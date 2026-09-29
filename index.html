@@ -143,10 +143,21 @@ code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--s
   </div>
 </div>
 
+<div class="group">
+  <h2 class="dh">5주차</h2>
+  <div class="cards">
+    <a data-week="5" data-topic="C언어 프로젝트" class="card two" href="study/c-workshop/study-design.html">
+      <div class="t dh">study 설계 노트</div>
+      <div class="d">공부 기록 CLI를 C로 키우면서, 무엇을 어떻게 왜 만드는지와 그 답에 닿기까지 세웠다가 고친 가설을 함께 남겼습니다. Rec이 몇 개인지, ID에 hash table이 필요한지, 함수로 나눴는데 왜 파일까지 나누는지를 그때 쓴 문장 그대로 따라갑니다.</div>
+      <div class="m">c-workshop / projects/study-cli · Stage 7 진입</div>
+    </a>
+  </div>
+</div>
+
 </div>
 
 <footer>
-  문서는 주차별 저장소에 나뉘어 있습니다. 2~3주차는 <code>SW-AI-W02-03</code>의 <code>docs/</code>에, 4주차부터는 <code>SW-AI-C</code>의 <code>study/</code>에 있습니다. 이 페이지는 그 위에 얹은 목차일 뿐이라, 각 문서의 원래 주소는 그대로 살아 있습니다.
+  문서는 주차별 저장소에 나뉘어 있습니다. 2~3주차는 <code>SW-AI-W02-03</code>의 <code>docs/</code>에, 4주차는 <code>SW-AI-C</code>의 <code>study/</code>에 있습니다. 5주차의 C 워크숍 문서는 원본 저장소가 공개되지 않아 이 저장소의 <code>study/c-workshop/</code>에 복사본을 둡니다. 이 페이지는 그 위에 얹은 목차일 뿐이라, 각 문서의 원래 주소는 그대로 살아 있습니다.
 </footer>
 
 </div>
@@ -158,11 +169,13 @@ code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--s
   const list = document.getElementById('list');
   const cards = Array.from(list.querySelectorAll('a.card'));
   const buttons = Array.from(document.querySelectorAll('.sortbar button'));
-  const TOPICS = ['알고리즘', '시스템'];
+  const TOPICS = ['알고리즘', '시스템', 'C언어', '프로젝트'];
+  const topicsOf = (c) => c.dataset.topic.split(' ');   /* 한 카드가 여러 주제에 속할 수 있다 */
+  const has = (mode, c, k) => mode === 'week' ? c.dataset.week === k : topicsOf(c).includes(k);
   const label = (mode, key) => mode === 'week' ? key + '주차' : key;
   const keys = (mode) => mode === 'week'
     ? [...new Set(cards.map(c => c.dataset.week))].sort((a, b) => a - b)
-    : TOPICS.filter(t => cards.some(c => c.dataset.topic === t));
+    : TOPICS.filter(t => cards.some(c => topicsOf(c).includes(t)));
 
   function render(mode) {
     list.textContent = '';
@@ -170,9 +183,9 @@ code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--s
       const group = document.createElement('div'); group.className = 'group';
       const h2 = document.createElement('h2'); h2.className = 'dh'; h2.textContent = label(mode, k);
       const box = document.createElement('div'); box.className = 'cards';
-      cards.filter(c => c.dataset[mode] === k)
+      cards.filter(c => has(mode, c, k))
            .sort((a, b) => a.dataset.week - b.dataset.week)   /* 묶음 안에서는 언제나 주차 순 */
-           .forEach(c => box.appendChild(c));
+           .forEach(c => box.appendChild(c.cloneNode(true)));   /* 두 묶음에 나올 수 있어 복제본을 붙인다 */
       group.append(h2, box); list.appendChild(group);
     }
     buttons.forEach(b => {
