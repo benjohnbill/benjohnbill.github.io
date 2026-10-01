@@ -159,3 +159,12 @@ span.todo{display:inline-block; vertical-align:top; max-width:100%}
 td .todo{display:block; margin-top:8px}
 .rm .more{font-size:14px; color:var(--s2); margin-top:4px}
 a.rm:hover .t,a.rm:hover .more{text-decoration:underline}
+.codebox pre .ln.cmd{color:var(--ink)}
+.codebox pre .ln.out{color:var(--ink-2)}
+.codebox pre .ln.gap{min-height:0.8em}
+.cell{display:inline-block; width:2ch; height:1.7ch; vertical-align:middle; box-sizing:border-box; border:1px solid var(--surface); background:var(--line)}
+.cell.c1{background:var(--s2); opacity:.4}
+.cell.c2{background:var(--s2); opacity:.62}
+.cell.c3{background:var(--s2); opacity:.82}
+.cell.c4{background:var(--s2)}
+.cell.none{background:transparent}

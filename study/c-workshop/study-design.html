@@ -39,6 +39,46 @@
     </ul>
     <p><strong>Stage 11의 목표</strong>(조회 전용, 기록은 CLI): 날짜별 잔디밭(한 칸은 그날의 total)과 list, total을 한 화면에 보여 주는 <code>study-tui</code>. 기록 로직은 그대로 두고 조회 쪽만 더하는 별도 실행 파일.</p>
   </div>
+
+  <div class="block">
+    <h3 class="dh">무엇을 만들고자 하는가</h3>
+    <p>완성 기준의 화면 구상입니다. 기록은 <code>study</code>(CLI)로 남기고, 같은 기록을 <code>study-tui</code>가 한 화면에 보여 줍니다. 아래 데이터는 예시이고, 출력 문구의 꾸밈과 키 배치, 잔디밭의 농도 구간은 아직 정하지 않았습니다.</p>
+    <div class="codebox"><div class="cap"><span>study · CLI로 기록하고 조회한다</span><span>Stage 9–10</span></div><pre><span class="ln cmd">$ study add --subject C --minutes 30 --date 2026-09-23 --note &quot;pointer review&quot;</span>
+<span class="ln out">Added entry 1.</span>
+<span class="ln cmd">$ study add --subject OS --minutes 45 --date 2026-09-23</span>
+<span class="ln out">Added entry 2.</span>
+<span class="ln cmd">$ study add --subject C --minutes 20 --date 2026-09-24</span>
+<span class="ln out">Added entry 3.</span>
+<span class="ln cmd">$ study list</span>
+<span class="ln out">ID  DATE        SUBJECT  MINUTES  NOTE</span>
+<span class="ln out">1   2026-09-23  C        30       pointer review</span>
+<span class="ln out">2   2026-09-23  OS       45</span>
+<span class="ln out">3   2026-09-24  C        20</span>
+<span class="ln cmd">$ study total --date 2026-09-23</span>
+<span class="ln out">Total: 75 minutes</span>
+<span class="ln cmd">$ study total --subject C</span>
+<span class="ln out">Total: 50 minutes</span></pre></div>
+    <div class="codebox"><div class="cap"><span>study-tui · 같은 기록을 한 화면에서 조회한다 (조회 전용)</span><span>Stage 11</span></div><pre><span class="ln"> study-tui                                     s subject   q quit </span>
+<span class="ln"> ────────────────────────────────────────────────────────────────</span>
+<span class="ln">        Aug 24  Aug 31  Sep 7   Sep 14  Sep 21  Sep 28 </span>
+<span class="ln">  Mon     <span class="cell c1"></span>      <span class="cell c2"></span>      <span class="cell c0"></span>      <span class="cell c3"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>   </span>
+<span class="ln">  Tue     <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c2"></span>      <span class="cell c3"></span>      <span class="cell c2"></span>      <span class="cell c0"></span>   </span>
+<span class="ln">  Wed     <span class="cell c1"></span>      <span class="cell c0"></span>      <span class="cell c2"></span>      <span class="cell c4"></span>     [<span class="cell c3"></span>]     <span class="cell c1"></span>   </span>
+<span class="ln">  Thu     <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c0"></span>      <span class="cell c2"></span>      <span class="cell c1"></span>      <span class="cell c2"></span>   </span>
+<span class="ln">  Fri     <span class="cell c2"></span>      <span class="cell c1"></span>      <span class="cell c2"></span>      <span class="cell c3"></span>      <span class="cell c0"></span>           </span>
+<span class="ln">  Sat     <span class="cell c0"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>           </span>
+<span class="ln">  Sun     <span class="cell c0"></span>      <span class="cell c0"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c0"></span>           </span>
+<span class="ln gap"></span>
+<span class="ln">  <span class="cell c0"></span> 0   <span class="cell c1"></span> 1-29   <span class="cell c2"></span> 30-59   <span class="cell c3"></span> 60-119   <span class="cell c4"></span> 120+     minutes per day</span>
+<span class="ln"> ────────────────────────────────────────────────────────────────</span>
+<span class="ln">  Date 2026-09-23   Subject all</span>
+<span class="ln">  ID  DATE        SUBJECT  MINUTES  NOTE</span>
+<span class="ln">  1   2026-09-23  C        30       pointer review</span>
+<span class="ln">  2   2026-09-23  OS       45</span>
+<span class="ln"> ────────────────────────────────────────────────────────────────</span>
+<span class="ln">  Total: 75 minutes</span></pre></div>
+    <p>한 화면에 위에는 날짜별 잔디밭(칸 하나가 그날의 total), 가운데에는 고른 날짜와 과목의 기록, 아래에는 보이는 기록의 total이 항상 있습니다. 잔디밭에서 고른 날짜가 list를 거릅니다.</p>
+  </div>
 </section>
 
 <section class="part p1" id="status">
