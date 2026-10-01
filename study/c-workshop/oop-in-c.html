@@ -697,6 +697,8 @@ Read_total(<span class="c-hit">r</span>, print_total);</pre>
        sizeof r = 8 (main.c) · sizeof *r = 24 (record.c)
        main.o 의 call new_record = e8 00 00 00 00 + R_X86_64_PLT32 new_record
        study  의 call new_record = e8 41 02 00 00 → call 1877 <new_record>
+                                   (0x1636 + 0x241 = 0x1877: 다음 명령어에서 new_record 까지의 거리)
+       gdb (study total C 30): &r = 0x7fffffffcd80 [stack], r = 0x55555555a010 [heap]
      ============================================================ -->
 <section class="slide" id="s3" data-step="0" data-max-step="2">
     <div class="head head-space">
@@ -734,14 +736,14 @@ Rec *r = malloc(<span class="c-hit">sizeof *r</span>);</pre>
 <pre><span class="m-dim">call new_record</span>
 e8 <span class="m-err">00 00 00 00</span></pre>
             </div>
-            <div class="link"><i></i><span><b>②</b> link · 0을 new_record 주소로 채운다</span><i></i>▶</div>
+            <div class="link"><i></i><span><b>②</b> link · 0을 new_record까지의 거리로 채운다</span><i></i>▶</div>
             <div class="panel machine f-ro">
                 <div class="cap"><span>study</span><span class="side">링크 후</span></div>
 <pre><span class="m-dim">call new_record</span>
 e8 <span class="m-ok">41 02 00 00</span></pre>
             </div>
         </div>
-        <p class="punch reveal">구조체는 실행 중에 <code>record.c</code>의 <code>new_record</code>가 만든다. 구조체 내부 정의는 끝까지 <b>main.c에 보이지 않는다</b>.</p>
+        <p class="punch reveal"><code>r</code>에 들어갈 주소는 실행 중에 <code>new_record</code>가 <code>malloc</code>으로 만들어 돌려준다. 구조체 내부 정의는 끝까지 <b>main.c에 보이지 않는다</b>.</p>
     </div>
     <div class="step-dot" aria-hidden="true"></div>
     <div class="foot"><span>C17 6.2.5p28 · 구조체 포인터는 모두 같은 표현</span></div>
@@ -813,7 +815,7 @@ void Read_total(const Rec *r, Minutes func){
         <span class="num">05</span>
     </div>
     <div class="slide-content">
-        <h2 class="thesis reveal">숨김은 <b>양쪽에서</b> 일어난다</h2>
+        <h2 class="thesis reveal"><b>Why?</b> Core는 그대로 두고 main.c에서 재사용 가능</h2>
         <div class="two wide-r reveal">
             <div class="stack">
                 <div class="panel">
