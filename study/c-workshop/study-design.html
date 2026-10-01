@@ -161,8 +161,11 @@
     <p><strong>CRUD는 module을 나누는 기준이 아닙니다.</strong> C·R·U·D는 모두 "기록이 메모리에 어떤 모양으로 들어 있는가"를 알아야 하므로 core에 함께 들어갑니다. module은 동사가 아니라 아는 것으로 나눕니다.</p>
 
     <h4 class="dh">현재 module의 답</h4>
-    <div class="todo">[오라버니: <code>main.c</code>(interface)의 세 질문 답. DESIGN.md §3.3에 쓰면 옮깁니다.]</div>
-    <div class="todo">[오라버니: <code>record.c</code>(core)의 세 질문 답. DESIGN.md §3.3에 쓰면 옮깁니다.]</div>
+    <div class="tbl"><table>
+      <tr><th>module</th><th>무엇 때문에 바뀌나</th><th>무엇을 소유하나</th><th>누구를 알고, 누구에게 알려지나</th></tr>
+      <tr><td><b>main.c</b><br>interface</td><td>명령 형식, 출력 문구, exit code. stage마다 바뀐다.</td><td><code>Rec</code> 한 개의 수명(<code>new_record</code>를 한 번 부르고 끝에서 <code>record_free</code>). 파일은 열지 않는다.</td><td><code>record.h</code>와 <code>storage.h</code>의 선언을 안다. <code>Rec</code>과 <code>Sub</code>는 이름뿐이라 내부 모양은 모른다(멤버 접근 없음). 프로그램의 입구라서 이 파일을 부르는 곳은 없다.</td></tr>
+      <tr><td><b>record.c</b><br>core</td><td>기록을 담는 자료구조(지금은 동적 배열)를 바꿀 때: 함수 8개 중 6개의 본문이 바뀌고 선언은 그대로다. 유효한 기록의 정의(과목 이름 규칙, minutes 1–1440)를 바꿀 때: <code>valid_subject</code>, <code>minutes_parse</code>.</td><td><code>Rec</code>, 그 안의 배열, 기록마다 <code>Sub</code>와 <code>name</code> 문자열(복사본). 생성은 <code>new_record</code>와 <code>Sub_add</code>, 해제는 <code>record_free</code> 한 곳이다.</td><td>표준 라이브러리(<code>malloc</code>, <code>realloc</code>, <code>free</code>, <code>memcpy</code>, <code>strlen</code>, <code>strpbrk</code>)만 안다. 출력, 종료, 파일, argv는 모른다(<code>nm -u record.o</code>, 2026-10-01). <code>main.c</code>와 <code>storage.c</code>가 <code>record.h</code>를 통해 호출한다.</td></tr>
+    </table></div>
     <p><code>storage.c</code>는 Stage 8을 진행 중이라 이 절에서 제외합니다.</p>
 
     <h4 class="dh">경계를 정한 결정</h4>
