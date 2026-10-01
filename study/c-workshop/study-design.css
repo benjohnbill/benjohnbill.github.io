@@ -157,3 +157,5 @@ figure svg .ln.plan{stroke-dasharray:2 4; stroke:var(--muted)}
 ol.fixed{display:flex; flex-direction:column; gap:10px}
 span.todo{display:inline-block; vertical-align:top; max-width:100%}
 td .todo{display:block; margin-top:8px}
+.rm .more{font-size:14px; color:var(--s2); margin-top:4px}
+a.rm:hover .t,a.rm:hover .more{text-decoration:underline}

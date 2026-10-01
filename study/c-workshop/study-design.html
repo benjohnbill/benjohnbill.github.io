@@ -12,8 +12,11 @@
 
 <header>
   <h1 class="dh">study 설계 노트</h1>
-  <p class="sub">공부 기록을 남기는 작은 CLI를 C로 키우고 있습니다. 이 문서는 지금의 설계를 적습니다. 그 설계에 닿기까지 무엇을 잘못 생각했고 무엇을 보고 고쳤는지는 <a href="study-design-log.html">설계 로그</a>에 있습니다.</p>
+  <p class="sub">공부 기록을 남기는 작은 CLI를 C로 키우고 있습니다. 이 문서는 지금의 설계를 적습니다.</p>
   <div class="meta">c-workshop / projects/study-cli · 기준 2026-10-01 · commit 4010305 · Stage 7 통과, Stage 8 진행 중</div>
+  <div class="roadmap">
+    <a class="rm a" href="study-design-log.html"><div class="t dh">설계 로그: 어떻게 여기까지 왔나</div><div class="d">그때 세운 가설을 그대로 인용하고, 그 가설을 흔든 반례와 고친 그림을 순서대로 따라갑니다.</div><div class="more">로그 읽기 →</div></a>
+  </div>
 </header>
 
 <section class="part p1" id="what">
@@ -21,8 +24,9 @@
 
   <div class="block">
     <h3 class="dh">왜 만들었나</h3>
-    <div class="todo">[오라버니: 왜 만들고 싶었는지 3~5문장. 재료: DESIGN.md §1 "만드는 이유" · DESIGN-LOG.md 방향 전환 Q1 · 옛 페이지 1부의 "덧붙인 말"(git 72f25d4)]
-      <br>DESIGN.md §1 초안: 실제 프로젝트를 통한 직접 경험. C 문법(구조체, 함수 포인터, 표준 라이브러리 등)에 대한 이해도 향상.</div>
+    <p>프로젝트를 바탕으로 C언어를 공부해보고 싶었다. 책을 읽어봐야 휘발되기 마련이라고 생각하는데, 몸으로 익힌 기억은 쉽사리 사라지지 않기 때문이다.</p>
+    <p>나는 코드 독해를 연습했다. 디버깅 이전에 코드를 읽을 수가 없었기 때문이다. 계획을 세우기 위해서는 흐름을 알아야 한다. 흐름을 알기 위해서는 구성 요소들의 역할과 <code>input/output</code>을 알아야 했다. 무식하기 때문에 다음과 같은 방법을 고수할 수밖에 없던 것이다.</p>
+    <p>개인 프로젝트를 하는 것은 예정된 일이었다. 1번 문제에 등장하는 <code>Widget</code> 구조는 충격이었기 때문이다. 구조체 뿐만 아니라 함수형 포인터도 처음 보기 때문이다. <code>PintOS</code>를 고려하면 앞으로 반드시 익혀두어야만 한다고 판단했다. 얼핏 보았던 리눅스 커널 소스는 함수형 포인터와 구조체로 범벅이었기 때문이다. 위의 관점을 종합할 때 실무형 소스를 만들 필요가 있었다.</p>
   </div>
 
   <div class="block">
@@ -169,7 +173,7 @@
       <tr><td class="c"><b>Q2</b></td><td><code>new_record</code> 하나가 배열까지 확보한다</td><td>생성이 한 번의 호출로 끝나면 호출하는 쪽은 <code>NULL</code>만 확인하면 된다. <code>Sub_add</code>의 "실패하면 자기가 확보한 것을 해제하고 <code>NULL</code>" 규칙을 생성에도 적용했다.</td></tr>
       <tr><td class="c"><b>Q3</b></td><td>core는 출력하지 않는다</td><td>문구와 출력 위치는 interface의 약속이다. TUI와 테스트 <code>main</code>도 같은 core를 쓴다.</td></tr>
       <tr><td class="c"><b>Q4</b></td><td>minutes·subject 검사는 core의 함수</td><td>유효한 기록의 정의다. add 입력, edit 입력, 파일 읽기가 모두 호출한다.</td></tr>
-      <tr><td class="c"><b>Q5</b></td><td>함수마다 실패는 한 종류</td><td>검사 실패는 exit 2, <code>NULL</code>은 메모리 부족이라 exit 1. interface가 매핑한다. <span class="todo">[확인: storage의 <code>file_read</code>는 실패를 세 종류(IO·FORMAT·NOMEM)로 돌려주고, 손상된 파일은 exit 1입니다. 이 행의 적용 범위를 정해 주세요.]</span></td></tr>
+      <tr><td class="c"><b>Q5</b></td><td>함수마다 실패는 한 종류 (core 기준)</td><td>검사 실패는 exit 2, <code>NULL</code>은 메모리 부족이라 exit 1. interface가 매핑한다.</td></tr>
       <tr><td class="c"><b>Q6</b></td><td>연속 subject 경고는 interface가 argv만으로 판단</td><td>입력 습관에 대한 확인이지 기록의 규칙이 아니다. 파일에는 같은 과목이 연달아 있어도 정상이다.</td></tr>
     </table></div></div>
   </div>
@@ -178,15 +182,14 @@
 <section class="part p1" id="fixed">
   <h2 class="dh">틀렸다가 고친 것</h2>
   <div class="block">
-    <ol class="fixed">
-    <li><span class="todo">[오라버니: 한 문장 · 이 사이클의 시작: “일종의 stack 느낌으로 되는거 아닌가? …”]</span> <a href="study-design-log.html#c4-2">로그 ④ →</a></li>
-    <li><span class="todo">[오라버니: 한 문장 · 이 사이클의 시작: “내가 혼란에 빠졌던 건, "메인 한 번"이 Rec 1번을 생성하는 건데 …”]</span> <a href="study-design-log.html#c4-3">로그 ④ →</a></li>
-    <li><span class="todo">[오라버니: 한 문장 · 이 사이클의 시작: “minutes하고 subject는 입력을 받았을 때 '유효한 지'를 검사하는 것이니까 …”]</span> <a href="study-design-log.html#c5-1">로그 ⑤ →</a></li>
-    <li><span class="todo">[오라버니: 한 문장 · 이 사이클의 시작: “헤더가 왜 선언만 담는지를 물어본게 아니야. …”]</span> <a href="study-design-log.html#c6-2">로그 ⑥ →</a></li>
-    <li><span class="todo">[오라버니: 한 문장 · 이 사이클의 시작: “'기능적인 분리 및 함수 설정'만 잘 해놓으면, 한 파일로 만들어도 된다는 뜻으로 …”]</span> <a href="study-design-log.html#c6-3">로그 ⑥ →</a></li>
-    <li><span class="todo">[오라버니: 한 문장 · 이 사이클의 시작: “이 부분만 명확하게 잡히면 고개를 끄덕이고 넘어갈 수 있을 것 같아. …”]</span> <a href="study-design-log.html#c7-1">로그 ⑦ →</a></li>
-    </ol>
-    <p class="todo">[오라버니: 감상 (선택, 한 문단 이내)]</p>
+    <div class="roadmap">
+      <a class="rm a" href="study-design-log.html#c4-2"><div class="t dh">Rec은 하나, 기록마다 있는 것은 Sub</div><div class="d">“…이러면 Rec 구조체인 r은 한 개만 있는 건가? 원래는, r이 각 '기록마다 존재'하는 구도였는데.”</div><div class="more">로그 ④에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c4-3"><div class="t dh">ID는 count와 다르고, 파일에 있는 것은 행이다</div><div class="d">“내가 혼란에 빠졌던 건, "메인 한 번"이 Rec 1번을 생성하는 건데, 그렇다면 실제 기록 상에서는 여러 Rec가 기록의 형태로 디스크에 존재할 것이고, …”</div><div class="more">로그 ④에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c5-1"><div class="t dh">검사 지점에는 파일 읽기도 들어간다</div><div class="d">“minutes하고 subject는 입력을 받았을 때 '유효한 지'를 검사하는 것이니까, 명령 실행쪽이지 않을까?”</div><div class="more">로그 ⑤에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c6-2"><div class="t dh">module 분리는 로직을 바꾸지 않는다</div><div class="d">“헤더가 왜 선언만 담는지를 물어본게 아니야. 내 말은 "왜 그런 노력을 해가면서까지 모듈 분리를 해야 하냐"였던 거긴 했어.”</div><div class="more">로그 ⑥에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c6-3"><div class="t dh">한 파일이어도 되나? 경계는 인위적이다</div><div class="d">“'기능적인 분리 및 함수 설정'만 잘 해놓으면, 한 파일로 만들어도 된다는 뜻으로 들리기도 하거든.”</div><div class="more">로그 ⑥에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c7-1"><div class="t dh">main이 둘 이상인 이유</div><div class="d">“이 부분만 명확하게 잡히면 고개를 끄덕이고 넘어갈 수 있을 것 같아. "두 개 이상의 main이 왜 필요할까?"”</div><div class="more">로그 ⑦에서 이어 보기 →</div></a>
+    </div>
   </div>
 </section>
 
