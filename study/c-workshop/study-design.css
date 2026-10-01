@@ -21,9 +21,10 @@
 *{box-sizing:border-box}
 body{margin:0; background:var(--bg); color:var(--ink);
   font-family:"Gowun Dodum",system-ui,-apple-system,sans-serif;
-  font-size:17px; line-height:1.85}
+  font-size:17px; line-height:1.85; word-break:keep-all; overflow-wrap:break-word}
 .wrap{max-width:920px; margin:0 auto; padding:44px 22px 90px; display:flex; flex-direction:column; gap:12px}
 code,pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+p code,li code{white-space:nowrap}
 code{font-size:0.85em; background:var(--surface-2); padding:0.1em 0.38em; border-radius:3px}
 .dh{font-family:"Do Hyeon","Gowun Dodum",sans-serif; font-weight:400}
 a{color:var(--s2)}
