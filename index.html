@@ -159,10 +159,21 @@ code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--s
   </div>
 </div>
 
+<div class="group">
+  <h2 class="dh">6주차</h2>
+  <div class="cards">
+    <a data-week="6" data-topic="C언어" class="card two" href="study/malloc-lab/bsize-cast.html">
+      <div class="t dh">Typecasting - 컴파일러가 통과시키는 오류</div>
+      <div class="d">malloc-lab에서 경고 없이 컴파일된 할당기가 20MB를 다 쓰고 멈췄습니다. gdb로 따라가 보니 <code>first_fit()</code>이 함수 포인터 <code>bsize</code>를 <code>(size_t)</code>로 바꾼 값과 크기를 비교하고 있었습니다. 캐스트가 컴파일러의 경고를 어떻게 막았는지, 그리고 <code>unsigned int</code>가 4GB를 넘는 크기를 어떻게 잘라 내는지를 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="m">week6 / malloc-lab · 2분 발표</div>
+    </a>
+  </div>
+</div>
+
 </div>
 
 <footer>
-  문서는 주차별 저장소에 나뉘어 있습니다. 2~3주차는 <code>SW-AI-W02-03</code>의 <code>docs/</code>에, 4주차는 <code>SW-AI-C</code>의 <code>study/</code>에 있습니다. 5주차의 C 워크숍 문서는 원본 저장소가 공개되지 않아 이 저장소의 <code>study/c-workshop/</code>에 복사본을 둡니다. 이 페이지는 그 위에 얹은 목차일 뿐이라, 각 문서의 원래 주소는 그대로 살아 있습니다.
+  문서는 주차별 저장소에 나뉘어 있습니다. 2~3주차는 <code>SW-AI-W02-03</code>의 <code>docs/</code>에, 4주차는 <code>SW-AI-C</code>의 <code>study/</code>에 있습니다. 5주차의 C 워크숍 문서는 원본 저장소가 공개되지 않아 이 저장소의 <code>study/c-workshop/</code>에 복사본을 둡니다. 6주차 malloc-lab 발표 슬라이드도 원본이 저장소에 올라가지 않아 <code>study/malloc-lab/</code>에 둡니다. 이 페이지는 그 위에 얹은 목차일 뿐이라, 각 문서의 원래 주소는 그대로 살아 있습니다.
 </footer>
 
 </div>
