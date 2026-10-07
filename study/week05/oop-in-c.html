@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>C에서 객체지향 프로그래밍하기</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2312201F'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%234FC5B3'%3EJ%3C/text%3E%3C/svg%3E">
+<meta name="description" content="불완전 타입으로 구조체 몸체를 숨기고 함수 포인터로 출력을 넘겨 모듈이 서로를 모르게 만든 과정을 따라간 2분 발표 슬라이드입니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="C에서 객체지향 프로그래밍하기">
+<meta property="og:description" content="불완전 타입으로 구조체 몸체를 숨기고 함수 포인터로 출력을 넘겨 모듈이 서로를 모르게 만든 과정을 따라간 2분 발표 슬라이드입니다.">
+<meta property="og:url" content="https://benjohnbill.github.io/study/week05/oop-in-c.html">
 
 <!-- 폰트: IBM Plex Sans KR(본문·제목) · IBM Plex Mono(코드). week04 덱과 같은 디자인 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -547,9 +553,17 @@ body.edit-active [contenteditable]:focus {
     outline: 2px solid var(--red);
     background: rgba(255,51,0,.05);
 }
+/* Way back to the study index. Bottom-right is the only corner the deck chrome leaves free */
+.home-link {
+    position: fixed; right: clamp(.6rem,1.4vw,1.4rem); bottom: clamp(.4rem,1vh,.8rem); z-index: 9998;
+    font-family: var(--font-mono, monospace); font-size: clamp(.55rem,1vh,.72rem);
+    color: var(--mut); text-decoration: none; opacity: .75;
+}
+.home-link:hover { opacity: 1; text-decoration: underline; }
 </style>
 </head>
 <body>
+<a class="home-link" href="https://benjohnbill.github.io/">← 학습 기록</a>
 
 <div class="progress-bar" id="progressBar"></div>
 <nav class="nav-dots" id="navDots" aria-label="슬라이드 이동"></nav>
