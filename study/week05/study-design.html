@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>study 설계 노트</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="study-design.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1 class="dh">study 설계 노트</h1>
+  <p class="sub">공부 기록을 남기는 작은 CLI를 C로 키우고 있습니다. 이 문서는 지금의 설계를 적습니다.</p>
+  <div class="meta">c-workshop / projects/study-cli · 기준 2026-10-01 · commit 4010305 · Stage 7 통과, Stage 8 진행 중</div>
+  <div class="roadmap">
+    <a class="rm a" href="study-design-log.html"><div class="t dh">설계 로그: 어떻게 여기까지 왔나</div><div class="d">그때 세운 가설을 그대로 인용하고, 그 가설을 흔든 반례와 고친 그림을 순서대로 따라갑니다.</div><div class="more">로그 읽기 →</div></a>
+  </div>
+</header>
+
+<section class="part p1" id="what">
+  <h2 class="dh">무엇을, 왜 만드나</h2>
+
+  <div class="block">
+    <h3 class="dh">왜 만들었나</h3>
+    <p>프로젝트를 바탕으로 C언어를 공부해보고 싶었다. 책을 읽어봐야 휘발되기 마련이라고 생각하는데, 몸으로 익힌 기억은 쉽사리 사라지지 않기 때문이다.</p>
+    <p>나는 코드 독해를 연습했다. 디버깅 이전에 코드를 읽을 수가 없었기 때문이다. 계획을 세우기 위해서는 흐름을 알아야 한다. 흐름을 알기 위해서는 구성 요소들의 역할과 <code>input/output</code>을 알아야 했다. 무식하기 때문에 다음과 같은 방법을 고수할 수밖에 없던 것이다.</p>
+    <p>개인 프로젝트를 하는 것은 예정된 일이었다. 1번 문제에 등장하는 <code>Widget</code> 구조는 충격이었기 때문이다. 구조체 뿐만 아니라 함수형 포인터도 처음 보기 때문이다. <code>PintOS</code>를 고려하면 앞으로 반드시 익혀두어야만 한다고 판단했다. 얼핏 보았던 리눅스 커널 소스는 함수형 포인터와 구조체로 범벅이었기 때문이다. 위의 관점을 종합할 때 실무형 소스를 만들 필요가 있었다.</p>
+  </div>
+
+  <div class="block">
+    <h3 class="dh">study가 하는 일</h3>
+        <p>이 프로그램에는 목적이 두 층 있습니다. 하나는 <strong>내가 이 프로그램을 만드는 이유</strong>이고, 다른 하나는 <strong>사용자가 이 프로그램을 쓰는 이유</strong>입니다. 설계를 판단할 때는 주로 뒤쪽을 기준으로 삼습니다.</p>
+    <ul>
+      <li><strong>누가 쓰는가</strong>: 하루하루 공부한 바를 간단하게 기록하고, 나중에 그 기록을 가공하거나 표·그래프 같은 시각적인 형태로 보고 싶은 사람.</li>
+      <li><strong>언제 쓰는가</strong>: 하루를 마무리할 때 꾸준히 기록한다. journal이나 캘린더와 역할이 비슷하다.</li>
+      <li><strong>무엇을 위해 쓰는가</strong>: 기록하는 재미를 느끼고, 성취감을 눈으로 확인하기 위해.</li>
+    </ul>
+    <p><strong>Stage 11의 목표</strong>(조회 전용, 기록은 CLI): 날짜별 잔디밭(한 칸은 그날의 total)과 list, total을 한 화면에 보여 주는 <code>study-tui</code>. 기록 로직은 그대로 두고 조회 쪽만 더하는 별도 실행 파일.</p>
+  </div>
+
+  <div class="block">
+    <h3 class="dh">무엇을 만들고자 하는가</h3>
+    <p>완성하면 이런 화면이 됩니다. 기록은 <code>study</code>(CLI)로 남기고, 같은 기록을 <code>study-tui</code>가 한 화면에 보여 줍니다. 아래 데이터는 예시입니다. 출력 문구를 어떻게 꾸밀지, 어떤 키로 조작할지, 잔디밭의 농도를 어떻게 나눌지는 아직 정하지 않았습니다.</p>
+    <div class="codebox"><div class="cap"><span>study · CLI로 기록하고 조회한다</span><span>Stage 9–10</span></div><pre><span class="ln cmd">$ study add --subject C --minutes 30 --date 2026-09-23 --note &quot;pointer review&quot;</span>
+<span class="ln out">Added entry 1.</span>
+<span class="ln cmd">$ study add --subject OS --minutes 45 --date 2026-09-23</span>
+<span class="ln out">Added entry 2.</span>
+<span class="ln cmd">$ study add --subject C --minutes 20 --date 2026-09-24</span>
+<span class="ln out">Added entry 3.</span>
+<span class="ln cmd">$ study list</span>
+<span class="ln out">ID  DATE        SUBJECT  MINUTES  NOTE</span>
+<span class="ln out">1   2026-09-23  C        30       pointer review</span>
+<span class="ln out">2   2026-09-23  OS       45</span>
+<span class="ln out">3   2026-09-24  C        20</span>
+<span class="ln cmd">$ study total --date 2026-09-23</span>
+<span class="ln out">Total: 75 minutes</span>
+<span class="ln cmd">$ study total --subject C</span>
+<span class="ln out">Total: 50 minutes</span></pre></div>
+    <div class="codebox"><div class="cap"><span>study-tui · 같은 기록을 한 화면에서 조회한다 (조회 전용)</span><span>Stage 11</span></div><pre><span class="ln"> study-tui                                     s subject   q quit </span>
+<span class="ln"> ────────────────────────────────────────────────────────────────</span>
+<span class="ln">        Aug 24  Aug 31  Sep 7   Sep 14  Sep 21  Sep 28 </span>
+<span class="ln">  Mon     <span class="cell c1"></span>      <span class="cell c2"></span>      <span class="cell c0"></span>      <span class="cell c3"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>   </span>
+<span class="ln">  Tue     <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c2"></span>      <span class="cell c3"></span>      <span class="cell c2"></span>      <span class="cell c0"></span>   </span>
+<span class="ln">  Wed     <span class="cell c1"></span>      <span class="cell c0"></span>      <span class="cell c2"></span>      <span class="cell c4"></span>     [<span class="cell c3"></span>]     <span class="cell c1"></span>   </span>
+<span class="ln">  Thu     <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c0"></span>      <span class="cell c2"></span>      <span class="cell c1"></span>      <span class="cell c2"></span>   </span>
+<span class="ln">  Fri     <span class="cell c2"></span>      <span class="cell c1"></span>      <span class="cell c2"></span>      <span class="cell c3"></span>      <span class="cell c0"></span>           </span>
+<span class="ln">  Sat     <span class="cell c0"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>           </span>
+<span class="ln">  Sun     <span class="cell c0"></span>      <span class="cell c0"></span>      <span class="cell c0"></span>      <span class="cell c1"></span>      <span class="cell c0"></span>           </span>
+<span class="ln gap"></span>
+<span class="ln">  <span class="cell c0"></span> 0   <span class="cell c1"></span> 1-29   <span class="cell c2"></span> 30-59   <span class="cell c3"></span> 60-119   <span class="cell c4"></span> 120+     minutes per day</span>
+<span class="ln"> ────────────────────────────────────────────────────────────────</span>
+<span class="ln">  Date 2026-09-23   Subject all</span>
+<span class="ln">  ID  DATE        SUBJECT  MINUTES  NOTE</span>
+<span class="ln">  1   2026-09-23  C        30       pointer review</span>
+<span class="ln">  2   2026-09-23  OS       45</span>
+<span class="ln"> ────────────────────────────────────────────────────────────────</span>
+<span class="ln">  Total: 75 minutes</span></pre></div>
+    <p>화면은 하나입니다. 위쪽에는 날짜별 잔디밭이 있고(칸 하나가 그날의 total입니다), 가운데에는 고른 날짜와 과목에 해당하는 기록이 나옵니다. 아래 줄에는 화면에 보이는 기록의 total이 항상 표시됩니다. 잔디밭에서 날짜를 고르면 list에 그 날짜의 기록만 나옵니다.</p>
+  </div>
+</section>
+
+<section class="part p1" id="status">
+  <h2 class="dh">지금 어디까지</h2>
+  <div class="block">
+    <div class="meta">기준 2026-10-01 · commit 4010305 · 상태는 CURRICULUM.md의 Status 열과 실제 실행 결과에서 읽었습니다</div>
+    <ol class="bar" aria-label="Stage 6부터 11까지의 진행">
+      <li class="done"><span class="fill"></span><span class="st">Stage 6 · 통과</span><span class="f">인자로 기록 입력, 구조체·deep copy·동적 배열</span></li>
+      <li class="done"><span class="fill"></span><span class="st">Stage 7 · 통과</span><span class="f">list·total, module 분리, 함수 포인터로 처리 동작 전달</span><a href="#fixed">고친 것 6개 ↓</a></li>
+      <li class="now"><span class="fill"></span><span class="st">Stage 8 · 진행 중</span><span class="f">TSV 저장·불러오기, 읽기 버퍼와 기록의 수명, 실패 경로 정리</span><span class="gate">Minimum</span></li>
+      <li class="later"><span class="fill"></span><span class="st">Stage 9 · 시작 전</span><span class="f">정식 명령·옵션 검증, ID·날짜·메모, 안전한 저장</span></li>
+      <li class="later"><span class="fill"></span><span class="st">Stage 10 · 시작 전</span><span class="f">수정·삭제·필터, 오류 복구, 통합 테스트와 실사용</span><span class="gate">Usable</span></li>
+      <li class="later"><span class="fill"></span><span class="st">Stage 11 · 시작 전</span><span class="f">조회 전용 TUI: 상태→프레임 분리, 터미널 복원, 한글 표시 폭</span><span class="gate">Target</span></li>
+    </ol>
+    <p>관문은 CURRICULUM.md가 정합니다. Minimum은 Stage 8에서 기록을 저장하고 다른 실행에서 읽을 수 있는 단계입니다. Usable은 Stage 10의 CLI를 실제 터미널에서 계속 쓰는 단계이고, Target은 Stage 11의 <code>study-tui</code>로 같은 기록을 조회하는 단계입니다. 프로젝트는 Target에서 끝납니다.</p>
+
+    <h4 class="dh">기능별 상태</h4>
+    <div class="tbl"><table>
+      <tr><th>기능</th><th>상태</th><th>확인한 것</th></tr>
+      <tr><td>기록을 인자로 넣어 합계 보기 (<code>total C 30 OS 45</code>)</td><td class="c">동작</td><td><code>Total: 75 minutes</code>, exit 0</td></tr>
+      <tr><td>파일의 기록을 목록으로 보기 (<code>list PATH</code>)</td><td class="c">동작</td><td>정상 파일은 기록을 한 줄씩 출력합니다. 값이 잘못된 행이 있으면 행 번호를 알리고 exit 1로 끝납니다.</td></tr>
+      <tr><td>파일의 기록으로 합계 보기 (<code>total PATH</code>)</td><td class="c">아직</td><td>PATH를 과목·시간 쌍으로 읽어 exit 2로 끝납니다.</td></tr>
+      <tr><td>기록을 파일에 저장 (<code>save</code>)</td><td class="c">아직</td><td>명령으로 인식되지 않아 exit 2로 끝납니다.</td></tr>
+      <tr><td>수정, 삭제, 과목·날짜 filter</td><td class="c">아직</td><td>Stage 10에서 만듭니다.</td></tr>
+      <tr><td>조회 화면 (<code>study-tui</code>)</td><td class="c">아직</td><td>Stage 11에서 만듭니다.</td></tr>
+    </table></div>
+    <p>Stage 8을 진행 중이라서 <code>list</code>는 Stage 7의 인자 형식 대신 파일 경로를 받습니다. <code>list C 30 OS 45</code>는 지금 exit 2로 끝납니다.</p>
+    <p><strong>아직 정하지 않은 것</strong>: ID로 찾는 방법입니다. 처음부터 훑기, 이진 탐색, hash table 중 하나를 Stage 10에서 고릅니다.</p>
+  </div>
+</section>
+
+<section class="part p1" id="commands">
+  <h2 class="dh">명령과 데이터</h2>
+  <div class="block">
+        <p class="lead">study는 "기록" 하나를 다루는 프로그램이고, 명령은 그 기록을 만들고, 읽고, 고치고, 지우는 조작입니다.</p>
+    <p>기록 하나는 <code>id</code>, <code>date</code>, <code>subject</code>, <code>minutes</code>, <code>note</code>로 이루어집니다. 명령을 하나씩 따로 외우지 않고, 이 기록에 대한 조작으로 보면 네 명령이 한 틀에 들어옵니다. 이 틀을 CRUD라고 부릅니다.</p>
+    <div class="tbl"><table>
+      <tr><th>조작</th><th>명령</th><th>처음 들어오는 stage</th></tr>
+      <tr><td><b>Create</b> 만들기</td><td><code>add</code></td><td>6 (argv 쌍), 9 (옵션과 ID)</td></tr>
+      <tr><td><b>Read</b> 읽기</td><td><code>list</code>, <code>total</code></td><td>7 (filter는 10)</td></tr>
+      <tr><td><b>Update</b> 고치기</td><td><code>edit</code></td><td>10</td></tr>
+      <tr><td><b>Delete</b> 지우기</td><td><code>remove</code></td><td>10</td></tr>
+    </table></div>
+
+    <h4 class="dh">명령 표</h4>
+        <p>계약을 내 말로 다시 적은 표입니다. 정확한 출력 문구와 실패 조건은 stage를 마칠 때 README와 대조하는 checklist로 확인합니다.</p>
+    <p><code>stage</code> 열은 처음 생기는 stage다. Stage 6–8의 임시 명령(<code>save PATH …</code>, <code>list PATH</code>)은 stage 명세가 정의하므로 넣지 않는다.</p>
+    <div class="tbl"><table>
+      <tr><th>명령</th><th>stage</th><th>입력</th><th>출력</th></tr>
+      <tr><td><b>help</b></td><td class="c">9</td><td>없음</td><td>flag와 각 명령어의 작동 방식</td></tr>
+      <tr><td><b>add</b></td><td class="c">9</td><td>subject, minutes</td><td>기록 하나를 만든다</td></tr>
+      <tr class="cont"><td></td><td></td><td>date: 기본값은 실행한 날, 명시하면 덮어쓰기</td><td></td></tr>
+      <tr class="cont"><td></td><td></td><td>note: 커밋 메시지처럼 내용을 남긴다</td><td></td></tr>
+      <tr><td><b>list</b></td><td class="c">9</td><td>flag가 없으면 전부 (components default)</td><td>고른 기록의 components: ID, date, subject, minutes, note</td></tr>
+      <tr class="cont"><td></td><td class="c">10</td><td>flag로 특정 과목이나 날짜(하루)를 고를 수 있다</td><td>ID는 edit·remove가 가리키는 번호</td></tr>
+      <tr class="cont"><td></td><td class="c">10</td><td>둘을 함께 주면 둘 다 만족하는 기록만</td><td></td></tr>
+      <tr><td><b>total</b></td><td class="c">9 (filter는 10)</td><td>list와 같은 filter</td><td>고른 기록의 minutes 합</td></tr>
+    </table></div>
+
+  </div>
+</section>
+
+<section class="part p1" id="boundary">
+  <h2 class="dh">경계선</h2>
+  <div class="block">
+    <div class="meta">기준 Stage 7 통과 시점 · commit 4010305</div>
+    <p class="lead">함수는 동작 하나이고, module은 비밀 하나를 공유하는 함수들의 묶음입니다.</p>
+    <p>여기서 비밀은 바깥에서 몰라도 되는 결정을 말합니다. 예를 들면 "기록을 dynamic array에 담는다"는 결정입니다. 이 결정을 바꿀 때 같이 고쳐야 하는 함수들이 한 module에 모입니다. 이 판단법을 <strong>변경 시험</strong>이라고 부르고, Parnas가 1972년에 제시한 information hiding 원칙에서 왔습니다.</p>
+    <figure>
+      <div class="fig-title dh">호출은 바깥에서 core로만 향한다</div>
+      <svg viewBox="0 0 900 320" role="img" aria-label="interface(main.c)가 core(record.c)를 호출하고, 아직 완성되지 않은 study-tui와 storage도 core를 호출하는 구조. core는 argv와 파일을 모른다">
+        <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="arrowhead"/></marker></defs>
+        <rect class="box dash" x="20" y="30" width="170" height="50"/>
+        <text x="105" y="52" text-anchor="middle" class="k" font-size="13">사용자</text>
+        <text x="105" y="70" text-anchor="middle" font-size="11" class="mut">argv · stdout · stderr</text>
+        <rect class="box dash" x="20" y="240" width="170" height="50"/>
+        <text x="105" y="262" text-anchor="middle" class="k" font-size="13">파일</text>
+        <text x="105" y="280" text-anchor="middle" font-size="11" class="mut">TSV</text>
+
+        <rect class="box" x="270" y="30" width="170" height="50"/>
+        <text x="355" y="52" text-anchor="middle" font-size="14">interface</text>
+        <text x="355" y="70" text-anchor="middle" font-size="11" class="mut">main.c</text>
+        <rect class="box plan" x="460" y="30" width="170" height="50"/>
+        <text x="545" y="52" text-anchor="middle" font-size="14" class="mut">interface</text>
+        <text x="545" y="70" text-anchor="middle" font-size="11" class="k mut">study-tui · 예정 (Stage 11)</text>
+        <rect class="acc" x="270" y="135" width="360" height="50"/>
+        <text x="450" y="157" text-anchor="middle" font-size="14" class="acc-t">core</text>
+        <text x="450" y="175" text-anchor="middle" font-size="11" class="acc-t">record.c</text>
+        <rect class="box plan" x="270" y="240" width="360" height="50"/>
+        <text x="450" y="262" text-anchor="middle" font-size="14" class="mut">storage</text>
+        <text x="450" y="280" text-anchor="middle" font-size="11" class="k mut">storage.c · 진행 중 (Stage 8)</text>
+
+        <line class="ln" x1="192" y1="55" x2="266" y2="55" marker-start="url(#a2)" marker-end="url(#a2)"/>
+        <text x="229" y="47" text-anchor="middle" font-size="11" class="k">해석·출력</text>
+        <line class="ln plan" x1="192" y1="265" x2="266" y2="265" marker-start="url(#a2)" marker-end="url(#a2)"/>
+        <text x="229" y="257" text-anchor="middle" font-size="11" class="k mut">읽기·쓰기</text>
+        <line class="ln" x1="355" y1="82" x2="355" y2="131" marker-end="url(#a2)"/>
+        <text x="365" y="112" font-size="11" class="k">호출</text>
+        <line class="ln plan" x1="545" y1="82" x2="545" y2="131" marker-end="url(#a2)"/>
+        <text x="555" y="112" font-size="11" class="k mut">호출</text>
+        <line class="ln plan" x1="450" y1="238" x2="450" y2="189" marker-end="url(#a2)"/>
+        <text x="460" y="218" font-size="11" class="k mut">호출</text>
+
+        <text x="650" y="52" font-size="12" class="k">명령 형식 · 출력 문구 · exit code</text>
+        <text x="650" y="70" font-size="11" class="k mut">stage마다 바뀐다</text>
+        <text x="650" y="157" font-size="12" class="k">기록의 모양 · C·R·U·D · 검사 규칙</text>
+        <text x="650" y="175" font-size="11" class="k mut">argv도 파일도 모른다</text>
+        <text x="650" y="262" font-size="12" class="k">파일 형식 · 저장 방식</text>
+        <text x="650" y="280" font-size="11" class="k mut">Stage 8, 9에서 바뀐다</text>
+        <text x="20" y="312" font-size="11" class="k mut">회색 점선은 아직 완성되지 않은 것입니다.</text>
+      </svg>
+      <figcaption>interface와 storage는 core를 호출하지만, core는 둘 중 어느 쪽도 알지 못합니다. 그래서 TUI를 붙이면 interface만 바뀌고, 파일 형식을 바꾸면 storage만 바뀝니다. 가장 자주 바뀌는 층이 interface라는 점이 core와 분리해야 하는 가장 큰 이유입니다.</figcaption>
+    </figure>
+    <p>module마다 세 질문에 답합니다. 이 세 질문이 명세서를 대신합니다. 명세서를 받아 쓰면 결과만 남지만, 이 질문을 던질 줄 알면 명세서를 스스로 만들 수 있습니다.</p>
+    <ol>
+      <li><strong>무엇 때문에 바뀌나?</strong> 바뀌는 이유가 다르면 다른 module에 둡니다.</li>
+      <li><strong>무엇을 소유하나?</strong> malloc한 메모리, 열어 둔 파일처럼 해제할 책임이 있는 자원을 가진 쪽이 생성과 해제를 모두 맡습니다.</li>
+      <li><strong>누가 누구를 아나?</strong> interface는 core를 호출합니다. 반대로 core가 argv를 알면, argv 없이 core를 검증할 수 없습니다.</li>
+    </ol>
+    <p><strong>CRUD는 module을 나누는 기준이 아닙니다.</strong> C·R·U·D는 모두 "기록이 메모리에 어떤 모양으로 들어 있는가"를 알아야 하므로 core에 함께 들어갑니다. module은 동사가 아니라 아는 것으로 나눕니다.</p>
+
+    <h4 class="dh">현재 module의 답</h4>
+    <div class="tbl"><table>
+      <tr><th>module</th><th>무엇 때문에 바뀌나</th><th>무엇을 소유하나</th><th>누구를 알고, 누구에게 알려지나</th></tr>
+      <tr><td><b>main.c</b><br>interface</td><td>명령 형식, 출력 문구, exit code. stage마다 바뀐다.</td><td><code>Rec</code> 한 개의 수명(<code>new_record</code>를 한 번 부르고 끝에서 <code>record_free</code>). 파일은 열지 않는다.</td><td><code>record.h</code>와 <code>storage.h</code>의 선언을 안다. <code>Rec</code>과 <code>Sub</code>는 이름뿐이라 내부 모양은 모른다(멤버 접근 없음). 프로그램의 진입점이라서 이 파일을 부르는 곳은 없다.</td></tr>
+      <tr><td><b>record.c</b><br>core</td><td>기록을 담는 자료구조(지금은 동적 배열)를 바꿀 때: 함수 8개 중 6개의 본문이 바뀌고 선언은 그대로다. 유효한 기록의 정의(과목 이름 규칙, minutes 1–1440)를 바꿀 때: <code>valid_subject</code>, <code>minutes_parse</code>.</td><td><code>Rec</code>, 그 안의 배열, 기록마다 <code>Sub</code>와 <code>name</code> 문자열(복사본). 생성은 <code>new_record</code>와 <code>Sub_add</code>, 해제는 <code>record_free</code> 한 곳이다.</td><td>표준 라이브러리(<code>malloc</code>, <code>realloc</code>, <code>free</code>, <code>memcpy</code>, <code>strlen</code>, <code>strpbrk</code>)만 안다. 출력, 종료, 파일, argv는 모른다(<code>nm -u record.o</code>, 2026-10-01). <code>main.c</code>와 <code>storage.c</code>가 <code>record.h</code>를 통해 호출한다.</td></tr>
+    </table></div>
+    <p><code>storage.c</code>는 Stage 8을 진행 중이라 이 절에서 제외합니다.</p>
+
+    <h4 class="dh">경계를 정한 결정</h4>
+    <p>2026-09-29에 Stage 7에 진입하면서 grilling으로 정했고, 2026-10-01에 현재 코드와 대조했습니다.</p>
+    <div class="tbl"><div class="tbl"><table>
+      <tr><th>#</th><th>결정</th><th>이유</th></tr>
+      <tr><td class="c"><b>Q1</b></td><td>구조체 정의를 <code>record.c</code>로 숨긴다 (opaque type)</td><td><code>main</code>이 "배열로 담는다"는 비밀을 알면 core를 바꿀 때 <code>main</code>이 깨진다.</td></tr>
+      <tr><td class="c"><b>Q2</b></td><td><code>new_record</code> 하나가 배열까지 확보한다</td><td>생성이 한 번의 호출로 끝나면 호출하는 쪽은 <code>NULL</code>만 확인하면 된다. <code>Sub_add</code>의 "실패하면 자기가 확보한 것을 해제하고 <code>NULL</code>" 규칙을 생성에도 적용했다.</td></tr>
+      <tr><td class="c"><b>Q3</b></td><td>core는 출력하지 않는다</td><td>문구와 출력 위치는 interface의 약속이다. TUI와 테스트 <code>main</code>도 같은 core를 쓴다.</td></tr>
+      <tr><td class="c"><b>Q4</b></td><td>minutes·subject 검사는 core의 함수</td><td>유효한 기록의 정의다. add 입력, edit 입력, 파일 읽기가 모두 호출한다.</td></tr>
+      <tr><td class="c"><b>Q5</b></td><td>함수마다 실패는 한 종류 (core 기준)</td><td>검사 실패는 exit 2, <code>NULL</code>은 메모리 부족이라 exit 1. interface가 매핑한다.</td></tr>
+      <tr><td class="c"><b>Q6</b></td><td>연속 subject 경고는 interface가 argv만으로 판단</td><td>입력 습관에 대한 확인이지 기록의 규칙이 아니다. 파일에는 같은 과목이 연달아 있어도 정상이다.</td></tr>
+    </table></div></div>
+  </div>
+</section>
+
+<section class="part p1" id="fixed">
+  <h2 class="dh">틀렸다가 고친 것</h2>
+  <div class="block">
+    <div class="roadmap">
+      <a class="rm a" href="study-design-log.html#c4-2"><div class="t dh">Rec은 하나, 기록마다 있는 것은 Sub</div><div class="d">“…이러면 Rec 구조체인 r은 한 개만 있는 건가? 원래는, r이 각 '기록마다 존재'하는 구도였는데.”</div><div class="more">로그 ④에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c4-3"><div class="t dh">ID는 count와 다르고, 파일에 있는 것은 행이다</div><div class="d">“내가 혼란에 빠졌던 건, "메인 한 번"이 Rec 1번을 생성하는 건데, 그렇다면 실제 기록 상에서는 여러 Rec가 기록의 형태로 디스크에 존재할 것이고, …”</div><div class="more">로그 ④에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c5-1"><div class="t dh">검사 지점에는 파일 읽기도 들어간다</div><div class="d">“minutes하고 subject는 입력을 받았을 때 '유효한 지'를 검사하는 것이니까, 명령 실행쪽이지 않을까?”</div><div class="more">로그 ⑤에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c6-2"><div class="t dh">module 분리는 로직을 바꾸지 않는다</div><div class="d">“헤더가 왜 선언만 담는지를 물어본게 아니야. 내 말은 "왜 그런 노력을 해가면서까지 모듈 분리를 해야 하냐"였던 거긴 했어.”</div><div class="more">로그 ⑥에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c6-3"><div class="t dh">한 파일이어도 되나? 경계는 인위적이다</div><div class="d">“'기능적인 분리 및 함수 설정'만 잘 해놓으면, 한 파일로 만들어도 된다는 뜻으로 들리기도 하거든.”</div><div class="more">로그 ⑥에서 이어 보기 →</div></a>
+      <a class="rm a" href="study-design-log.html#c7-1"><div class="t dh">main이 둘 이상인 이유</div><div class="d">“이 부분만 명확하게 잡히면 고개를 끄덕이고 넘어갈 수 있을 것 같아. "두 개 이상의 main이 왜 필요할까?"”</div><div class="more">로그 ⑦에서 이어 보기 →</div></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>동작의 기준은 <code>projects/study-cli/README.md</code>와 각 stage의 brief입니다. 이 문서는 그 계약을 내가 읽은 방식과 내린 결정을 기록합니다. 원본은 같은 디렉터리의 <code>DESIGN.md</code>이고, 이 문서는 기준 시점의 정리본입니다.</p>
+</footer>
+
+</div>
+</body>
+</html>
