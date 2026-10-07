@@ -188,12 +188,12 @@ code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--s
     <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-5-C%EC%96%B8%EC%96%B4-2">WIL →</a>
   </div>
   <div class="cards">
-    <a class="card" data-week="5" data-topic="C언어" data-kind="note" data-src="c-workshop/projects/study-cli/study-design.html" href="study/week05/study-design.html">
+    <a class="card" data-week="5" data-topic="C언어" data-kind="note" data-src="c-workshop/projects/study-cli/study-design.html" href="https://benjohnbill.github.io/study/week05/study-design.html">
       <div class="t dh">study 설계 노트</div>
       <div class="d">공부 기록 CLI를 C로 키우는 설계의 현재 상태입니다. 왜 만드는지, 어디까지 됐는지, 명령과 경계선을 적었고, 세웠다가 고친 가설은 그때 쓴 문장 그대로 따라가는 설계 로그로 이어집니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · Stage 8 진행 중</span></div>
     </a>
-    <a class="card" data-week="5" data-topic="C언어" data-kind="deck" data-src="c-workshop/study/oop-in-c.html" href="study/week05/oop-in-c.html">
+    <a class="card" data-week="5" data-topic="C언어" data-kind="deck" data-src="c-workshop/study/oop-in-c.html" href="https://benjohnbill.github.io/study/week05/oop-in-c.html">
       <div class="t dh">C에서 객체지향 프로그래밍하기</div>
       <div class="d">study CLI의 구조체를 <code>record.c</code> 안에 숨겼더니 <code>main</code>이 <code>r-&gt;count</code>를 읽지 못하게 됐습니다. 불완전 타입이 몸체를 숨기는 원리를 컴파일과 링크 두 단계로 나눠 보고, 출력을 함수 포인터로 넘겨 양쪽이 서로를 모르게 만든 과정을 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · 2분 발표</span></div>
@@ -206,7 +206,7 @@ code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--s
     <h2 class="dh">6주차 · malloc-lab</h2>
   </div>
   <div class="cards">
-    <a class="card" data-week="6" data-topic="C언어" data-kind="deck" data-src="week06/study/bsize-cast-v2.html" href="study/week06/bsize-cast.html">
+    <a class="card" data-week="6" data-topic="C언어" data-kind="deck" data-src="week06/study/bsize-cast-v2.html" href="https://benjohnbill.github.io/study/week06/bsize-cast.html">
       <div class="t dh">Typecasting - 컴파일러가 통과시키는 오류</div>
       <div class="d">malloc-lab에서 경고 없이 컴파일된 할당기가 20MB를 다 쓰고 멈췄습니다. gdb로 따라가 보니 <code>first_fit()</code>이 함수 포인터 <code>bsize</code>를 <code>(size_t)</code>로 바꾼 값과 크기를 비교하고 있었습니다. 캐스트가 컴파일러의 경고를 어떻게 막았는지, 그리고 <code>unsigned int</code>가 4GB를 넘는 크기를 어떻게 잘라 내는지를 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">6주차</span><span>week6 / malloc-lab · 2분 발표</span></div>
