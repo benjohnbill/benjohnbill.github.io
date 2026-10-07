@@ -43,13 +43,25 @@ a.card:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 a.card .t{font-size:22px; letter-spacing:-0.01em; display:flex; align-items:baseline; gap:10px}
 a.card .t::after{content:"→"; font-family:"IBM Plex Mono",monospace; font-size:16px; color:var(--muted); transition:transform .12s ease}
 a.card:hover .t::after{transform:translateX(4px)}
-a.card.one .t{color:var(--s3)} a.card.two .t{color:var(--s2)} a.card.three .t{color:var(--s4)}
+a.card[data-topic="알고리즘"] .t{color:var(--s3)} a.card[data-topic="시스템"] .t{color:var(--s2)} a.card[data-topic="C언어"] .t{color:var(--s4)}
 .group{display:flex; flex-direction:column; gap:14px}
 .group + .group{margin-top:30px}
 a.card .d{font-size:15.5px; color:var(--ink-2); line-height:1.7}
 a.card .m{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted)}
-.sortbar{display:flex; align-items:center; gap:8px; font-family:"IBM Plex Mono",monospace; font-size:13px}
-.sortlabel{color:var(--muted); margin-right:4px}
+a.card .m{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px}
+.b{font-family:"IBM Plex Mono",monospace; font-size:11.5px; line-height:1.5; padding:0 7px; border:1px solid var(--line); color:var(--ink-2); background:var(--surface-2)}
+.b.wk{display:none}
+#list.by-topic .b.wk{display:inline}
+.gh{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.gh h2{margin:0}
+.wil{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--s2); text-decoration:none; white-space:nowrap}
+.wil:hover{text-decoration:underline}
+a.repo{color:var(--muted); text-decoration:none}
+a.repo:hover{color:var(--ink-2); text-decoration:underline}
+.essay{font-size:15.5px; color:var(--s2); text-decoration:none; align-self:flex-start}
+.essay:hover{text-decoration:underline}
+.intro{display:flex; flex-direction:column; gap:10px}
+.sortbar{display:flex; align-items:center; font-family:"IBM Plex Mono",monospace; font-size:13px}
 .sortbar button{font:inherit; color:var(--ink-2); background:var(--surface); border:1px solid var(--line);
   padding:6px 14px; cursor:pointer; transition:border-color .12s ease, background .12s ease}
 .sortbar button+button{margin-left:-1px}
@@ -57,8 +69,6 @@ a.card .m{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--mut
 .sortbar button.active{color:var(--surface); background:var(--ink); border-color:var(--ink)}
 .sortbar button:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 #list{display:flex; flex-direction:column}
-footer{border-top:1px solid var(--line); padding-top:18px; font-size:14px; color:var(--muted); line-height:1.7}
-footer a{color:var(--s2)}
 code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--surface-2); padding:0.1em 0.36em; border-radius:3px}
 @media (prefers-reduced-motion:reduce){ *{transition:none!important} }
 </style>
@@ -68,141 +78,168 @@ code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--s
 
 <header>
   <h1 class="dh">크래프톤 정글 학습 기록</h1>
-  <div class="repo">github.com/benjohnbill</div>
+  <a class="repo" href="https://github.com/benjohnbill">github.com/benjohnbill</a>
 </header>
 
-<p>크래프톤 정글을 지나면서 공부한 것을 문서로 남긴 페이지들의 목차입니다. 알고리즘은 한 문제를 여러 번 다시 짜는 과정을, 시스템은 C 코드가 기계에서 실제로 어떻게 굴러가는지를 다룹니다. 대부분 실제로 측정한 값과 직접 뜯어본 바이트를 함께 싣고 있습니다.</p>
+<div class="intro">
+  <p>크래프톤 정글을 지나면서 공부한 것을 문서로 남긴 페이지들의 목차입니다. 알고리즘은 한 문제를 여러 번 다시 짜는 과정을, 시스템은 C 코드가 기계에서 실제로 어떻게 굴러가는지를 다룹니다. 대부분 실제로 측정한 값과 직접 뜯어본 바이트를 함께 싣고 있습니다.</p>
+  <a class="essay" href="https://velog.io/@benjohnbill/jungle-essey">정글을 시작하며 쓴 글 →</a>
+</div>
 
-<div class="sortbar" role="group" aria-label="묶는 기준">
-  <span class="sortlabel">묶기</span>
-  <button type="button" data-mode="week" class="active" aria-pressed="true">주차별</button>
-  <button type="button" data-mode="topic" aria-pressed="false">주제별</button>
+<div class="sortbar" role="group" aria-label="보기 기준">
+  <button type="button" data-mode="week" class="active" aria-pressed="true">주차</button>
+  <button type="button" data-mode="topic" aria-pressed="false">주제</button>
 </div>
 
 <div id="list">
 <div class="group">
-  <h2 class="dh">2주차</h2>
+  <div class="gh">
+    <h2 class="dh">1주차 · 정글장터 - 크래프톤 당근</h2>
+  </div>
   <div class="cards">
-    <a data-week="2" data-topic="알고리즘" class="card one" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-three-stages.html">
+    <a class="card" data-week="1" data-kind="repo" data-src="https://github.com/Youjaeseon/jungle10team" href="https://github.com/Youjaeseon/jungle10team">
+      <div class="t dh">정글장터 저장소</div>
+      <div class="m"><span class="b">저장소</span><span class="b wk">1주차</span><span>github.com/Youjaeseon/jungle10team</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh">2주차 · 알고리즘(1)</h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-2-%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%A3%BC%EC%B0%A81">WIL →</a>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/quicksort-three-stages.html" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-three-stages.html">
       <div class="t dh">퀵 정렬 세 단계</div>
       <div class="d">같은 문제를 세 번 다시 짜면서 무엇이 잘못됐고 무엇을 바꿨는지, 실제 코드와 그림과 측정값으로 따라갑니다. 로무토 분할과의 대조를 부록으로 실었습니다.</div>
-      <div class="m">week2 / 2. advanced / 01_quick_sort</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 01_quick_sort</span></div>
     </a>
-    <a data-week="2" data-topic="알고리즘" class="card two" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-partition-rewrite.html">
+    <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/quicksort-partition-rewrite.html" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-partition-rewrite.html">
       <div class="t dh">분할 함수 재작성 기록</div>
       <div class="d">호어 분할을 바로잡던 과정의 중간 기록입니다. 같은 값만 있는 구간에서 두 지수가 어떻게 움직이는지를 회전 단위로 추적했습니다.</div>
-      <div class="m">week2 / 2. advanced / 01_quick_sort</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 01_quick_sort</span></div>
     </a>
-    <a data-week="2" data-topic="알고리즘" class="card three" href="https://benjohnbill.github.io/SW-AI-W02-03/priority-queue-stages.html">
+    <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/priority-queue-stages.html" href="https://benjohnbill.github.io/SW-AI-W02-03/priority-queue-stages.html">
       <div class="t dh">응급실 대기줄</div>
       <div class="d">같은 문제를 다섯 번 짠 기록입니다. 완전탐색이 왜 입력 모양에 따라 제곱도 되고 세제곱도 되는지, 접었던 버전이 왜 느리기 전에 이미 틀렸는지, 그리고 정석이라던 heapq가 왜 이 문제에서는 .sort()보다 느린지를 측정값으로 따라갑니다.</div>
-      <div class="m">week2 / 2. advanced / 03_priority_queue</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 03_priority_queue</span></div>
     </a>
   </div>
 </div>
 
 <div class="group">
-  <h2 class="dh">3주차</h2>
+  <div class="gh">
+    <h2 class="dh">3주차 · 알고리즘(2)</h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-3-%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%A3%BC%EC%B0%A82">WIL →</a>
+  </div>
   <div class="cards">
-    <a data-week="3" data-topic="알고리즘" class="card one" href="https://benjohnbill.github.io/SW-AI-W02-03/bfs-dfs-wave-and-thread.html">
+    <a class="card" data-week="3" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/bfs-dfs-wave-and-thread.html" href="https://benjohnbill.github.io/SW-AI-W02-03/bfs-dfs-wave-and-thread.html">
       <div class="t dh">물결과 실타래</div>
       <div class="d">BFS와 DFS를 한 걸음씩 직접 돌려 보는 문서입니다. 큐와 스택의 차이, visited의 정체, 재귀와 호출 스택의 관계를 다루고, 하노이 탑을 상태 그래프로 뒤집어 봅니다.</div>
-      <div class="m">week3 / 1. basic / 04_bfs · 05_dfs</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>week3 / 1. basic / 04_bfs · 05_dfs</span></div>
     </a>
-    <a data-week="3" data-topic="시스템" class="card three" href="https://benjohnbill.github.io/SW-AI-W02-03/preprocessor-hello-i.html">
+    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/preprocessor-hello-i.html" href="https://benjohnbill.github.io/SW-AI-W02-03/preprocessor-hello-i.html">
       <div class="t dh">hello.i 해부도</div>
       <div class="d">세 줄짜리 C 파일이 <code>gcc -E</code>를 거쳐 844줄이 되는 과정입니다. 늘어난 줄이 각각 무엇인지 세어서 나눠 놓았습니다.</div>
-      <div class="m">CS:APP · 컴파일 파이프라인</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 컴파일 파이프라인</span></div>
     </a>
-    <a data-week="3" data-topic="시스템" class="card three" href="https://benjohnbill.github.io/SW-AI-W02-03/linker-elf-hello.html">
+    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/linker-elf-hello.html" href="https://benjohnbill.github.io/SW-AI-W02-03/linker-elf-hello.html">
       <div class="t dh">hello.i에서 hello까지</div>
       <div class="d">위 문서의 다음 편입니다. 어셈블러가 주소 자리에 0을 적고 남긴 쪽지, 링커가 그것을 채우는 순간, 그리고 완성된 ELF 파일이 실행 직전에 스스로 문을 잠그는 과정을 바이트 단위로 확인했습니다.</div>
-      <div class="m">CS:APP · 링킹과 ELF</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 링킹과 ELF</span></div>
     </a>
-    <a data-week="3" data-topic="시스템" class="card three" href="https://benjohnbill.github.io/SW-AI-W02-03/threads-blueprints.html">
+    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/threads-blueprints.html" href="https://benjohnbill.github.io/SW-AI-W02-03/threads-blueprints.html">
       <div class="t dh">쓰레드 도면집</div>
       <div class="d">프로세스와 쓰레드, 가상 메모리 배치, 컨텍스트 스위칭, race condition을 도면 여섯 장으로 정리했습니다.</div>
-      <div class="m">CS:APP 1장 · 운영체제</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP 1장 · 운영체제</span></div>
     </a>
   </div>
 </div>
 
 <div class="group">
-  <h2 class="dh">4주차</h2>
+  <div class="gh">
+    <h2 class="dh">4주차 · C언어(1)</h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-4-C%EC%96%B8%EC%96%B4-1">WIL →</a>
+  </div>
   <div class="cards">
-    <a data-week="4" data-topic="시스템" class="card three" href="https://benjohnbill.github.io/SW-AI-C/study/csapp-ch3/">
+    <a class="card" data-week="4" data-topic="시스템" data-kind="note" data-src="week04/study/csapp-ch3/" href="https://benjohnbill.github.io/SW-AI-C/study/csapp-ch3/">
       <div class="t dh">3장 기계어 문제집</div>
       <div class="d">CS:APP 3장 3.1~3.7을 조원들과 함께 풀도록 만든 12문항 문제집입니다. 답을 확인하면 정답 근거와 더 찾아볼 검색어, 그리고 그 사실이 C 코딩과 gdb, malloc-lab, pintos에서 어디에 걸리는지가 함께 펼쳐집니다.</div>
-      <div class="m">week4 / CS:APP 3장 · 조별 학습</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">4주차</span><span>week4 / CS:APP 3장 · 조별 학습</span></div>
     </a>
-    <a data-week="4" data-topic="시스템" class="card two" href="https://benjohnbill.github.io/SW-AI-C/study/week04-array-in-c.html">
+    <a class="card" data-week="4" data-topic="시스템" data-kind="deck" data-src="week04/study/week04-array-in-c.html" href="https://benjohnbill.github.io/SW-AI-C/study/week04-array-in-c.html">
       <div class="t dh">함수에 들어가는 순간 배열이 아니다</div>
       <div class="d">파이썬 버블 정렬을 C로 옮기다 만난 일입니다. 함수 안에서 <code>sizeof(arr)</code>가 8인 이유를 퀴즈로 열고, 직접 만든 길이 함수가 왜 조용히 0을 돌려줬는지를 gdb 기록으로 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
-      <div class="m">week4 / porting/08_bubble_sort · 2분 발표</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">4주차</span><span>week4 / porting/08_bubble_sort · 2분 발표</span></div>
     </a>
   </div>
 </div>
 
 <div class="group">
-  <h2 class="dh">5주차</h2>
+  <div class="gh">
+    <h2 class="dh">5주차 · C언어(2) [Debugging lab]</h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-5-C%EC%96%B8%EC%96%B4-2">WIL →</a>
+  </div>
   <div class="cards">
-    <a data-week="5" data-topic="C언어 프로젝트" class="card two" href="study/week05/study-design.html">
+    <a class="card" data-week="5" data-topic="C언어" data-kind="note" data-src="c-workshop/projects/study-cli/study-design.html" href="study/week05/study-design.html">
       <div class="t dh">study 설계 노트</div>
       <div class="d">공부 기록 CLI를 C로 키우는 설계의 현재 상태입니다. 왜 만드는지, 어디까지 됐는지, 명령과 경계선을 적었고, 세웠다가 고친 가설은 그때 쓴 문장 그대로 따라가는 설계 로그로 이어집니다.</div>
-      <div class="m">c-workshop / projects/study-cli · Stage 8 진행 중</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · Stage 8 진행 중</span></div>
     </a>
-    <a data-week="5" data-topic="C언어 프로젝트" class="card two" href="study/week05/oop-in-c.html">
+    <a class="card" data-week="5" data-topic="C언어" data-kind="deck" data-src="c-workshop/study/oop-in-c.html" href="study/week05/oop-in-c.html">
       <div class="t dh">C에서 객체지향 프로그래밍하기</div>
       <div class="d">study CLI의 구조체를 <code>record.c</code> 안에 숨겼더니 <code>main</code>이 <code>r-&gt;count</code>를 읽지 못하게 됐습니다. 불완전 타입이 몸체를 숨기는 원리를 컴파일과 링크 두 단계로 나눠 보고, 출력을 함수 포인터로 넘겨 양쪽이 서로를 모르게 만든 과정을 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
-      <div class="m">c-workshop / projects/study-cli · 2분 발표</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · 2분 발표</span></div>
     </a>
   </div>
 </div>
 
 <div class="group">
-  <h2 class="dh">6주차</h2>
+  <div class="gh">
+    <h2 class="dh">6주차 · malloc-lab</h2>
+  </div>
   <div class="cards">
-    <a data-week="6" data-topic="C언어" class="card two" href="study/week06/bsize-cast.html">
+    <a class="card" data-week="6" data-topic="C언어" data-kind="deck" data-src="week06/study/bsize-cast-v2.html" href="study/week06/bsize-cast.html">
       <div class="t dh">Typecasting - 컴파일러가 통과시키는 오류</div>
       <div class="d">malloc-lab에서 경고 없이 컴파일된 할당기가 20MB를 다 쓰고 멈췄습니다. gdb로 따라가 보니 <code>first_fit()</code>이 함수 포인터 <code>bsize</code>를 <code>(size_t)</code>로 바꾼 값과 크기를 비교하고 있었습니다. 캐스트가 컴파일러의 경고를 어떻게 막았는지, 그리고 <code>unsigned int</code>가 4GB를 넘는 크기를 어떻게 잘라 내는지를 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
-      <div class="m">week6 / malloc-lab · 2분 발표</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">6주차</span><span>week6 / malloc-lab · 2분 발표</span></div>
     </a>
   </div>
 </div>
-
 </div>
-
-<footer>
-  문서는 주차별 저장소에 나뉘어 있습니다. 2~3주차는 <code>SW-AI-W02-03</code>의 <code>docs/</code>에, 4주차는 <code>SW-AI-C</code>의 <code>study/</code>에 있습니다. 5주차의 C 워크숍 문서는 원본 저장소가 공개되지 않아 이 저장소의 <code>study/week05/</code>에 복사본을 둡니다. 6주차 malloc-lab 발표 슬라이드도 원본이 저장소에 올라가지 않아 <code>study/week06/</code>에 둡니다. 이 페이지는 그 위에 얹은 목차일 뿐이라, 각 문서의 원래 주소는 그대로 살아 있습니다.
-</footer>
 
 </div>
 
 <script>
-/* 카드는 한 벌뿐이고, 버튼은 묶는 기준만 바꾼다. 기본은 주차별.
+/* 주차 보기는 손으로 쓴 마크업 그대로다(주차 이름과 WIL 링크가 여기에만 있다).
+   주제 보기는 카드를 data-topic으로 다시 묶고, 주제가 없는 카드는 맨 뒤 '그 외'에 둔다.
    마지막 선택은 이 브라우저에만 기억한다 */
 (() => {
   const list = document.getElementById('list');
+  const byWeek = Array.from(list.children).map(n => n.cloneNode(true));
   const cards = Array.from(list.querySelectorAll('a.card'));
   const buttons = Array.from(document.querySelectorAll('.sortbar button'));
-  const TOPICS = ['알고리즘', '시스템', 'C언어', '프로젝트'];
-  const topicsOf = (c) => c.dataset.topic.split(' ');   /* 한 카드가 여러 주제에 속할 수 있다 */
-  const has = (mode, c, k) => mode === 'week' ? c.dataset.week === k : topicsOf(c).includes(k);
-  const label = (mode, key) => mode === 'week' ? key + '주차' : key;
-  const keys = (mode) => mode === 'week'
-    ? [...new Set(cards.map(c => c.dataset.week))].sort((a, b) => a - b)
-    : TOPICS.filter(t => cards.some(c => topicsOf(c).includes(t)));
+  const topics = [...new Set(cards.map(c => c.dataset.topic).filter(Boolean))];
+
+  function group(title, members) {
+    const g = document.createElement('div'); g.className = 'group';
+    const gh = document.createElement('div'); gh.className = 'gh';
+    const h2 = document.createElement('h2'); h2.className = 'dh'; h2.textContent = title;
+    const box = document.createElement('div'); box.className = 'cards';
+    members.forEach(c => box.appendChild(c.cloneNode(true)));
+    gh.appendChild(h2); g.append(gh, box); return g;
+  }
 
   function render(mode) {
     list.textContent = '';
-    for (const k of keys(mode)) {
-      const group = document.createElement('div'); group.className = 'group';
-      const h2 = document.createElement('h2'); h2.className = 'dh'; h2.textContent = label(mode, k);
-      const box = document.createElement('div'); box.className = 'cards';
-      cards.filter(c => has(mode, c, k))
-           .sort((a, b) => a.dataset.week - b.dataset.week)   /* 묶음 안에서는 언제나 주차 순 */
-           .forEach(c => box.appendChild(c.cloneNode(true)));   /* 두 묶음에 나올 수 있어 복제본을 붙인다 */
-      group.append(h2, box); list.appendChild(group);
+    list.classList.toggle('by-topic', mode === 'topic');
+    if (mode === 'week') {
+      byWeek.forEach(n => list.appendChild(n.cloneNode(true)));
+    } else {
+      topics.forEach(t => list.appendChild(group(t, cards.filter(c => c.dataset.topic === t))));
+      const rest = cards.filter(c => !c.dataset.topic);
+      if (rest.length) list.appendChild(group('그 외', rest));
     }
     buttons.forEach(b => {
       const on = b.dataset.mode === mode;
