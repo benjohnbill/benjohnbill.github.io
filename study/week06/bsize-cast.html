@@ -64,7 +64,8 @@
 }
 @media (max-width: 600px) {
     :root { --title-size: clamp(1.3rem, 7vw, 2.4rem); }
-    .panels { grid-template-columns: 1fr !important; }
+    /* 한 줄에 패널 하나. 패널은 제 너비를 지키고, 넘치면 fitSlides() 가 장 전체를 줄인다 */
+    .panels { grid-template-columns: max-content !important; }
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -102,6 +103,7 @@ body {
     gap: var(--content-gap);
     padding: clamp(.5rem, 1.4vh, 1.1rem) var(--slide-padding);
     position: relative; z-index: 2;
+    transform-origin: 0 0;   /* 창 맞춤 — fitSlides() 가 넘치는 장만 줄인다 */
 }
 
 /* 머리띠 · 발띠 */
@@ -574,6 +576,7 @@ function scrub(root) {
     root.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
     root.querySelectorAll('.on').forEach(e => e.classList.remove('on'));
     root.querySelectorAll('[class=""]').forEach(e => e.removeAttribute('class'));
+    root.querySelectorAll('.slide-content[style]').forEach(e => e.removeAttribute('style'));   /* 창 맞춤 배율 */
     return root;
 }
 const slideHTML = () => slides.map(s => scrub(s.cloneNode(true)).innerHTML);
@@ -766,6 +769,45 @@ const fromHash = () => {
 };
 window.addEventListener('hashchange', () => { if (fromHash() !== cur) show(fromHash(), 0); });
 show(fromHash(), 0);
+
+/* ===========================================
+   창 맞춤 — 내용이 창보다 크면 장 전체를 같은 비율로 줄인다.
+   단계는 visibility 로만 숨기므로 자리가 이미 잡혀 있어, 단계마다 배율이 바뀌지 않는다
+   =========================================== */
+function fitSlides() {
+    document.querySelectorAll('.slide-content').forEach(c => {
+        c.style.transform = ''; c.style.width = '';
+        const cs = getComputedStyle(c);
+        const padL = parseFloat(cs.paddingLeft), padT = parseFloat(cs.paddingTop);
+        const availW = c.clientWidth - padL - parseFloat(cs.paddingRight);
+        const availH = c.clientHeight - padT - parseFloat(cs.paddingBottom);
+        /* 좁은 칸의 코드는 패널이 잘라 먹는다(overflow: hidden). 잘린 만큼 넓게 배치한 뒤 줄인다 */
+        for (let k = 0; k < 3; k++) {
+            const cut = Math.max(0, ...Array.from(c.querySelectorAll('pre'), p => p.scrollWidth - p.clientWidth));
+            if (cut < 1) break;
+            c.style.width = (c.offsetWidth + cut) + 'px';
+        }
+        let l = Infinity, t = Infinity, r = -Infinity, b = -Infinity;
+        for (const k of c.children) {
+            if (k.matches('aside.notes')) continue;
+            l = Math.min(l, k.offsetLeft);
+            t = Math.min(t, k.offsetTop);
+            r = Math.max(r, k.offsetLeft + Math.max(k.offsetWidth, k.scrollWidth));
+            b = Math.max(b, k.offsetTop + Math.max(k.offsetHeight, k.scrollHeight));
+        }
+        const s = Math.min(1, availW / (r - l), availH / (b - t));
+        if (!(s < 0.995)) { c.style.width = ''; return; }   /* 들어맞으면 원래 배치 그대로 */
+        /* 왼쪽은 여백에 붙이고, 세로는 가운데 */
+        const tx = padL - s * l, ty = padT + (availH - s * (b - t)) / 2 - s * t;
+        c.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+    });
+}
+let fitRaf = 0;
+const refit = () => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fitSlides); };
+window.addEventListener('resize', refit);
+document.addEventListener('input', refit);   /* 편집 모드에서 글자가 늘면 다시 맞춘다 */
+if (document.fonts) document.fonts.ready.then(refit);
+fitSlides();
 </script>
 </body>
 </html>
