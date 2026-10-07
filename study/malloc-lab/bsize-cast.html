@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typecasting - 컴파일러가 통과시키는 오류</title>
+
+<!-- 폰트: IBM Plex Sans KR(본문·제목) · IBM Plex Mono(코드) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!--
+  조작법
+    → / Space / PageDown : 이 슬라이드의 다음 단계, 단계를 다 보이면 다음 슬라이드
+    ← / PageUp           : 마지막 단계를 숨기고, 다 숨기면 이전 슬라이드
+    N                    : 발표자 노트 열기/닫기
+    E (또는 왼쪽 위 모서리) : 편집 모드 — 슬라이드 글자와 노트를 눌러 고친다
+    Ctrl+S               : 고친 내용을 HTML 파일로 내려받기 (편집 중 Esc → 커서 빼기)
+    Home / End           : 처음 / 끝
+    주소 끝 #3           : 3번 슬라이드로 바로 열기
+
+  고치는 법
+    단계  : 요소에 data-step="1", "2" … 를 붙이면 그 순서로 나타난다
+    노트  : 각 <section> 안의 <aside class="notes" data-sec="15"> 를 고친다 (슬라이드에는 안 보인다)
+-->
+
+<style>
+/* ===========================================
+   1. 테마 변수 — v1 덱(bsize-cast.html)과 같은 값
+   =========================================== */
+:root {
+    --paper:  #ffffff;
+    --ink:    #0a0a0a;
+    --acc:    #1638c7;              /* 유일한 악센트. 글자색으로만 쓴다 */
+    --hl:     rgba(22,56,199,.13);  /* 코드 줄 강조 바탕 — 채움은 여기서만 */
+    --grid:   #ebebeb;
+    --mut:    #5e5e5e;
+    --panel:  #f3f5fc;
+    --panel-b:#0a0a0a;
+
+    --font-body: 'IBM Plex Sans KR', sans-serif;
+    /* 코드 안의 한글은 Plex Sans KR 로 떨어진다 */
+    --font-mono: 'IBM Plex Mono', 'IBM Plex Sans KR', monospace;
+
+    --title-size: clamp(2.2rem, 4.4vw, 7rem);
+    --h2-size:    clamp(1.35rem, 2.15vw, 3rem);
+    --body-size:  clamp(0.95rem, 1.2vw, 1.7rem);
+    --small-size: clamp(0.72rem, 0.8vw, 1.15rem);
+    --code-size:  clamp(0.8rem, min(1.1vw, 2vh), 1.65rem);
+
+    --slide-padding: clamp(1rem, 4vw, 4rem);
+    --content-gap:   clamp(0.5rem, 1.8vh, 1.6rem);
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur:  0.5s;
+}
+@media (max-height: 700px) {
+    :root {
+        --title-size: clamp(1.4rem, 4.2vw, 2.6rem);
+        --h2-size:    clamp(1.05rem, 2.6vw, 1.8rem);
+        --content-gap: clamp(.35rem, 1.2vh, .8rem);
+    }
+}
+@media (max-width: 600px) {
+    :root { --title-size: clamp(1.3rem, 7vw, 2.4rem); }
+    .panels { grid-template-columns: 1fr !important; }
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+}
+
+/* ===========================================
+   2. 슬라이드 — 한 번에 한 장만 보인다
+   =========================================== */
+.slide {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    background: var(--paper);
+    opacity: 0; visibility: hidden;
+    transition: opacity .35s ease, visibility 0s linear .35s;
+}
+.slide.active {
+    opacity: 1; visibility: visible; z-index: 2;
+    transition: opacity .35s ease, visibility 0s;
+}
+/* 떠나는 장은 페이드하지 않고 밑에 그대로 둔다.
+   두 장이 동시에 반투명해지면 머리띠·격자처럼 같은 자리의 선이 흐려졌다 돌아온다 */
+.slide.leaving {
+    opacity: 1; visibility: visible; z-index: 1;
+    transition: none;
+}
+.slide-content {
+    flex: 1; min-height: 0;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: var(--content-gap);
+    padding: clamp(.5rem, 1.4vh, 1.1rem) var(--slide-padding);
+    position: relative; z-index: 2;
+}
+
+/* 머리띠 · 발띠 */
+.head {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 2px solid var(--ink);
+    padding: clamp(1rem, 3.2vh, 2.4rem) var(--slide-padding) clamp(.4rem, 1vh, .7rem);
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut);
+}
+.head .num { letter-spacing: .1em; }
+.foot {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--ink);
+    margin: 0 var(--slide-padding) clamp(1rem, 3vh, 2.2rem);
+    padding-top: clamp(.35rem, 1vh, .6rem);
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut);
+}
+
+h1, h2, p, li, td, .foot span, .head span { word-break: keep-all; text-wrap: pretty; }
+h1, h2 { text-wrap: balance; }
+
+/* ===========================================
+   3. 글자 요소
+   =========================================== */
+h1 {
+    font-weight: 700; line-height: 1.22; letter-spacing: -.02em;
+    font-size: var(--title-size); max-width: 20ch;
+}
+h1 em, h2 em { font-style: normal; color: var(--acc); }
+h2 {
+    font-weight: 700; line-height: 1.3; letter-spacing: -.015em;
+    font-size: var(--h2-size); max-width: 34ch;
+}
+.kicker {
+    align-self: flex-start;
+    font-family: var(--font-mono); font-size: var(--small-size);
+    color: var(--mut);
+}
+.rule { width: clamp(70px, 9vw, 180px); height: clamp(6px, .55vw, 12px); background: var(--ink); }
+
+/* 그때 했던 생각 */
+.said {
+    font-size: clamp(1.15rem, 1.6vw, 2.3rem); font-weight: 500; line-height: 1.4;
+}
+.said::before { content: "“"; color: var(--acc); font-weight: 700; margin-right: .1em; }
+.said::after  { content: "”"; color: var(--acc); font-weight: 700; margin-left: .1em; }
+
+/* 결론 한 줄 */
+.punch {
+    font-size: clamp(1rem, 1.3vw, 1.9rem); font-weight: 500; line-height: 1.5;
+    max-width: 62ch;
+}
+.punch::before {
+    content: ""; display: inline-block; width: .6em; height: .6em;
+    background: var(--acc); margin-right: .55em; vertical-align: .02em;
+}
+.punch b { color: var(--acc); font-weight: 700; }
+.punch code, .rows code, .hint code { font-family: var(--font-mono); font-weight: 600; }
+.hint {
+    font-size: var(--small-size); color: var(--mut); line-height: 1.55;
+    margin-top: .25em; padding-left: 1.15em;
+}
+.ask { font-size: clamp(1.2rem, 1.7vw, 2.4rem); font-weight: 700; }
+
+/* ===========================================
+   4. 코드 패널 — gdb · 컴파일러 출력도 같은 밝은 패널을 쓴다
+   =========================================== */
+.panels {
+    display: grid; gap: clamp(.6rem, 1.6vw, 1.4rem);
+    grid-template-columns: 1fr 1fr; align-items: start;
+}
+.panel {
+    border: 2px solid var(--panel-b);
+    background: var(--panel);
+    min-width: 0; overflow: hidden;
+}
+.panel.accent { border-color: var(--acc); }
+/* 패널 이름표 — 밝게. 검은 띠를 쓰지 않는다 */
+.cap {
+    display: flex; justify-content: space-between; gap: .8em;
+    font-family: var(--font-mono); font-size: var(--small-size); font-weight: 500;
+    letter-spacing: .04em; color: var(--mut);
+    padding: .4em .8em; border-bottom: 1.5px solid currentColor;
+    border-bottom-color: rgba(10,10,10,.25);
+}
+.cap .side { color: var(--acc); }
+pre {
+    font-family: var(--font-mono); font-size: var(--code-size);
+    line-height: 1.55; white-space: pre; tab-size: 4;
+    padding: clamp(.5rem, 1.4vh, 1rem) clamp(.7rem, 1.3vw, 1.2rem);
+    overflow: hidden;
+}
+pre.wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
+.big pre { font-size: clamp(.95rem, min(1.4vw, 2.5vh), 2.2rem); }
+.c-hit { color: var(--acc); font-weight: 600; }
+.c-com { color: #8a8a8a; }
+.c-dim { color: #9a9a9a; }
+.hl { background: var(--hl); color: var(--acc); font-weight: 600; display: block; }
+.hl .c-com { color: var(--acc); opacity: .75; }
+
+/* 에디터 밑줄 흉내 — 물결 (악센트색) */
+.squiggle { text-decoration: underline wavy var(--acc); text-underline-offset: .22em; text-decoration-thickness: 1.5px; }
+
+/* 타입 밑에 그어지는 파란 선 — 단계가 켜지면 왼쪽에서 오른쪽으로 */
+.uline {
+    background: linear-gradient(var(--acc), var(--acc)) no-repeat left 100% / 0% 3px;
+    padding-bottom: 2px;
+    color: var(--acc); font-weight: 600;
+    transition: background-size .9s var(--ease) .45s;
+}
+.on .uline, .uline.on { background-size: 100% 3px; }
+.uline-2 { transition-delay: .9s; }
+
+/* 비교 표 */
+.rows {
+    border-collapse: collapse; background: var(--paper);
+    font-size: clamp(.9rem, 1.15vw, 1.7rem);
+}
+.rows th, .rows td { border: 2px solid var(--ink); padding: .45em .9em; text-align: left; vertical-align: top; }
+.rows th { font-family: var(--font-mono); font-weight: 500; font-size: var(--small-size); letter-spacing: .06em; color: var(--mut); }
+.rows td.code { font-family: var(--font-mono); white-space: nowrap; }
+.rows td.msg { font-family: var(--font-mono); font-size: .88em; }
+.rows tr.hit td { color: var(--acc); font-weight: 600; }
+
+/* 비교식 한 줄 — 왜 매번 extend_heap 인지 */
+.chain {
+    font-family: var(--font-mono); font-size: var(--code-size); line-height: 1.5;
+    border-left: 3px solid var(--acc); padding: .15em 0 .15em .7em;
+}
+.chain span { white-space: nowrap; }
+.chain b { color: var(--acc); font-weight: 600; }
+
+/* 슬라이드별 배치 */
+.s2-grid { grid-template-columns: max-content minmax(0, 1fr); }
+.s2-grid pre { font-size: clamp(.72rem, min(.95vw, 1.85vh), 1.45rem); }
+.col { display: flex; flex-direction: column; gap: clamp(.35rem, 1vh, .8rem); min-width: 0; }
+.s5-grid { grid-template-columns: max-content max-content; justify-content: start; align-items: stretch; }
+.s5-grid > .col > .panel { flex: 1; }   /* 두 패널 높이를 맞춰서 아래 문장의 줄을 맞춘다 */
+.s4-grid { grid-template-columns: minmax(0, max-content) max-content; justify-content: start; align-items: stretch; }
+/* 시그니처: size_t 를 받아 unsigned int 를 돌려준다 */
+.sig { background: var(--hl); color: var(--acc); font-weight: 600; padding: 0 .15em; }
+.closing h1 { max-width: none; text-wrap: wrap; font-size: clamp(1.8rem, 3.3vw, 5.2rem); }
+.closing h1 + h1 { color: var(--acc); }
+.thanks { font-size: var(--body-size); color: var(--mut); }
+
+/* ===========================================
+   5. 단계 공개 — 자리는 미리 잡아 두고 보이기만 바꾼다 (화면이 튀지 않게)
+   =========================================== */
+[data-step] {
+    opacity: 0; visibility: hidden; transform: translateY(14px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s linear var(--dur);
+}
+[data-step].on {
+    opacity: 1; visibility: visible; transform: none;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; transition-delay: 0s !important; animation-duration: .01ms !important; }
+    [data-step] { transform: none; }
+}
+
+/* ===========================================
+   6. 발표자 노트 — N 키. 기본은 숨김
+   =========================================== */
+aside.notes { display: none; }
+#notesPanel {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 9997;
+    max-height: 42vh; overflow: auto;
+    background: var(--paper); border-top: 2px solid var(--ink);
+    box-shadow: 0 -8px 24px rgba(0,0,0,.08);
+    padding: clamp(.7rem, 1.6vh, 1.2rem) var(--slide-padding);
+}
+#notesPanel[hidden] { display: none; }
+#notesPanel .meta {
+    display: flex; gap: 1.4em; flex-wrap: wrap;
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut);
+    margin-bottom: .5em;
+}
+#notesPanel .meta b { color: var(--acc); font-weight: 600; }
+#notesPanel .body { font-size: clamp(1rem, 1.25vw, 1.6rem); line-height: 1.65; }
+#notesPanel .body p + p { margin-top: .35em; }
+#notesPanel .body .st { font-family: var(--font-mono); color: var(--acc); font-weight: 600; margin-right: .4em; }
+
+/* 진행 막대 · 이동 점 · 안내 */
+.progress-bar {
+    position: fixed; top: 0; left: 0; height: 4px; width: 100%;
+    background: var(--acc); z-index: 9999;
+    transform: scaleX(0); transform-origin: left center; transition: transform .2s linear;
+}
+.nav-dots {
+    position: fixed; right: clamp(.6rem, 1.4vw, 1.4rem); top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: .55rem; z-index: 9998;
+}
+.nav-dots button {
+    width: 9px; height: 9px; padding: 0; border: 1.5px solid var(--ink);
+    background: transparent; border-radius: 50%; cursor: pointer;
+}
+.nav-dots button.active { background: var(--acc); border-color: var(--acc); transform: scale(1.35); }
+.keyboard-hint {
+    position: fixed; left: clamp(.6rem,1.4vw,1.4rem); bottom: clamp(.4rem,1vh,.8rem);
+    font-family: var(--font-mono); font-size: clamp(.55rem,1vh,.72rem); color: var(--mut);
+    z-index: 9998; opacity: .75; animation: hint-out .5s 5s forwards;
+}
+@keyframes hint-out { to { opacity: 0; visibility: hidden; } }
+
+/* ===========================================
+   7. 브라우저 편집 모드 — E 키 또는 왼쪽 위 모서리
+   =========================================== */
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; }
+.edit-toggle {
+    position: fixed; top: 14px; left: 14px;
+    width: 42px; height: 42px; border: 2px solid var(--ink);
+    background: var(--paper); border-radius: 50%; cursor: pointer;
+    font-size: 17px; line-height: 1;
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+    z-index: 10001;
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.edit-toggle.active { background: var(--acc); border-color: var(--acc); }
+.edit-banner {
+    position: fixed; top: 4px; left: 0; right: 0;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--font-mono); font-size: clamp(.6rem,1.1vh,.78rem);
+    padding: .45em 1em; text-align: center;
+    transform: translateY(-120%); transition: transform .3s var(--ease);
+    z-index: 10000;
+}
+body.edit-active .edit-banner { transform: none; }
+/* 편집 중에는 단계를 전부 보여 준다 — 숨은 글자도 고칠 수 있게 */
+body.edit-active [data-step] { opacity: 1; visibility: visible; transform: none; }
+body.edit-active [contenteditable] { outline: 1px dashed var(--acc); outline-offset: 3px; }
+body.edit-active [contenteditable]:focus { outline: 2px solid var(--acc); background: rgba(22,56,199,.05); }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav-dots" id="navDots" aria-label="슬라이드 이동"></nav>
+<div class="keyboard-hint">→ 다음 단계 · ← 이전 · N 발표자 노트 · E 편집 · Ctrl+S 저장</div>
+
+<div class="edit-hotzone" aria-hidden="true"></div>
+<button class="edit-toggle" id="editToggle" title="편집 모드 (E)" aria-label="편집 모드 켜기">✏️</button>
+<div class="edit-banner" id="editBanner">편집 모드 · 글자를 눌러 고치세요 · N 노트도 고칠 수 있어요 · Esc 커서 빼기 · Ctrl+S 파일 저장 · E 끄기</div>
+
+<!-- ============================================================
+     01 · 증상 (15초)
+     ============================================================ -->
+<section class="slide" id="s1">
+    <div class="head"><span>증상 · mdriver</span><span class="num">01 / 06</span></div>
+    <div class="slide-content">
+        <span class="kicker">Krafton Jungle · Week 06 · malloc-lab</span>
+        <h1><em>Type Casting</em> - 컴파일러가 통과시켜주는 오류</h1>
+        <div class="panel">
+            <div class="cap"><span>mdriver · coalescing-bal.rep</span><span class="side">실제 기록</span></div>
+<pre class="wrap">ERROR: mem_sbrk failed. Ran out of memory...
+Checking mm_malloc for correctness, ERROR [trace 0, line 7673]: mm_malloc failed.</pre>
+        </div>
+        <p class="ask">- 20MB가 바닥났어요</p>
+    </div>
+    <div class="foot"><span>malloc-lab/mm.c · first_fit()</span></div>
+    <aside class="notes" data-sec="15">
+        <p>컴파일 돌려서 이상 없이 실행이 됐는데, 20MB를 초과하는 오류가 발생했어요. 왜 그랬을까요?</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     02 · gdb (30초) — 단계 4개
+     ============================================================ -->
+<section class="slide" id="s2">
+    <div class="head"><span>gdb · coalescing-bal.rep</span><span class="num">02 / 06</span></div>
+    <div class="slide-content">
+        <h2>알고 싶으면 GDB</h2>
+        <p class="said" data-step="1">왜 메모리가 계속 늘어났을까?</p>
+        <div class="panels s2-grid">
+            <div class="col" data-step="2">
+                <div class="panel">
+                    <div class="cap"><span>gdb · break mem_sbrk + bt 3</span><span class="side">실제 기록</span></div>
+<pre>mem_sbrk(4104)  heap = 4120 bytes
+<span class="c-hit">#1  extend_heap (size=4095) at mm.c:175</span>
+#2  mm_malloc (size=4095) at mm.c:224
+
+mem_sbrk(8200)  heap = 8224 bytes
+<span class="c-hit">#1  extend_heap (size=8190) at mm.c:175</span>
+#2  mm_malloc (size=8190) at mm.c:224
+
+<span class="c-dim">   ⋮   같은 패턴 7,670번</span>
+
+mem_sbrk(4104)  heap = <span class="c-hit">20969440</span> bytes
+<span class="c-hit">#1  extend_heap (size=4095) at mm.c:175</span>
+#2  mm_malloc (size=4095) at mm.c:224</pre>
+                </div>
+                <p class="punch">extend_heap()이 malloc마다 나오는데, 왜 find_fit()이 먹통일까?</p>
+            </div>
+            <div class="col" data-step="3">
+                <div class="panel accent">
+                    <div class="cap"><span>gdb · first_fit 안에서 track</span><span class="side">실제 기록</span></div>
+<pre>&gt;103   if (GET_ALLOC(bp) == FREE &amp;&amp; <span class="uline">GET_SIZE(bp) &gt;= (size_t)bsize</span>){
+
+ 1 size          = 8190
+ 2 GET_ALLOC(bp) = 0
+ 3 <span class="uline uline-2">GET_SIZE(bp)</span>  = 8208
+<span class="hl"> 4 bsize         = {unsigned int (size_t)} 0x555555557c88 &lt;bsize&gt;</span><span class="hl"> 5 (size_t)bsize = 93824992246920</span></pre>
+                </div>
+                <p class="chain"><span>8208 &gt;= 93824992246920 → <b>거짓</b></span><br><span>→ first_fit() = NULL → <b>extend_heap()</b></span></p>
+                <p class="punch"><b>8208</b>바이트 빈 블록이 바로 앞에 있는데, 비교 대상이 <b>93조.</b></p>
+                <p class="punch" data-step="4">함수 포인터 <code>bsize</code>를 <code>(size_t)</code>로 바꾼 값</p>
+            </div>
+        </div>
+    </div>
+    <div class="foot"><span>break mem_sbrk · bt 3 · track</span></div>
+    <aside class="notes" data-sec="30">
+        <p><span class="st">▸1</span>엥? 왜 실행됐는데 총 메모리를 다 썼다고 하지? 그럴 리 없는데.</p>
+        <p><span class="st">▸2</span>GDB로 한 번 찾아볼까? 근데 로그를 보니 heap이 계속 늘어나기만 하고, 이유는 안 알려 줘요.</p>
+        <p><span class="st">▸3</span>진짜 뭐지 하다가 bsize 값을 띄워 봤더니… 8208바이트 빈 블록이 바로 앞에 있는데, 비교 대상이 93조예요.</p>
+        <p><span class="st">▸4</span>알고 보니 함수 포인터 bsize를 size_t로 바꾼 값이 93조였어요.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     03 · 경고를 지운 캐스트 (30초) — 단계 4개
+     ============================================================ -->
+<section class="slide" id="s3">
+    <div class="head"><span>clangd · -std=gnu23 -Wall</span><span class="num">03 / 06</span></div>
+    <div class="slide-content">
+        <h2>무엇이 문제였을까? -&nbsp;<em>Type Casting</em></h2>
+        <p class="said" data-step="1">생각해 보니 처음엔 빨간 밑줄이 있었던 것 같기도…</p>
+        <table class="rows" data-step="2">
+            <tr><th>first_fit() 의 조건</th><th>에디터 (clangd)</th></tr>
+            <tr><td class="code">GET_SIZE(bp) &gt;= <span class="squiggle">bsize</span></td><td class="msg">Ordered comparison between pointer and integer ('unsigned int' and 'unsigned int (*)(size_t)')</td></tr>
+            <tr class="hit"><td class="code">GET_SIZE(bp) &gt;= (size_t)bsize</td><td class="msg">진단 없음 (gcc -Wall도 0개)</td></tr>
+        </table>
+        <div data-step="3">
+            <p class="punch">Casting을 붙이면, 컴파일러는 <b>개발자의 의도</b>라고 믿는다.</p>
+        </div>
+        <div class="col" data-step="4">
+            <div class="panel">
+                <div class="cap"><span>mm.c</span><span class="side">타입</span></div>
+<pre>#define GET_SIZE(bp)  ((<span class="uline">unsigned int</span>)(...))
+static <span class="uline uline-2">unsigned int</span> bsize(size_t psize)</pre>
+            </div>
+            <p class="punch">그러나.. 애초에 둘 다 <b>unsigned int</b>였다. 애초에 내 실수..</p>
+        </div>
+    </div>
+    <div class="foot"><span>(size_t)bsize = 함수 주소를 정수로</span></div>
+    <aside class="notes" data-sec="30">
+        <p><span class="st">▸1</span>생각해 보니 처음엔 빨간 밑줄이 있었던 것 같기도 해요.</p>
+        <p><span class="st">▸2</span>캐스트 없이 쓰면 에디터가 포인터와 정수를 비교한다고 경고해요. 캐스트를 붙이면 아무 말도 안 해요.</p>
+        <p><span class="st">▸3</span>아, 캐스팅해 버리니까 그냥 경고를 지워 버렸구나. 제가 size_t로 캐스팅하니까 컴파일러는 개발자의 의도라고 알았나 봐요.</p>
+        <p><span class="st">▸4</span>그리고 생각해 보니 GET_SIZE부터가 unsigned int라서, 캐스팅 자체가 애초에 잘못이었어요. (5초)</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     04 · 퀴즈 (15초)
+     ============================================================ -->
+<section class="slide" id="s4">
+    <div class="head"><span>퀴즈 · bsize()</span><span class="num">04 / 06</span></div>
+    <div class="slide-content">
+        <h2><em>unsigned int</em> 타입의 <em>bsize(4GB + 16)</em>은 몇일까?</h2>
+        <div class="panels big s4-grid">
+            <div class="panel accent">
+                <div class="cap"><span>mm.c · bsize()</span><span class="side">?</span></div>
+<pre>static <span class="sig">unsigned int</span> bsize(<span class="sig">size_t psize</span>){
+    return HSIZE + <span class="c-hit">(unsigned int)</span>exact_psize(psize) + FSIZE;
+}</pre>
+            </div>
+            <div class="panel">
+                <div class="cap"><span>상수</span></div>
+<pre>HSIZE = FSIZE = 4
+DSIZE = 8
+
+<span class="hl">UINT_MAX = 2³² − 1   // 약 4GB</span></pre>
+            </div>
+        </div>
+    </div>
+    <div class="foot"><span>bsize()</span></div>
+    <aside class="notes" data-sec="15">
+        <p>여기서 퀴즈 하나 낼게요. 이 상태에서 bsize에 4GB 더하기 16을 넣으면 몇이 나올까요? size_t로 받아서 unsigned int로 돌려준다는 점을 잘 보세요.</p>
+        <p>(3초쯤 기다린다)</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     05 · 답 (20초) — 단계 3개
+     ============================================================ -->
+<section class="slide" id="s5">
+    <div class="head"><span>답 · bsize(4294967312)</span><span class="num">05 / 06</span></div>
+    <div class="slide-content">
+        <h2><em>unsigned int</em>는 4GB가 넘는 정보를 잘라낸다</h2>
+        <div class="panels s5-grid">
+            <div class="col" data-step="1">
+                <div class="panel accent">
+                    <div class="cap"><span>gcc -Wall -Wextra -Wconversion · 0 warnings</span><span class="side">실제 기록</span></div>
+<pre>request      = 4294967312
+<span class="hl">bsize(req)   = 24</span></pre>
+                </div>
+                <p class="punch">4GB + 24가 아니라 <b>24</b></p>
+            </div>
+            <div class="col" data-step="2">
+                <div class="panel">
+                    <div class="cap"><span>mm.c · mm_malloc()</span><span class="side">가드</span></div>
+<pre>void *mm_malloc(size_t size){
+<span class="hl">    if (size == 0 || size &gt;= MAX_HEAP){   // MAX_HEAP = 20MB</span>        return NULL;
+    }</pre>
+                </div>
+                <p class="punch">물론, 우리 malloc()은 <b>20MB 가드</b>가 먼저 막는다.</p>
+            </div>
+        </div>
+        <div class="col" data-step="3">
+            <div class="panel" style="align-self:flex-start">
+                <div class="cap"><span>mm.c · exact_psize() · 제안</span><span class="side">주석</span></div>
+<pre><span class="c-hit">/* MAX_HEAP(20MB) 가드가 있어서 4GB를 넘는 크기는 여기 오지 않는다.
+   가드가 없다면 이 캐스트는 크기를 잘라 낸다. */</span>
+return (unsigned int)psize;</pre>
+            </div>
+            <p class="punch">그래도 <b>왜 괜찮은지</b> 주석으로 남겨 두는 게 좋지 않을까?</p>
+        </div>
+    </div>
+    <div class="foot"><span>24는 bsize()의 값 · malloc(4GB+16)은 가드에서 NULL</span></div>
+    <aside class="notes" data-sec="20">
+        <p><span class="st">▸1</span>답은 24예요. 4GB + 24가 아니라 24. exact_psize() 안의 (unsigned int) 캐스트가 앞자리를 잘라 냈어요.</p>
+        <p><span class="st">▸2</span>그런데 실제 malloc은 여기까지 오지도 않아요. mm_malloc 맨 앞에서 20MB 가드가 먼저 NULL을 돌려줘요. 그래서 저희 코드에선 이 캐스트가 문제가 안 돼요. 저도 실제로 그렇게 짜 뒀어요.</p>
+        <p><span class="st">▸3</span>다만 캐스트를 쓴다면, 왜 괜찮은지 주석으로 남겨 두는 게 맞다고 생각해요.</p>
+        <p>(질문이 오면) 캐스트를 빼면 -Wconversion이 "conversion from 'size_t' to 'unsigned int' may change value"라고 알려 줘요. 캐스트를 붙이면 조용해져요. -Wall만으로는 둘 다 조용해요.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     06 · 마무리 (10초)
+     ============================================================ -->
+<section class="slide closing" id="s6">
+    <div class="head"><span>정리</span><span class="num">06 / 06</span></div>
+    <div class="slide-content">
+        <h1>컴파일러가 조용한 건, 내가 조용히 시켰기 때문일 수 있다.</h1>
+        <h1>조용히 시켰다면, 왜 그래도 되는지 적어 둔다.</h1>
+        <div class="rule"></div>
+        <p class="thanks">감사합니다</p>
+    </div>
+    <div class="foot"><span>2026-10 · WEEK 06</span><span>malloc-lab</span></div>
+    <aside class="notes" data-sec="10">
+        <p>컴파일러가 조용한 건, 내가 조용히 시켰기 때문일 수 있어요. 그러니까 조용히 시켰다면, 왜 그래도 되는지 적어 두려고 해요.</p>
+        <p>감사합니다.</p>
+    </aside>
+</section>
+
+<div id="notesPanel" hidden aria-live="polite">
+    <div class="meta"><span id="nSlide"></span><span>목표 <b id="nSec"></b>초</span><span id="nStep"></span><span id="nTotal"></span></div>
+    <div class="body" id="nBody"></div>
+</div>
+
+<script>
+/* ===========================================
+   덱 조작기 — 단계 공개 · 해시 · 노트
+   =========================================== */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total = slides.length;
+
+/* ===========================================
+   브라우저 편집기 — 고친 내용은 localStorage 에 자동 보관,
+   Ctrl+S 로 HTML 파일을 내려받는다
+   =========================================== */
+const STORE = 'week06-bsize-cast-v2';
+const EDITABLE = '.slide > .head span:not(.num), .slide > .foot span, '
+               + '.slide-content :is(h1, h2, .kicker, p, th, td, .cap span)';
+
+/* 편집 흔적(contenteditable, 단계 표시)을 걷어낸다 */
+function scrub(root) {
+    root.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+    root.querySelectorAll('.on').forEach(e => e.classList.remove('on'));
+    root.querySelectorAll('[class=""]').forEach(e => e.removeAttribute('class'));
+    return root;
+}
+const slideHTML = () => slides.map(s => scrub(s.cloneNode(true)).innerHTML);
+
+/* 파일 자체가 바뀌면 예전 저장본을 쓰지 않는다 */
+const signature = (() => {
+    const src = slideHTML().join('\u0000');
+    let h = 5381;
+    for (let i = 0; i < src.length; i++) h = ((h * 33) ^ src.charCodeAt(i)) >>> 0;
+    return src.length + '-' + h.toString(36);
+})();
+
+function saveLocal() {
+    try { localStorage.setItem(STORE, JSON.stringify({ sig: signature, data: slideHTML() })); } catch (e) {}
+}
+(function restoreLocal() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+        if (!saved) return;
+        if (saved.sig !== signature) {
+            /* 파일이 바뀌었다. 지우지 않고 옆으로 치워 둔다 */
+            localStorage.setItem(STORE + ':stale', JSON.stringify(saved));
+            localStorage.removeItem(STORE);
+            return;
+        }
+        slides.forEach((s, i) => { if (saved.data[i]) s.innerHTML = saved.data[i]; });
+    } catch (e) {}
+})();
+const pad = n => String(n).padStart(2, '0');
+let cur = 0;
+
+/* 슬라이드의 단계 수 = data-step 의 최댓값 */
+const maxStep = s => Math.max(0, ...Array.from(s.querySelectorAll('[data-step]'), e => Number(e.dataset.step)));
+const shown = s => Number(s.dataset.shown || 0);
+
+function setShown(s, n) {
+    s.dataset.shown = n;
+    s.querySelectorAll('[data-step]').forEach(e => e.classList.toggle('on', Number(e.dataset.step) <= n));
+    renderNotes();
+}
+
+function show(i, n) {
+    i = Math.max(0, Math.min(total - 1, i));
+    if (i !== cur) {
+        const out = slides[cur];
+        slides.forEach(s => s.classList.remove('leaving'));
+        out.classList.add('leaving');
+        clearTimeout(show.t);
+        show.t = setTimeout(() => out.classList.remove('leaving'), 400);   /* 새 장의 페이드(.35s)가 끝난 뒤 */
+    }
+    cur = i;
+    slides.forEach((s, k) => {
+        s.classList.toggle('active', k === i);
+        s.setAttribute('aria-hidden', k === i ? 'false' : 'true');
+    });
+    setShown(slides[i], n);
+    if (location.hash !== '#' + (i + 1)) history.replaceState(null, '', '#' + (i + 1));
+    document.getElementById('progressBar').style.transform = 'scaleX(' + (i / Math.max(1, total - 1)) + ')';
+    Array.from(document.getElementById('navDots').children).forEach((b, k) => b.classList.toggle('active', k === i));
+}
+
+function next() {
+    const s = slides[cur];
+    if (shown(s) < maxStep(s)) setShown(s, shown(s) + 1);
+    else if (cur < total - 1) show(cur + 1, 0);
+}
+function prev() {
+    const s = slides[cur];
+    if (shown(s) > 0) setShown(s, shown(s) - 1);
+    else if (cur > 0) show(cur - 1, maxStep(slides[cur - 1]));   /* 돌아가면 그 장은 다 보인 상태 */
+}
+
+/* 발표자 노트 */
+const notesPanel = document.getElementById('notesPanel');
+const totalSec = slides.reduce((a, s) => a + Number((s.querySelector('aside.notes') || {}).dataset?.sec || 0), 0);
+function renderNotes() {
+    const s = slides[cur];
+    const a = s.querySelector('aside.notes');
+    document.getElementById('nSlide').textContent = pad(cur + 1) + ' / ' + pad(total);
+    document.getElementById('nSec').textContent = a ? a.dataset.sec : '–';
+    document.getElementById('nStep').textContent = maxStep(s) ? '단계 ' + shown(s) + ' / ' + maxStep(s) : '단계 없음';
+    document.getElementById('nTotal').textContent = '전체 ' + totalSec + '초';
+    document.getElementById('nBody').innerHTML = a ? a.innerHTML : '';
+}
+
+/* 슬라이드 번호 · 이동 점 */
+slides.forEach((s, i) => {
+    const num = s.querySelector('.head .num');
+    if (num) num.textContent = pad(i + 1) + ' / ' + pad(total);
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', (i + 1) + '번 슬라이드로');
+    b.addEventListener('click', () => show(i, 0));
+    document.getElementById('navDots').appendChild(b);
+});
+
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') { e.preventDefault(); exportFile(); return; }
+    if (e.target.isContentEditable) {
+        if (e.key === 'Escape') e.target.blur();   /* 커서를 빼야 화살표가 다시 넘긴다 */
+        return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.code === 'KeyE') { toggleEdit(); return; }
+    if (e.code === 'KeyN') { notesPanel.hidden = !notesPanel.hidden; return; }   /* 한글 입력 상태에서도 동작 */
+    switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ':
+            e.preventDefault(); next(); break;
+        case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+            e.preventDefault(); prev(); break;
+        case 'Home': e.preventDefault(); show(0, 0); break;
+        case 'End':  e.preventDefault(); show(total - 1, 0); break;
+    }
+});
+
+let x0 = null;
+document.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = x0 - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) dx > 0 ? next() : prev();
+    x0 = null;
+}, { passive: true });
+
+/* 편집 모드 */
+let editing = false;
+const editToggle = document.getElementById('editToggle');
+const nBody = document.getElementById('nBody');
+
+function toggleEdit() {
+    editing = !editing;
+    document.body.classList.toggle('edit-active', editing);
+    editToggle.classList.toggle('active', editing);
+    editToggle.setAttribute('aria-label', editing ? '편집 모드 끄기' : '편집 모드 켜기');
+    const els = [...document.querySelectorAll(EDITABLE), nBody];
+    els.forEach(el => editing ? el.setAttribute('contenteditable', 'true') : el.removeAttribute('contenteditable'));
+    if (!editing && document.activeElement) document.activeElement.blur();
+}
+
+/* 슬라이드 글자 → 바로 보관 */
+document.addEventListener('input', e => {
+    if (e.target === nBody) {
+        const a = slides[cur].querySelector('aside.notes');   /* 노트 패널 → 원래 aside 로 되돌려 쓴다 */
+        if (a) a.innerHTML = nBody.innerHTML;
+    }
+    saveLocal();
+});
+/* 붙여넣기는 글자만 — 다른 곳의 서식이 따라 들어오지 않게 */
+document.addEventListener('paste', e => {
+    if (!e.target.closest || !e.target.closest('[contenteditable]')) return;
+    e.preventDefault();
+    document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+});
+
+function exportFile() {
+    const doc = document.documentElement.cloneNode(true);
+    scrub(doc);
+    doc.querySelector('body').removeAttribute('class');
+    doc.querySelectorAll('.slide').forEach(s => {
+        s.classList.remove('active'); s.removeAttribute('aria-hidden'); s.removeAttribute('data-shown');
+    });
+    doc.querySelector('#navDots').innerHTML = '';          /* 스크립트가 다시 만든다 */
+    doc.querySelector('#progressBar').removeAttribute('style');
+    doc.querySelector('#notesPanel').setAttribute('hidden', '');
+    doc.querySelectorAll('#notesPanel span[id], #notesPanel b[id], #nBody').forEach(e => e.textContent = '');
+    doc.querySelector('#editToggle').className = 'edit-toggle';
+    doc.querySelector('#editToggle').setAttribute('aria-label', '편집 모드 켜기');
+    scrub(doc);
+    const blob = new Blob(['<!DOCTYPE html>\n' + doc.outerHTML], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'bsize-cast-v2.html';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* 편집 버튼 — 왼쪽 위 모서리에 마우스를 올리면 나타난다 */
+let hideTimer = null;
+const hotzone = document.querySelector('.edit-hotzone');
+hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimer); editToggle.classList.add('show'); });
+hotzone.addEventListener('mouseleave', () => {
+    hideTimer = setTimeout(() => { if (!editing) editToggle.classList.remove('show'); }, 400);
+});
+editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+editToggle.addEventListener('click', toggleEdit);
+
+/* #3 → 3번 슬라이드 */
+const fromHash = () => {
+    const n = parseInt(location.hash.slice(1), 10);
+    return Number.isFinite(n) ? n - 1 : 0;
+};
+window.addEventListener('hashchange', () => { if (fromHash() !== cur) show(fromHash(), 0); });
+show(fromHash(), 0);
+</script>
+</body>
+</html>
