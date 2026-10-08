@@ -35,6 +35,12 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   that week's repository (the `origin` of `~/dev/krafton-jungle/weekNN/`),
   plus a `WIL →` link to that week's velog post, added when the post exists
   (`jungle-week-init` asks for it at the start of the next week).
+- **Shared CSS.** Every written page (the index and the notes; not the decks)
+  links `https://benjohnbill.github.io/assets/site.css` by absolute URL, so an
+  original opened from disk gets it too. It holds the color tokens (light and
+  dark, by `prefers-color-scheme` only), the three font slots (`--font-head`,
+  `--font-body`, `--font-code`; meta text uses the code slot) and the base
+  elements. A page keeps only its own shapes and page-only tokens.
 - **Moved pages.** `study/c-workshop/` and `study/malloc-lab/` hold redirect
   stubs for links shared before 2026-10-08. Do not delete them or add pages
   there.

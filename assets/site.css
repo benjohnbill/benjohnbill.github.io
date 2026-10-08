@@ -1,0 +1,46 @@
+/* Shared base for every written page on this site (index and notes; not decks).
+   Link it by absolute URL so an original opened from disk gets it too:
+   <link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+   Page-specific shapes stay in the page; colors and fonts live here. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap");
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+:root{
+  color-scheme:light dark;
+  --font-head:"Pretendard Variable",Pretendard,"IBM Plex Sans KR",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans KR",system-ui,-apple-system,sans-serif;
+  --font-code:"IBM Plex Mono","IBM Plex Sans KR",ui-monospace,Menlo,monospace;
+
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F5F5F5; --sunken:#F7F7F7;
+  --ink:#111111; --ink-2:#3F3F3F; --muted:#737373; --line:#DEDEDE;
+  --s1:#AF4227; --s1-soft:#F9E6E1; --s1-rail:#D9917E;
+  --s2:#0A7165; --s2-soft:#DDF0EC; --s2-rail:#6FBBB0;
+  --s3:#453AA6; --s3-soft:#E5E3F7; --s3-rail:#9A92DC;
+  --s4:#7E6416; --s4-soft:#F5EEDA; --s4-rail:#C3A85C;
+  /* topic markers on the index; same contrast on the page background */
+  --t-alg:#5347BF; --t-sys:#09645A; --t-c:#884918;
+}
+@media (prefers-color-scheme:dark){ :root{
+  --bg:#0B0B0B; --surface:#0B0B0B; --surface-2:#171717; --sunken:#121212;
+  --ink:#EDEDED; --ink-2:#B4B4B4; --muted:#858585; --line:#2A2A2A;
+  --s1:#F09479; --s1-soft:#2B1712; --s1-rail:#7E4030;
+  --s2:#4FC5B3; --s2-soft:#0D2A26; --s2-rail:#2C6B61;
+  --s3:#A398F3; --s3-soft:#1B1836; --s3-rail:#4E4696;
+  --s4:#D8B65E; --s4-soft:#2A2312; --s4-rail:#7A6631;
+  --t-alg:#ABA0F4; --t-sys:#3EBDAA; --t-c:#DF9C63;
+}}
+
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--font-body); font-size:17px; line-height:1.85;
+  word-break:keep-all; overflow-wrap:break-word}
+img{max-width:100%}
+[hidden]{display:none!important}
+.dh{font-family:var(--font-head); font-weight:700}
+a{color:var(--s2)}
+code,pre{font-family:var(--font-code)}
+code{font-size:0.88em; background:var(--surface-2); padding:0.1em 0.36em; border-radius:3px}
+.meta{font-family:var(--font-code); font-size:12.5px; color:var(--muted)}
+.home{align-self:flex-start; font-family:var(--font-code); font-size:13px; color:var(--muted); text-decoration:none}
+.home:hover{color:var(--ink-2); text-decoration:underline}
+@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
