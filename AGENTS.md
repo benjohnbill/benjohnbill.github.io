@@ -30,9 +30,11 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   시스템, C언어; a new topic also needs a title-color rule), `data-kind`
   (`note`, `deck`, `repo`), `data-src`, and an absolute `href`. Card shape:
   `skills/jungle-deck/reference/local-template.md`, "Built-in card".
-- **Week headings.** `N주차 · <week name>` plus a `WIL →` link to that
-  week's velog post, added when the post exists (`jungle-week-init` asks for
-  it at the start of the next week).
+- **Week headings.** `N주차 · <week name>`, wrapped in
+  `<a class="wk-repo" href="https://github.com/<owner>/<repo>">` pointing at
+  that week's repository (the `origin` of `~/dev/krafton-jungle/weekNN/`),
+  plus a `WIL →` link to that week's velog post, added when the post exists
+  (`jungle-week-init` asks for it at the start of the next week).
 - **Moved pages.** `study/c-workshop/` and `study/malloc-lab/` hold redirect
   stubs for links shared before 2026-10-08. Do not delete them or add pages
   there.
