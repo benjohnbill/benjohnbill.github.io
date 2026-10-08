@@ -41,6 +41,21 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   dark, by `prefers-color-scheme` only), the three font slots (`--font-head`,
   `--font-body`, `--font-code`; meta text uses the code slot) and the base
   elements. A page keeps only its own shapes and page-only tokens.
+  Box rules for a page on this base (decided 2026-10-08):
+  1. Outer boxes (cards, panels, tables) get `1px solid var(--line)` and no
+     fill. `--surface` equals `--bg`, so a box told apart by fill alone has
+     no edge.
+  2. Fill (`--surface-2`) goes one level in only: code, bins, highlighted
+     rows. Never put fill on fill.
+  3. Color marks meaning only. Page accent tokens and their `-soft` fills
+     stay as they are.
+  4. No shadows and no large corner radii on outer boxes. One line is the
+     only surface cue.
+  5. Each note starts its `.wrap` (or `.page`) with
+     `<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>`.
+  A page with its own token names keeps the names and points them at site
+  tokens (`--rule:var(--line)`, `--paper:var(--bg)`). Dark `--line`
+  (`#2A2A2A`) is shared with the index cards: ask before raising it.
 - **Moved pages.** `study/c-workshop/` and `study/malloc-lab/` hold redirect
   stubs for links shared before 2026-10-08. Do not delete them or add pages
   there.
