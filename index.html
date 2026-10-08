@@ -4,40 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>크래프톤 정글 학습 기록</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2312201F'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%234FC5B3'%3EJ%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111111'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EJ%3C/text%3E%3C/svg%3E">
 <meta name="description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드로 남긴 목차입니다.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="크래프톤 정글 학습 기록">
 <meta property="og:description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드로 남긴 목차입니다.">
 <meta property="og:url" content="https://benjohnbill.github.io/">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gowun+Dodum&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
 <style>
-:root{
-  color-scheme:light dark;
-  --bg:#EFF3F3; --surface:#FFFFFF; --surface-2:#E6ECEC;
-  --ink:#12201F; --ink-2:#3D4E4D; --muted:#6D7D7C; --line:#CDD8D8;
-  --s2:#0A7165; --s3:#453AA6; --s4:#8A4A18;
-}
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --bg:#0B1413; --surface:#121C1B; --surface-2:#182322;
-  --ink:#E0EAE9; --ink-2:#A8B7B6; --muted:#7E8D8C; --line:#243130;
-  --s2:#4FC5B3; --s3:#A398F3; --s4:#E0A06A;
-}}
-:root[data-theme="dark"]{
-  --bg:#0B1413; --surface:#121C1B; --surface-2:#182322;
-  --ink:#E0EAE9; --ink-2:#A8B7B6; --muted:#7E8D8C; --line:#243130;
-  --s2:#4FC5B3; --s3:#A398F3; --s4:#E0A06A;
-}
-*{box-sizing:border-box}
-body{margin:0; background:var(--bg); color:var(--ink);
-  font-family:"Gowun Dodum",system-ui,-apple-system,sans-serif; font-size:17px; line-height:1.85}
-img{max-width:100%}
-[hidden]{display:none!important}
-.dh{font-family:"Do Hyeon","Gowun Dodum",sans-serif}
 .wrap{max-width:780px; margin:0 auto; padding:56px 22px 90px; display:flex; flex-direction:column; gap:34px}
 header{display:flex; flex-direction:column; gap:12px; padding-bottom:26px; border-bottom:3px solid var(--ink)}
 h1{margin:0; font-size:clamp(32px,6vw,50px); line-height:1.12; letter-spacing:-0.02em}
-.repo{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--muted)}
+.repo{font-family:var(--font-code); font-size:13px; color:var(--muted)}
 p{margin:0; color:var(--ink-2); max-width:60ch}
 h2{margin:0 0 4px; font-size:20px; letter-spacing:-0.01em}
 .cards{display:flex; flex-direction:column; gap:16px}
@@ -47,20 +25,21 @@ a.card{display:flex; flex-direction:column; gap:7px; padding:22px 22px 24px;
 a.card:hover{border-color:var(--muted); background:var(--surface-2)}
 a.card:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 a.card .t{font-size:22px; letter-spacing:-0.01em; display:flex; align-items:baseline; gap:10px}
-a.card .t::after{content:"→"; font-family:"IBM Plex Mono",monospace; font-size:16px; color:var(--muted); transition:transform .12s ease}
+a.card .t::after{content:"→"; font-family:var(--font-code); font-size:16px; color:var(--muted); transition:transform .12s ease}
 a.card:hover .t::after{transform:translateX(4px)}
-a.card[data-topic="알고리즘"] .t{color:var(--s3)} a.card[data-topic="시스템"] .t{color:var(--s2)} a.card[data-topic="C언어"] .t{color:var(--s4)}
+a.card[data-topic="알고리즘"]{--tc:var(--t-alg)} a.card[data-topic="시스템"]{--tc:var(--t-sys)} a.card[data-topic="C언어"]{--tc:var(--t-c)}
+a.card[data-topic] .t::before{content:""; flex:none; width:8px; height:8px; background:var(--tc); align-self:center; margin-right:-2px}
 .group{display:flex; flex-direction:column; gap:14px}
 .group + .group{margin-top:30px}
 a.card .d{font-size:15.5px; color:var(--ink-2); line-height:1.7}
-a.card .m{font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--muted)}
+a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
 a.card .m{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px}
-.b{font-family:"IBM Plex Mono",monospace; font-size:11.5px; line-height:1.5; padding:0 7px; border:1px solid var(--line); color:var(--ink-2); background:var(--surface-2)}
+.b{font-family:var(--font-code); font-size:11.5px; line-height:1.5; padding:0 7px; border:1px solid var(--line); color:var(--ink-2); background:var(--surface-2)}
 .b.wk{display:none}
 #list.by-topic .b.wk{display:inline}
 .gh{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap}
 .gh h2{margin:0}
-.wil{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--s2); text-decoration:none; white-space:nowrap}
+.wil{font-family:var(--font-code); font-size:13px; color:var(--s2); text-decoration:none; white-space:nowrap}
 .wil:hover{text-decoration:underline}
 a.wk-repo{color:inherit; text-decoration:none}
 a.wk-repo:hover{text-decoration:underline; text-underline-offset:4px}
@@ -69,7 +48,7 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
 .essay{font-size:15.5px; color:var(--s2); text-decoration:none; align-self:flex-start}
 .essay:hover{text-decoration:underline}
 .intro{display:flex; flex-direction:column; gap:10px}
-.sortbar{display:flex; align-items:center; font-family:"IBM Plex Mono",monospace; font-size:13px}
+.sortbar{display:flex; align-items:center; font-family:var(--font-code); font-size:13px}
 .sortbar button{font:inherit; color:var(--ink-2); background:var(--surface); border:1px solid var(--line);
   padding:6px 14px; cursor:pointer; transition:border-color .12s ease, background .12s ease}
 .sortbar button+button{margin-left:-1px}
@@ -77,8 +56,6 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
 .sortbar button.active{color:var(--surface); background:var(--ink); border-color:var(--ink)}
 .sortbar button:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 #list{display:flex; flex-direction:column}
-code{font-family:"IBM Plex Mono",monospace; font-size:0.88em; background:var(--surface-2); padding:0.1em 0.36em; border-radius:3px}
-@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
 </style>
 </head>
 <body>

@@ -1,42 +1,15 @@
-:root{
-  color-scheme:light dark;
-  --bg:#EFF3F3; --surface:#FFFFFF; --surface-2:#E6ECEC; --sunken:#DBE3E3;
-  --ink:#12201F; --ink-2:#3D4E4D; --muted:#6D7D7C; --line:#CDD8D8;
-  --s1:#AF4227; --s1-soft:#F9E6E1; --s1-rail:#D9917E;
-  --s2:#0A7165; --s2-soft:#DDF0EC; --s2-rail:#6FBBB0;
-}
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --bg:#0B1413; --surface:#121C1B; --surface-2:#182322; --sunken:#0E1817;
-  --ink:#E0EAE9; --ink-2:#A8B7B6; --muted:#7E8D8C; --line:#243130;
-  --s1:#F09479; --s1-soft:#2B1712; --s1-rail:#7E4030;
-  --s2:#4FC5B3; --s2-soft:#0D2A26; --s2-rail:#2C6B61;
-}}
-:root[data-theme="dark"]{
-  --bg:#0B1413; --surface:#121C1B; --surface-2:#182322; --sunken:#0E1817;
-  --ink:#E0EAE9; --ink-2:#A8B7B6; --muted:#7E8D8C; --line:#243130;
-  --s1:#F09479; --s1-soft:#2B1712; --s1-rail:#7E4030;
-  --s2:#4FC5B3; --s2-soft:#0D2A26; --s2-rail:#2C6B61;
-}
+/* Colors, fonts and base elements: https://benjohnbill.github.io/assets/site.css */
 
-*{box-sizing:border-box}
-body{margin:0; background:var(--bg); color:var(--ink);
-  font-family:"Gowun Dodum",system-ui,-apple-system,sans-serif;
-  font-size:17px; line-height:1.85; word-break:keep-all; overflow-wrap:break-word}
 .wrap{max-width:920px; margin:0 auto; padding:44px 22px 90px; display:flex; flex-direction:column; gap:12px}
-code,pre{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
 p code,li code{white-space:nowrap}
-code{font-size:0.85em; background:var(--surface-2); padding:0.1em 0.38em; border-radius:3px}
-.dh{font-family:"Do Hyeon","Gowun Dodum",sans-serif; font-weight:400}
-a{color:var(--s2)}
+code{font-size:0.85em; padding:0.1em 0.38em}
 
 /* header */
 header{display:flex; flex-direction:column; gap:16px; padding-bottom:34px; margin-bottom:22px; border-bottom:3px solid var(--ink)}
 h1{margin:0; font-size:clamp(38px,7vw,62px); line-height:1.1; letter-spacing:-0.02em}
 .sub{margin:0; font-size:18px; color:var(--ink-2); max-width:62ch}
-.meta{font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--muted)}
 .roadmap{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-top:6px}
-.rm{padding:16px 16px 18px; border-top:4px solid; background:var(--surface); display:flex; flex-direction:column; gap:5px; text-decoration:none; color:inherit}
-.rm{border-color:var(--s2)}
+.rm{padding:16px 16px 18px; border:1px solid var(--line); border-top:4px solid var(--s2); background:var(--surface); display:flex; flex-direction:column; gap:5px; text-decoration:none; color:inherit}
 .rm .n{font-size:15px; line-height:1.2; color:var(--muted)}
 .rm .t{font-size:17px}
 .rm .d{font-size:14px; color:var(--muted); line-height:1.6}
@@ -86,8 +59,8 @@ figure{margin:0; background:var(--surface); border:1px solid var(--line); paddin
 figcaption{font-size:15px; color:var(--ink-2); border-top:1px solid var(--line); padding-top:14px; max-width:72ch}
 .fig-title{font-size:19px}
 figure svg{width:100%; height:auto; color:var(--ink); min-width:560px}
-figure svg text{font-family:"IBM Plex Mono","Gowun Dodum",monospace; fill:currentColor}
-figure svg .k{font-family:"Gowun Dodum",sans-serif}
+figure svg text{font-family:var(--font-code); fill:currentColor}
+figure svg .k{font-family:var(--font-body)}
 figure svg .mut{fill:var(--muted)}
 figure svg .box{fill:var(--surface-2); stroke:currentColor; stroke-width:1.3}
 figure svg .box.dash{stroke-dasharray:5 4; fill:none}
@@ -101,7 +74,7 @@ figure svg .arrowhead{fill:currentColor}
 .tbl{overflow-x:auto}
 table{border-collapse:collapse; width:100%; background:var(--surface); font-size:15.5px}
 th,td{border:1px solid var(--line); padding:8px 11px; text-align:left; vertical-align:top; color:var(--ink-2); line-height:1.65}
-th{background:var(--surface-2); color:var(--ink); font-weight:400; font-family:"Do Hyeon","Gowun Dodum",sans-serif; font-size:16px}
+th{background:var(--surface-2); color:var(--ink); font-weight:600; font-family:var(--font-head); font-size:15.5px}
 td b{color:var(--ink); font-weight:400}
 td.c{white-space:nowrap}
 tr.cont td:first-child{border-top-color:transparent}
@@ -109,7 +82,7 @@ tr.cont td:first-child{border-top-color:transparent}
 /* code */
 .codebox{border:1px solid var(--line); background:var(--surface); overflow:hidden}
 .codebox .cap{padding:9px 15px; background:var(--surface-2); border-bottom:1px solid var(--line);
-  font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-2); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
+  font-family:var(--font-code); font-size:12.5px; color:var(--ink-2); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap}
 .codebox pre{margin:0; padding:14px 0; overflow-x:auto; font-size:13.5px; line-height:1.65; white-space:normal}
 .codebox pre .ln{display:block; padding:0 18px; white-space:pre; min-height:1.65em}
 .codebox pre .ln.mark{background:var(--s2-soft); box-shadow:inset 3px 0 0 var(--s2-rail)}
@@ -122,7 +95,6 @@ tr.cont td:first-child{border-top-color:transparent}
 
 footer{border-top:1px solid var(--line); margin-top:30px; padding-top:18px; font-size:14px; color:var(--muted); line-height:1.7}
 footer p{color:var(--muted); font-size:14px}
-@media (prefers-reduced-motion:reduce){ *{transition:none!important} }
 
 /* product page */
 .part > h2{margin:0; font-size:clamp(26px,4vw,36px); line-height:1.2; letter-spacing:-0.02em}
@@ -131,7 +103,7 @@ footer p{color:var(--muted); font-size:14px}
 .bar .fill{display:block; height:12px; background:var(--line)}
 .bar .done .fill{background:var(--s2)}
 .bar .now .fill{background:var(--s2-rail)}
-.bar .st{font-family:"Do Hyeon","Gowun Dodum",sans-serif; font-size:16px; color:var(--ink)}
+.bar .st{font-family:var(--font-head); font-weight:600; font-size:15.5px; color:var(--ink)}
 .bar .f{font-size:13.5px; line-height:1.55; color:var(--ink-2)}
 .bar .gate{font-size:13px; color:var(--muted)}
 @media (max-width:760px){ .bar{grid-template-columns:repeat(2,minmax(0,1fr))} }
@@ -149,5 +121,3 @@ a.rm:hover .t,a.rm:hover .more{text-decoration:underline}
 .cell.c2{background:var(--s2); opacity:.62}
 .cell.c3{background:var(--s2); opacity:.82}
 .cell.c4{background:var(--s2)}
-.home{align-self:flex-start; font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--muted); text-decoration:none}
-.home:hover{color:var(--ink-2); text-decoration:underline}
