@@ -101,6 +101,24 @@ u { text-decoration-thickness: 2px; text-underline-offset: .25em; }
 .logs pre.rows > span { white-space: pre-wrap; word-break: break-all; }
 .logs pre { font-size: 13px; }
 .cap { margin: 0 0 4px; font-size: .85rem; }
+/* section 5 steps: one row = one shared step; cell = code line + the log line it printed.
+   tag says same or different; green cell = only one side has it (same meaning as diff green) */
+.steps { margin-top: 12px; table-layout: fixed; }
+.steps thead th:first-child { width: 8.5em; }
+.steps th[scope="row"] { color: var(--ink); font-weight: 600; }
+.steps .tag { display: block; width: max-content; margin-top: 4px; font: 400 .75rem var(--font-code); border: 1px solid var(--line); border-radius: 3px; padding: 1px 8px; }
+.steps pre { margin: 0; padding: 0; background: none; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.steps pre .cm { color: var(--muted); }
+.steps samp { display: block; margin-top: 6px; padding: 4px 8px; background: var(--surface-2); border-radius: 3px; font: 13px/1.5 var(--font-code); overflow-wrap: anywhere; }
+.steps td.d-add samp { background: none; border: 1px solid var(--line); }
+@media (max-width: 760px) {
+  .steps, .steps tbody, .steps tr, .steps th, .steps td { display: block; width: auto; }
+  .steps thead { display: none; }
+  .steps tr { border-bottom: 1px solid var(--line); padding: 4px 0; }
+  .steps th, .steps td { border: 0; }
+  .steps .tag { display: inline-block; margin: 0 0 0 .6em; }
+  .steps td::before { content: attr(data-h); display: block; font-weight: 600; font-size: .85rem; margin-bottom: 2px; }
+}
 </style>
 <script>
 /* each button opens or closes its own pane; open panes split the shared area */
@@ -288,20 +306,29 @@ gdb -q -batch -x w.gdb ./panic        # ⓒ write만 모아 보기</pre>
 </div>
 
 <h2>5. 실물: Pintos와 Linux의 커널 PANIC</h2>
-<p class="lead">Linux 커널도 밑에 받아 줄 OS 없음 → 같은 두 갈래: 기계를 끄거나 재시작, 아니면 무한 대기</p>
-<div class="ends">
-<div><pre><span class="cm">/* Pintos: lib/kernel/debug.c:41-43 */</span>
-if (power_off_when_done)  <span class="cm">// -q 옵션</span>
-    power_off ();         <span class="cm">// QEMU 끄기</span>
-for (;;);                 <span class="cm">// 아니면 영원히</span></pre></div>
-<div><pre><span class="cm">/* Linux: kernel/panic.c:573-616 (v6.18), 발췌 */</span>
-if (panic_timeout != 0)   <span class="cm">// panic=N 부팅 옵션</span>
-    emergency_restart (); <span class="cm">// 재시작</span>
-pr_emerg ("---[ end Kernel panic …");
-for (i = 0; ; i += PANIC_TIMER_STEP)
-    mdelay (PANIC_TIMER_STEP); <span class="cm">// 아니면 영원히</span></pre></div>
-</div>
-<p>Linux <code>panic (fmt, ...)</code>도 같은 가변 인자 구조: <code>va_start</code> → <code>vpanic (fmt, args)</code> → <code>va_end</code> (<code>kernel/panic.c:621-628</code>)</p>
+<p class="lead">Linux 커널도 밑에 받아 줄 OS 없음 → 같은 순서, 같은 두 갈래: 끄거나(재시작) 무한 대기</p>
+<table class="steps">
+<thead><tr><th>단계</th><th>Pintos · <code>lib/kernel/debug.c</code></th><th>Linux v6.18 · <code>kernel/panic.c</code></th></tr></thead>
+<tbody>
+<tr><th scope="row">끼어들기 막기<span class="tag">같음</span></th><td data-h="Pintos"><pre>intr_disable ();  <span class="cm">// :20</span>
+level++;          <span class="cm">// :23 재귀 세기</span></pre></td><td data-h="Linux"><pre>local_irq_disable (); <span class="cm">// :451</span>
+panic_try_start ()    <span class="cm">// :470 첫 CPU만</span></pre></td></tr>
+<tr><th scope="row">가변 인자<span class="tag">같음</span></th><td data-h="Pintos"><pre>va_start → vprintf → va_end <span class="cm">// :27-30</span></pre></td><td data-h="Linux"><pre>va_start → vpanic → va_end  <span class="cm">// :625-627</span></pre></td></tr>
+<tr><th scope="row">메시지<span class="tag">같음</span></th><td data-h="Pintos"><pre>printf ("Kernel PANIC at %s:%d in %s(): ", …); <span class="cm">// :25</span></pre><samp>Kernel PANIC at ../../tests/threads/tests.c:93 in fail(): test failed</samp></td><td data-h="Linux"><pre>pr_emerg ("Kernel panic - not syncing: %s\n", buf); <span class="cm">// :482</span></pre><samp>Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)</samp></td></tr>
+<tr><th scope="row">호출 스택<span class="tag">같음</span></th><td data-h="Pintos"><pre>debug_backtrace (); <span class="cm">// :32</span></pre><samp>Call stack: 0x8004214331 0x8004217c5b …</samp></td><td data-h="Linux"><pre>dump_stack ();      <span class="cm">// :489</span></pre><samp>Call Trace: vpanic+0x2cc/0x310 panic+0x5b/0x60 …</samp></td></tr>
+<tr><th scope="row">옵션이면 끝냄<span class="tag">다름</span></th><td data-h="Pintos"><pre>if (power_off_when_done)  <span class="cm">// -q</span>
+    power_off ();         <span class="cm">// :41-42 QEMU 끄기</span></pre><samp>Timer: 4621 ticks</samp></td><td data-h="Linux"><pre>if (panic_timeout != 0)  <span class="cm">// panic=N</span>
+    emergency_restart (); <span class="cm">// :573-581 재시작</span></pre><samp>Rebooting in 3 seconds..</samp></td></tr>
+<tr><th scope="row">끝 표시<span class="tag">Linux만</span></th><td data-h="Pintos">—</td><td data-h="Linux" class="d-add"><pre>pr_emerg ("---[ end …"); <span class="cm">// :595</span></pre><samp>---[ end Kernel panic - not syncing: VFS: … ]---</samp></td></tr>
+<tr><th scope="row">무한 대기<span class="tag">같음</span></th><td data-h="Pintos"><pre>for (;;); <span class="cm">// :43</span></pre></td><td data-h="Linux"><pre>for (i = 0; ; i += PANIC_TIMER_STEP)
+    mdelay (PANIC_TIMER_STEP); <span class="cm">// :609-615</span></pre></td></tr>
+</tbody>
+</table>
+<p>차이는 둘: 옵션이 켜졌을 때 Pintos는 끄고 Linux는 재시작, Linux만 끝 표시 줄을 남김</p>
+<details class="fold">
+<summary><span>원본 로그</span></summary>
+<div class="in">
+<p class="cap">굵은 줄은 PANIC 첫 줄, 초록 줄은 끝으로 가는 코드(Pintos backtrace·통계, Linux 마지막 줄)가 낸 것. <code>panic=3</code>으로 부팅하면 끝이 <code>Rebooting in 3 seconds..</code> 후 재시작</p>
 <div class="ends logs">
 <div><p class="cap">Pintos · <code>mlfqs-load-1.output</code> (2026-10-13, MLFQS 미구현으로 실패)</p>
 <pre class="rows"><span class="dim">(mlfqs-load-1) FAIL: load average stayed below 0.5 for more than 45 seconds</span>
@@ -324,7 +351,8 @@ for (i = 0; ; i += PANIC_TIMER_STEP)
 <span class="d-add">[    1.837802] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0) ]---</span>
 <span class="d-cm">(이후 출력 없음, 40초 뒤 timeout으로 강제 종료)</span></pre></div>
 </div>
-<p>굵은 줄은 PANIC 첫 줄, 초록 줄은 끝으로 가는 코드(Pintos backtrace·통계, Linux 마지막 줄)가 낸 것. <code>panic=3</code>으로 부팅하면 끝이 <code>Rebooting in 3 seconds..</code> 후 재시작</p>
+</div>
+</details>
 <details class="fold">
 <summary><span>Linux PANIC 재현</span></summary>
 <div class="in">
