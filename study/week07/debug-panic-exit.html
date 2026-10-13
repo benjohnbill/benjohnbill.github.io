@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>exit(1)을 받아 줄 OS가 없을 때</title>
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+/* type scale (2026-10-14): body 17 → 19px. Every rem below follows the root, so one number moves the page.
+   headings = major third (×1.25): h3 24 · h2 30 · h1 37 · lead = 1.1× (story beats) · secondary = .85× (16px, Korean floor)
+   code = 16px: mono glyphs run wider and taller than Plex Sans KR, and 16px keeps the ~90-col diff lines inside the frame */
+html { font-size: 19px; }
+body { font-size: 1rem; }
+.lead { font-size: 1.1rem; line-height: 1.75; }
+.meta { font-size: .75rem; }
+/* page tokens → site tokens: harness = s3, user = s4, kernel = s1; diff add = s2, del = s1 */
+/* one accent: green = added in that version (diff, kernel log); red = removed (diff only). Versions are told apart by ①②③, not by color. */
+:root { --add: var(--s2-soft); --del: var(--s1-soft); }
+/* versions: one hue (site s3), deeper = closer to the machine. harness light → user mid → kernel full */
+.v1 { --v: var(--s3-rail); }
+.v2 { --v: color-mix(in srgb, var(--s3) 55%, var(--s3-rail)); }
+.v3 { --v: var(--s3); }
+.sw { display: inline-block; width: .72em; height: .72em; border-radius: 2px; background: var(--v); margin-right: .4em; vertical-align: .02em; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; display: flex; flex-direction: column; }
+h1 { font-family: var(--font-head); font-size: 1.95rem; line-height: 1.25; margin: 12px 0 4px; }
+h2 { font-family: var(--font-head); font-size: 1.56rem; line-height: 1.35; margin: 56px 0 10px; }
+h3 { font-family: var(--font-head); font-size: 1.25rem; line-height: 1.4; margin: 28px 0 8px; }
+.sub { color: var(--ink-2); margin: 0 0 16px; }
+.big { font-size: 1.15rem; font-weight: 600; text-align: center; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+.card { border: 1px solid var(--line); border-radius: 4px; padding: 16px; }
+.card h3 { margin: 0 0 2px; font-size: 1.1rem; }
+.card svg { width: 100%; height: auto; display: block; }
+.card p { margin: 8px 0 0; font-size: .95rem; line-height: 1.7; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; line-height: 1.6; border: 1px solid var(--line); }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+.scroll { overflow-x: auto; }
+/* code: plain blocks get the one fill level; marked blocks get a line instead, rows carry the fill */
+pre { background: var(--surface-2); border-radius: 4px; padding: 12px 14px; overflow-x: auto; font-size: 16px; line-height: 1.6; margin: 8px 0 0; }
+pre .dim, .d-cm { color: var(--muted); }
+.d-cm { font-style: italic; }
+pre.rows { background: none; border: 1px solid var(--line); padding: 8px 0; white-space: normal; }
+pre.rows > span { display: block; white-space: pre; padding: 0 14px; }
+.d-add { background: var(--add); }
+.d-del { background: var(--del); }
+pre.rows .key { font-weight: 600; }
+.tl td:first-child { white-space: nowrap; }
+.tl td { font-size: .92rem; }
+.gloss { list-style: none; padding: 0; margin: 12px 0 0; line-height: 1.8; }
+.gloss code:first-child { margin-right: .5em; }
+details.fold { border: 1px solid var(--line); border-radius: 4px; margin: 16px 0 0; }
+details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: .6em; padding: 12px 16px; font-weight: 600; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: ""; flex: none; width: .5em; height: .5em; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: rotate(-45deg); transition: transform .15s; align-self: center; }
+details.fold[open] > summary::before { transform: rotate(45deg); }
+details.fold > summary::after { content: "펼치기"; margin-left: auto; flex: none; font: 400 .75rem var(--font-code); color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 1px 8px; }
+details.fold[open] > summary::after { content: "접기"; }
+details.fold > summary:hover { background: var(--surface-2); }
+details.fold > summary:hover::after { color: var(--ink); border-color: var(--ink-2); }
+details.fold > summary:focus-visible { outline: 2px solid var(--s3); outline-offset: -2px; }
+details.fold > summary > span:first-child { white-space: nowrap; }
+details.fold > summary .sum { font-weight: 400; color: var(--ink-2); flex: 1 1 auto; min-width: 0; }
+details.fold[open] > summary { border-bottom: 1px solid var(--line); }
+details.fold > .in { padding: 4px 16px 16px; }
+details.fold > .in > pre:first-child, details.fold > .in > h3:first-child { margin-top: 12px; }
+details.fold h4 { font-family: var(--font-head); font-size: 1.1rem; margin: 18px 0 4px; }
+.grid + .scroll { margin-top: 16px; }
+.ends { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0 4px; }
+.ends pre { margin-top: 4px; }
+.ends .cm { color: var(--muted); }
+@media (max-width: 760px) { .ends { grid-template-columns: 1fr; } }
+u { text-decoration-thickness: 2px; text-underline-offset: .25em; }
+/* code panes: toggle each version on its own; the open ones share one area side by side.
+   long lines wrap; a wrapped line hangs 2ch deeper than its own indent, so nothing is cut off.
+   panes stretch to the tallest open one, so nothing scrolls vertically */
+.panes { margin-top: 12px; }
+.pane-bar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pane-btn { display: flex; align-items: center; gap: .6em; padding: 12px 14px; border: 1px solid var(--line); border-radius: 4px; background: none; color: var(--ink); font: 600 1rem var(--font-body); text-align: left; cursor: pointer; }
+.pane-btn::before { content: ""; flex: none; width: .5em; height: .5em; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: rotate(-45deg); }
+.pane-btn[aria-pressed="true"]::before { transform: rotate(45deg); }
+.pane-btn::after { content: "펼치기"; margin-left: auto; flex: none; font: 400 .75rem var(--font-code); color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 1px 8px; }
+.pane-btn[aria-pressed="true"]::after { content: "접기"; }
+.pane-btn[aria-pressed="true"] { border-color: var(--ink-2); }
+.pane-btn:hover { background: var(--surface-2); }
+.pane-btn .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pane-btn:focus-visible { outline: 2px solid var(--s3); outline-offset: 2px; }
+.pane-area { display: flex; gap: 8px; margin-top: 8px; }
+.pane-area:not(:has(.pane:not([hidden]))) { display: none; }
+.pane { flex: 1 1 0; min-width: 0; border: 1px solid var(--line); border-radius: 4px; }
+.pane pre.code { margin: 0; background: none; font-size: 14px; line-height: 1.55; padding: 10px 0; white-space: normal; }
+.pane .row { display: grid; grid-template-columns: 2.8em 1fr; padding-right: 12px; }
+.pane .ln { color: var(--muted); text-align: right; padding-right: .9em; }
+.pane .tx { white-space: pre-wrap; padding-left: calc(var(--ind) + 2ch); text-indent: -2ch; }
+.pane .key { font-weight: 600; }
+.pane .cm { color: var(--muted); }
+.pane .nt { color: var(--muted); font-style: italic; font-weight: 400; margin-left: 1.5ch; }
+@media (max-width: 760px) { .pane-bar { grid-template-columns: 1fr; } .pane-area { flex-direction: column; } }
+.logs { align-items: start; }
+.logs pre.rows > span { white-space: pre-wrap; word-break: break-all; }
+.logs pre { font-size: 13px; }
+.cap { margin: 0 0 4px; font-size: .85rem; }
+</style>
+<script>
+/* each button opens or closes its own pane; open panes split the shared area */
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".pane-btn").forEach(btn => {
+    const pane = document.getElementById(btn.getAttribute("aria-controls"));
+    pane.hidden = true;
+    btn.addEventListener("click", () => {
+      const open = btn.getAttribute("aria-pressed") !== "true";
+      btn.setAttribute("aria-pressed", String(open));
+      pane.hidden = !open;
+    });
+  });
+});
+</script>
+</head>
+<body>
+<main class="wrap">
+<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>
+
+<h1>exit(1)을 받아 줄 OS가 없을 때</h1>
+<p class="sub">같은 <code>debug_panic</code>, 내 코드 · Pintos user · Pintos kernel에서 끝이 다름. 갈림길은 밑에 받아 줄 OS의 유무</p>
+
+<h2>1. <code>debug_panic()</code></h2>
+<p class="lead">내 코드(<code>harness/boot.c</code>)를 한 줄씩 읽다가 마지막 줄에서 멈춤. Pintos 커널의 같은 함수는 끝이 다름</p>
+<div class="ends">
+<div><pre><span class="cm">/* 내 코드: harness/boot.c:42-43 */</span>
+printf ("\n");
+exit (1);</pre></div>
+<div><pre><span class="cm">/* lib/kernel/debug.c:41-43 */</span>
+if (power_off_when_done)
+    power_off ();
+for (;;);</pre></div>
+</div>
+<p class="lead"><u>커널은 왜 <code>exit (1)</code>로 끝나지 않을까?</u></p>
+
+<h2>2. 공통 코드</h2>
+<p class="lead">Pintos에는 두 벌: <code>lib/user/debug.c</code> (사용자 프로그램용) · <code>lib/kernel/debug.c</code> (커널용). 내 코드까지 셋 다 같은 다섯 줄:</p>
+<pre class="rows"><span>printf ("Kernel PANIC at %s:%d in %s(): ", file, line, function);   <span class="d-cm">// 어디서: 위치</span></span>
+<span>va_start (args, message);</span>
+<span>vprintf (message, args);                                             <span class="d-cm">// 왜: 사유</span></span>
+<span>va_end (args);</span>
+<span>printf ("\n");</span></pre>
+<p>user는 첫 단어만 <code>User process ABORT</code>. kernel·user는 <code>printf ("\n")</code>과 <code>va_end</code> 순서가 반대</p>
+<ul class="gloss">
+<li><code>va_list args</code>아직 안 읽은 가변 인자(<code>...</code>)를 가리키는 책갈피</li>
+<li><code>va_start (args, message)</code>책갈피를 <code>message</code> 다음, 첫 가변 인자에 꽂음</li>
+<li><code>vprintf (message, args)</code><code>...</code> 대신 책갈피를 받는 <code>printf</code></li>
+<li><code>va_end (args)</code>책갈피 정리, <code>va_start</code>와 짝</li>
+</ul>
+<p>출력은 셋 다 세 조각. gdb로 <code>write</code> 시스템 콜을 잡으면 조각마다 한 번씩:</p>
+<pre class="rows"><span>write #1  len=44  "Kernel PANIC at panic.c:21 in thread_foo(): "   <span class="d-cm">← printf</span></span>
+<span>write #2  len=29  "assertion `t != NULL' failed."                  <span class="d-cm">← vprintf</span></span>
+<span>write #3  len=1   "⏎"                                             <span class="d-cm">← printf</span></span>
+<span>[Inferior 1 (process 32805) exited with code 01]                   <span class="d-cm">← exit(1)</span></span></pre>
+
+<details class="fold">
+<summary><span>gdb로 본 공통 코드</span></summary>
+<div class="in">
+<p>재료: <code>notes/debug-panic/panic.c</code> (<code>boot.c</code>의 <code>debug_panic</code> 복사 + <code>ASSERT (t != NULL)</code>을 <code>NULL</code>로 실패), <code>notes/debug-panic/w.gdb</code></p>
+<pre>cd notes/debug-panic
+gcc -g -O0 -I ../../include panic.c -o panic
+./panic; echo "exit=$?"</pre>
+<h4>들어온 인자: <code>b debug_panic</code> → <code>info args</code></h4>
+<pre>file = 0x555555556049 "panic.c"
+line = 21
+function = 0x555555556058 &lt;__func__.0&gt; "thread_foo"
+message = 0x555555556032 "assertion `%s' failed."</pre>
+<p>주소 = 인자가 놓인 곳이 아니라 문자열 리터럴이 놓인 곳. <code>objdump -s -j .rodata panic</code>:</p>
+<pre>…6008  "Kernel PANIC at %s:%d in %s(): "   32B   ← 38행 형식 문자열
+…6028  "t != NULL"                          10B   ← #CONDITION (첫 가변 인자)
+…6032  "assertion `%s' failed."             23B   ← message
+…6049  "panic.c"                             8B   ← file
+…6051  00 × 7                                     ← 패딩 (8바이트 정렬)
+…6058  "thread_foo"                         11B   ← function (__func__ 는 배열 변수라 정렬됨)</pre>
+<h4>한 줄씩: 같은 순간을 세 화면에서</h4>
+<p>행 = <code>debug_panic</code> 한 줄 실행 직후 · <span class="d-add">초록 칸</span> = 그 줄 때문에 바뀐 것</p>
+<div class="scroll"><table class="tl">
+<tr><th>실행한 줄<br><span class="meta">boot.c (panic.c)</span></th><th>ⓐ out 창에 쌓인 출력</th><th>ⓑ <code>gp_offset</code></th><th>ⓑ 책갈피가 가리키는 값</th><th>ⓒ 나간 <code>write</code></th></tr>
+<tr><td>진입<br><span class="meta">b debug_panic</span></td><td class="meta">(없음)</td><td>1 <span class="meta">쓰레기</span></td><td><code>0x3400007fffffffd7 &lt;…&gt;</code> <span class="meta">쓰레기</span></td><td></td></tr>
+<tr><td>38 (11)<br><code>printf (…, file, line, function)</code></td><td class="d-add"><code>Kernel PANIC at panic.c:21 in thread_foo(): </code></td><td>1</td><td>쓰레기</td><td class="d-add">#1 · 44B</td></tr>
+<tr><td>39 (12)<br><code>va_start (args, message)</code></td><td>그대로</td><td class="d-add"><b>32</b> <span class="meta">고정 인자 4개 × 8B</span></td><td class="d-add"><code>0x555555556028 "t != NULL"</code></td><td></td></tr>
+<tr><td>40 (13)<br><code>vprintf (message, args)</code></td><td class="d-add">… <code>assertion `t != NULL' failed.</code></td><td class="d-add"><b>40</b> <span class="meta">%s 하나 = 8B 한 칸</span></td><td>다음 칸</td><td class="d-add">#2 · 29B</td></tr>
+<tr><td>41 (14)<br><code>va_end (args)</code></td><td>그대로</td><td>40</td><td>그대로</td><td></td></tr>
+<tr><td>42 (15)<br><code>printf ("\n")</code></td><td class="d-add">… ⏎</td><td>40</td><td>그대로</td><td class="d-add">#3 · 1B</td></tr>
+<tr><td>43 (16)<br><code>exit (1)</code></td><td colspan="4" class="d-add"><code>[Inferior 1 (process 32805) exited with code 01]</code></td></tr>
+</table></div>
+<p><code>va_start</code>·<code>va_end</code> 행은 ⓒ 없음 = 출력 없는 줄 · <code>va_end</code> 행은 ⓑ도 그대로 = x86-64 gcc에서 기계어 0개 · <code>write</code> 3회 분리 = <code>boot.c:55</code> <code>setvbuf (_IONBF)</code>, 버퍼 꺼짐</p>
+<h4>재현</h4>
+<pre>gdb -q ./panic
+b debug_panic
+out                                   # ⓐ 출력 창
+tk args[0].gp_offset                  # ⓑ
+tk *(char **)(args[0].reg_save_area + args[0].gp_offset)
+run
+next                                  # 한 번에 한 행씩
+
+gdb -q -batch -x w.gdb ./panic        # ⓒ write만 모아 보기</pre>
+</div>
+</details>
+
+<h2>3. 실제 코드: 뭐가 다를까?</h2>
+<p class="lead">공통 다섯 줄 뒤가 다름. 커널은 더하고, 내 코드의 <code>exit(1)</code>은 뺌. 굵은 줄은 공통 코드, <span class="d-add">초록 줄</span>은 내 코드에 없는 줄</p>
+<div class="panes">
+<div class="pane-bar">
+<button type="button" class="pane-btn" aria-pressed="false" aria-controls="pane1"><span class="t"><span class="v1"><span class="sw"></span></span>① 내 코드</span></button>
+<button type="button" class="pane-btn" aria-pressed="false" aria-controls="pane2"><span class="t"><span class="v2"><span class="sw"></span></span>② Pintos user</span></button>
+<button type="button" class="pane-btn" aria-pressed="false" aria-controls="pane3"><span class="t"><span class="v3"><span class="sw"></span></span>③ Pintos kernel</span></button>
+</div>
+<div class="pane-area">
+<div class="pane" id="pane1"><pre class="code"><span class="row"><span class="ln"></span><span class="tx cm" style="--ind:0ch">// harness/boot.c:33-44</span></span><span class="row"><span class="ln">33</span><span class="tx" style="--ind:0ch">void</span></span><span class="row"><span class="ln">34</span><span class="tx" style="--ind:0ch">debug_panic (const char *file, int line, const char *function,</span></span><span class="row"><span class="ln">35</span><span class="tx" style="--ind:8ch">const char *message, ...) {</span></span><span class="row"><span class="ln">36</span><span class="tx" style="--ind:4ch">va_list args;</span></span><span class="row"><span class="ln">37</span><span class="tx" style="--ind:0ch"></span></span><span class="row key"><span class="ln">38</span><span class="tx" style="--ind:4ch">printf (&quot;Kernel PANIC at %s:%d in %s(): &quot;, file, line, function);</span></span><span class="row key"><span class="ln">39</span><span class="tx" style="--ind:4ch">va_start (args, message);</span></span><span class="row key"><span class="ln">40</span><span class="tx" style="--ind:4ch">vprintf (message, args);</span></span><span class="row key"><span class="ln">41</span><span class="tx" style="--ind:4ch">va_end (args);</span></span><span class="row key"><span class="ln">42</span><span class="tx" style="--ind:4ch">printf (&quot;\n&quot;);</span></span><span class="row"><span class="ln">43</span><span class="tx" style="--ind:4ch">exit (1);<span class="nt">// 받는 쪽은 Linux</span></span></span><span class="row"><span class="ln">44</span><span class="tx" style="--ind:0ch">}</span></span></pre></div>
+<div class="pane" id="pane2"><pre class="code"><span class="row"><span class="ln"></span><span class="tx cm" style="--ind:0ch">// lib/user/debug.c:9-24</span></span><span class="row"><span class="ln">9</span><span class="tx" style="--ind:0ch">void</span></span><span class="row"><span class="ln">10</span><span class="tx" style="--ind:0ch">debug_panic (const char *file, int line, const char *function,</span></span><span class="row"><span class="ln">11</span><span class="tx" style="--ind:8ch">const char *message, ...) {</span></span><span class="row"><span class="ln">12</span><span class="tx" style="--ind:4ch">va_list args;</span></span><span class="row"><span class="ln">13</span><span class="tx" style="--ind:0ch"></span></span><span class="row key d-add"><span class="ln">14</span><span class="tx" style="--ind:4ch">printf (&quot;User process ABORT at %s:%d in %s(): &quot;, file, line, function);<span class="nt">// 첫 단어만 다름</span></span></span><span class="row"><span class="ln">15</span><span class="tx" style="--ind:0ch"></span></span><span class="row key"><span class="ln">16</span><span class="tx" style="--ind:4ch">va_start (args, message);</span></span><span class="row key"><span class="ln">17</span><span class="tx" style="--ind:4ch">vprintf (message, args);</span></span><span class="row key"><span class="ln">18</span><span class="tx" style="--ind:4ch">printf (&quot;\n&quot;);</span></span><span class="row key"><span class="ln">19</span><span class="tx" style="--ind:4ch">va_end (args);</span></span><span class="row"><span class="ln">20</span><span class="tx" style="--ind:0ch"></span></span><span class="row d-add"><span class="ln">21</span><span class="tx" style="--ind:4ch">debug_backtrace ();<span class="nt">// 호출 스택 출력</span></span></span><span class="row"><span class="ln">22</span><span class="tx" style="--ind:0ch"></span></span><span class="row"><span class="ln">23</span><span class="tx" style="--ind:4ch">exit (1);<span class="nt">// 받는 쪽은 Pintos 커널 (시스템 콜)</span></span></span><span class="row"><span class="ln">24</span><span class="tx" style="--ind:0ch">}</span></span></pre></div>
+<div class="pane" id="pane3"><pre class="code"><span class="row"><span class="ln"></span><span class="tx cm" style="--ind:0ch">// lib/kernel/debug.c:14-44</span></span><span class="row"><span class="ln">14</span><span class="tx" style="--ind:0ch">void</span></span><span class="row"><span class="ln">15</span><span class="tx" style="--ind:0ch">debug_panic (const char *file, int line, const char *function,</span></span><span class="row"><span class="ln">16</span><span class="tx" style="--ind:8ch">const char *message, ...) {</span></span><span class="row d-add"><span class="ln">17</span><span class="tx" style="--ind:4ch">static int level;<span class="nt">// 몇 번째 PANIC인가, 호출 사이에도 유지</span></span></span><span class="row"><span class="ln">18</span><span class="tx" style="--ind:4ch">va_list args;</span></span><span class="row"><span class="ln">19</span><span class="tx" style="--ind:0ch"></span></span><span class="row d-add"><span class="ln">20</span><span class="tx" style="--ind:4ch">intr_disable ();<span class="nt">// 타이머 인터럽트 끔: 죽는 중 다른 스레드로 안 넘어감</span></span></span><span class="row d-add"><span class="ln">21</span><span class="tx" style="--ind:4ch">console_panic ();<span class="nt">// 콘솔 락 무시: 락을 쥔 채 죽어도 출력</span></span></span><span class="row"><span class="ln">22</span><span class="tx" style="--ind:0ch"></span></span><span class="row d-add"><span class="ln">23</span><span class="tx" style="--ind:4ch">level++;</span></span><span class="row d-add"><span class="ln">24</span><span class="tx" style="--ind:4ch">if (level == 1) {<span class="nt">// 첫 PANIC만 전체 출력</span></span></span><span class="row key"><span class="ln">25</span><span class="tx" style="--ind:8ch">printf (&quot;Kernel PANIC at %s:%d in %s(): &quot;, file, line, function);</span></span><span class="row"><span class="ln">26</span><span class="tx" style="--ind:0ch"></span></span><span class="row key"><span class="ln">27</span><span class="tx" style="--ind:8ch">va_start (args, message);</span></span><span class="row key"><span class="ln">28</span><span class="tx" style="--ind:8ch">vprintf (message, args);</span></span><span class="row key"><span class="ln">29</span><span class="tx" style="--ind:8ch">printf (&quot;\n&quot;);</span></span><span class="row key"><span class="ln">30</span><span class="tx" style="--ind:8ch">va_end (args);</span></span><span class="row"><span class="ln">31</span><span class="tx" style="--ind:0ch"></span></span><span class="row d-add"><span class="ln">32</span><span class="tx" style="--ind:8ch">debug_backtrace ();<span class="nt">// &quot;Call stack: 0x…&quot; 출력 (5절)</span></span></span><span class="row d-add"><span class="ln">33</span><span class="tx" style="--ind:4ch">} else if (level == 2)<span class="nt">// 출력하다 또 PANIC → 한 줄만</span></span></span><span class="row d-add"><span class="ln">34</span><span class="tx" style="--ind:8ch">printf (&quot;Kernel PANIC recursion at %s:%d in %s().\n&quot;,</span></span><span class="row d-add"><span class="ln">35</span><span class="tx" style="--ind:16ch">file, line, function);</span></span><span class="row d-add"><span class="ln">36</span><span class="tx" style="--ind:4ch">else {</span></span><span class="row d-add"><span class="ln">37</span><span class="tx" style="--ind:8ch">/* Don&#x27;t print anything: that&#x27;s probably why we recursed. */</span></span><span class="row"><span class="ln">38</span><span class="tx" style="--ind:4ch">}</span></span><span class="row"><span class="ln">39</span><span class="tx" style="--ind:0ch"></span></span><span class="row d-add"><span class="ln">40</span><span class="tx" style="--ind:4ch">serial_flush ();<span class="nt">// 시리얼 버퍼에 남은 글자 밀어내기</span></span></span><span class="row d-add"><span class="ln">41</span><span class="tx" style="--ind:4ch">if (power_off_when_done)</span></span><span class="row d-add"><span class="ln">42</span><span class="tx" style="--ind:8ch">power_off ();<span class="nt">// QEMU 끄기, 직전에 통계 출력</span></span></span><span class="row d-add"><span class="ln">43</span><span class="tx" style="--ind:4ch">for (;;);<span class="nt">// 못 끄면 영원히 멈춤</span></span></span><span class="row"><span class="ln">44</span><span class="tx" style="--ind:0ch">}</span></span></pre></div>
+</div>
+</div>
+
+<h2>4. OS가 받아 줄 수 있냐의 차이</h2>
+<p class="big">밑에 받아 줄 OS 있음 → <code>exit(1)</code> · 없음 → 스스로 꺼야 함</p>
+<div class="grid">
+
+  <!-- jingeunOS harness -->
+  <div class="card v1">
+    <h3><span class="sw"></span>① 내 코드 (jingeunOS)</h3>
+    <svg viewBox="0 0 240 230" role="img" aria-label="jingeunOS 프로세스가 exit(1)로 Linux에 보고">
+      <rect x="40" y="10" width="160" height="56" rx="10" fill="color-mix(in srgb, var(--v) 14%, transparent)" stroke="var(--v)" stroke-width="2.5"/>
+      <text x="120" y="35" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="600">jingeunOS</text>
+      <text x="120" y="55" text-anchor="middle" fill="var(--muted)" font-size="12">Linux 프로세스 하나</text>
+      <line x1="120" y1="68" x2="120" y2="150" stroke="var(--ink)" stroke-width="1.5"/>
+      <polygon points="112,142 128,142 120,156" fill="var(--ink)"/>
+      <text x="130" y="105" fill="var(--ink)" font-size="14" font-family="monospace">exit(1)</text>
+      <rect x="20" y="160" width="200" height="58" rx="10" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="120" y="186" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="600">Linux</text>
+      <text x="120" y="206" text-anchor="middle" fill="var(--muted)" font-size="12">종료 코드 1 수신</text>
+    </svg>
+    <p>밑에 Linux 있음 → <code>exit(1)</code>만으로 정리 가능</p>
+  </div>
+
+  <!-- Pintos user -->
+  <div class="card v2">
+    <h3><span class="sw"></span>② Pintos 사용자 프로그램</h3>
+    <svg viewBox="0 0 240 230" role="img" aria-label="사용자 프로그램이 exit 시스템 콜로 Pintos 커널에 보고">
+      <rect x="40" y="10" width="160" height="56" rx="10" fill="color-mix(in srgb, var(--v) 14%, transparent)" stroke="var(--v)" stroke-width="2.5"/>
+      <text x="120" y="35" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="600">user 프로그램</text>
+      <text x="120" y="55" text-anchor="middle" fill="var(--muted)" font-size="12">"User process ABORT"</text>
+      <line x1="120" y1="68" x2="120" y2="150" stroke="var(--ink)" stroke-width="1.5"/>
+      <polygon points="112,142 128,142 120,156" fill="var(--ink)"/>
+      <text x="130" y="98" fill="var(--ink)" font-size="14" font-family="monospace">exit(1)</text>
+      <text x="130" y="116" fill="var(--muted)" font-size="11">시스템 콜</text>
+      <rect x="20" y="160" width="200" height="58" rx="10" fill="var(--surface-2)" stroke="var(--ink)" stroke-width="1.5"/>
+      <text x="120" y="186" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="600">Pintos 커널</text>
+      <text x="120" y="206" text-anchor="middle" fill="var(--muted)" font-size="12">그 프로세스만 정리</text>
+    </svg>
+    <p>밑에 Pintos 커널 있음 → 그 프로세스만 정리, 커널은 계속 동작</p>
+  </div>
+
+  <!-- Pintos kernel -->
+  <div class="card v3">
+    <h3><span class="sw"></span>③ Pintos 커널</h3>
+    <svg viewBox="0 0 240 230" role="img" aria-label="커널은 밑에 OS가 없어 기계를 끄거나 무한 루프">
+      <rect x="40" y="10" width="160" height="56" rx="10" fill="color-mix(in srgb, var(--v) 14%, transparent)" stroke="var(--v)" stroke-width="2.5"/>
+      <text x="120" y="35" text-anchor="middle" fill="var(--ink)" font-size="15" font-weight="600">Pintos 커널</text>
+      <text x="120" y="55" text-anchor="middle" fill="var(--muted)" font-size="12">내가 바로 OS</text>
+      <line x1="120" y1="68" x2="120" y2="140" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 5"/>
+      <text x="130" y="105" fill="var(--muted)" font-size="14" font-family="monospace">exit?</text>
+      <rect x="20" y="160" width="200" height="58" rx="10" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="6 5"/>
+      <text x="120" y="186" text-anchor="middle" fill="var(--muted)" font-size="15" font-weight="600">아무도 없음</text>
+      <text x="120" y="206" text-anchor="middle" fill="var(--ink)" font-size="12">→ power_off() 또는 for(;;)</text>
+    </svg>
+    <p>받아 줄 OS 없음 → QEMU 전원 차단, 아니면 무한 대기</p>
+  </div>
+
+</div>
+
+
+<div class="scroll">
+<table>
+  <tr><th></th><th class="v1"><span class="sw"></span>① 내 코드</th><th class="v2"><span class="sw"></span>② user</th><th class="v3"><span class="sw"></span>③ kernel</th></tr>
+  <tr><td>첫 단어</td><td><code>Kernel PANIC</code></td><td><code>User process ABORT</code></td><td><code>Kernel PANIC</code></td></tr>
+  <tr><td>공통 코드 (위치 + 사유 + ⏎)</td><td>✓</td><td>✓</td><td>✓</td></tr>
+  <tr><td>backtrace</td><td>—</td><td>✓</td><td>✓</td></tr>
+  <tr><td>인터럽트 끔 · 콘솔 락 무시 · 재귀 방지</td><td>—</td><td>—</td><td>✓</td></tr>
+  <tr><td>마지막</td><td><code>exit(1)</code> → Linux</td><td><code>exit(1)</code> → Pintos 커널</td><td><code>power_off()</code> 또는 <code>for(;;)</code></td></tr>
+  <tr><td>누가 받나</td><td>Linux</td><td>Pintos 커널</td><td>아무도</td></tr>
+</table>
+</div>
+
+<h2>5. 실물: Pintos와 Linux의 커널 PANIC</h2>
+<p class="lead">Linux 커널도 밑에 받아 줄 OS 없음 → 같은 두 갈래: 기계를 끄거나 재시작, 아니면 무한 대기</p>
+<div class="ends">
+<div><pre><span class="cm">/* Pintos: lib/kernel/debug.c:41-43 */</span>
+if (power_off_when_done)  <span class="cm">// -q 옵션</span>
+    power_off ();         <span class="cm">// QEMU 끄기</span>
+for (;;);                 <span class="cm">// 아니면 영원히</span></pre></div>
+<div><pre><span class="cm">/* Linux: kernel/panic.c:573-616 (v6.18), 발췌 */</span>
+if (panic_timeout != 0)   <span class="cm">// panic=N 부팅 옵션</span>
+    emergency_restart (); <span class="cm">// 재시작</span>
+pr_emerg ("---[ end Kernel panic …");
+for (i = 0; ; i += PANIC_TIMER_STEP)
+    mdelay (PANIC_TIMER_STEP); <span class="cm">// 아니면 영원히</span></pre></div>
+</div>
+<p>Linux <code>panic (fmt, ...)</code>도 같은 가변 인자 구조: <code>va_start</code> → <code>vpanic (fmt, args)</code> → <code>va_end</code> (<code>kernel/panic.c:621-628</code>)</p>
+<div class="ends logs">
+<div><p class="cap">Pintos · <code>mlfqs-load-1.output</code> (2026-10-13, MLFQS 미구현으로 실패)</p>
+<pre class="rows"><span class="dim">(mlfqs-load-1) FAIL: load average stayed below 0.5 for more than 45 seconds</span>
+<span class="key">Kernel PANIC at ../../tests/threads/tests.c:93 in fail(): test failed            <span class="d-cm">← 공통 코드</span></span>
+<span class="d-add">Call stack: 0x8004214331 0x8004217c5b 0x800421afd1 0x8004217a7e 0x8004206668 0x80042067c2 0x800420612b.   <span class="d-cm">← debug_backtrace</span></span>
+<span class="d-add">The `backtrace' program can make call stacks useful.</span>
+<span class="d-add">Read "Backtraces" in the "Debugging Tools" chapter</span>
+<span class="d-add">of the Pintos documentation for more information.</span>
+<span class="d-add">Timer: 4621 ticks     <span class="d-cm">← power_off → print_stats</span></span>
+<span class="d-add">Thread: 0 idle ticks, 4621 kernel ticks, 0 user ticks</span>
+<span class="d-add">Console: …</span></pre></div>
+<div><p class="cap">Linux 6.18 (WSL 커널) · QEMU에 루트 없이 부팅, <code>panic=0</code></p>
+<pre class="rows"><span class="key">[    1.833971] Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)</span>
+<span>[    1.834777] Hardware name: QEMU Ubuntu 26.04 PC (i440FX + PIIX, 1996), BIOS 1.17.0-debian-1.17.0-1ubuntu1 04/01/2014</span>
+<span>[    1.835032] Call Trace:</span>
+<span>[    1.836004]  vpanic+0x2cc/0x310</span>
+<span>[    1.836054]  panic+0x5b/0x60</span>
+<span>[    1.836099]  mount_root_generic+0x188/0x320</span>
+<span class="dim">  …</span>
+<span class="d-add">[    1.837802] ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0) ]---</span>
+<span class="d-cm">(이후 출력 없음, 40초 뒤 timeout으로 강제 종료)</span></pre></div>
+</div>
+<p>굵은 줄은 PANIC 첫 줄, 초록 줄은 끝으로 가는 코드(Pintos backtrace·통계, Linux 마지막 줄)가 낸 것. <code>panic=3</code>으로 부팅하면 끝이 <code>Rebooting in 3 seconds..</code> 후 재시작</p>
+<details class="fold">
+<summary><span>Linux PANIC 재현</span></summary>
+<div class="in">
+<pre><span class="dim"># WSL 커널 이미지를 QEMU에 루트 파일 시스템 없이 부팅 → VFS 마운트 실패로 panic</span>
+cp "/mnt/c/Program Files/WSL/tools/kernel" bzImage
+qemu-system-x86_64 -kernel bzImage -append "console=ttyS0 panic=0" -nographic -m 512 -no-reboot
+<span class="dim"># panic=3 이면 3초 뒤 재시작 (-no-reboot 이라 QEMU 종료)</span></pre>
+</div>
+</details>
+<details class="fold">
+<summary><span>주소를 함수 이름으로</span></summary>
+<div class="in">
+<pre><span class="dim"># build 폴더에서: addr2line -f -e kernel.o &lt;주소들&gt;</span>
+0x8004214331  debug_panic         lib/kernel/debug.c:32          ← debug_backtrace 부른 자리
+0x8004217c5b  <b>pass</b>                tests/threads/tests.c:99       ← fail이 아니라 pass. 아직 못 푼 점
+0x800421afd1  test_mlfqs_load_1   tests/threads/mlfqs/mlfqs-load-1.c:31
+0x8004217a7e  run_test            tests/threads/tests.c:57
+0x8004206668  run_task            threads/init.c:252
+0x80042067c2  run_actions         threads/init.c:297
+0x800420612b  main                threads/init.c:125</pre>
+</div>
+</details>
+
+</main>
+</body>
+</html>
