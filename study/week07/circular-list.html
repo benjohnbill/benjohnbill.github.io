@@ -891,8 +891,8 @@ body.edit-active [contenteditable]:focus {
                 </ul>
             </div>
             <div class="col panel at s1">
-                <div class="cap"><span>② PintOS</span><span class="side">보초 2개</span></div>
-                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Pintos 리스트. head 와 tail 보초가 서로를 가리키고, head.prev 와 tail.next 는 NULL">
+                <div class="cap"><span>② PintOS</span><span class="side">head · tail 노드 2개</span></div>
+                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Pintos 리스트. head 와 tail 노드가 서로를 가리키고, head.prev 와 tail.next 는 NULL">
                     <defs><marker id="p-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0a0a0a"/></marker></defs>
                     <g font-family="'IBM Plex Mono', monospace" text-anchor="middle">
                         <rect x="90" y="65" width="80" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
@@ -916,18 +916,18 @@ body.edit-active [contenteditable]:focus {
                 </ul>
             </div>
             <div class="col panel accent at s2">
-                <div class="cap"><span>③ Linux list_head</span><span class="side">원형 · 보초 1개</span></div>
-                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Linux 리스트. 보초 S 하나의 next 와 prev 가 모두 자기 자신을 가리킨다">
+                <div class="cap"><span>③ Linux list_head</span><span class="side">원형 · head 노드 1개</span></div>
+                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Linux 리스트. head 노드 ready_list 의 next 와 prev 가 모두 자기 자신을 가리킨다">
                     <defs><marker id="l-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff3300"/></marker></defs>
                     <g font-family="'IBM Plex Mono', monospace" text-anchor="middle">
-                        <rect x="160" y="65" width="80" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
-                        <text x="200" y="108" font-size="24" font-weight="600">S</text>
+                        <rect x="120" y="65" width="160" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <text x="200" y="106" font-size="20" font-weight="600">ready_list</text>
                         <g stroke="#ff3300" stroke-width="2" fill="none" marker-end="url(#l-arr)">
-                            <path d="M240,85 C310,85 310,22 200,22 L200,61"/>
-                            <path d="M160,115 C90,115 90,160 200,160 L200,139"/>
+                            <path d="M280,85 C350,85 350,22 200,22 L200,61"/>
+                            <path d="M120,115 C50,115 50,160 200,160 L200,139"/>
                         </g>
-                        <text x="320" y="40" font-size="17" fill="#ff3300">next</text>
-                        <text x="80" y="160" font-size="17" fill="#ff3300">prev</text>
+                        <text x="355" y="40" font-size="17" fill="#ff3300">next</text>
+                        <text x="45" y="160" font-size="17" fill="#ff3300">prev</text>
                         <text x="200" y="192" font-size="18" fill="#6b6b6b">빈 리스트 · 16 B</text>
                     </g>
                 </svg>
@@ -979,31 +979,31 @@ __list_add(new, prev, next) {
             </div>
             <div class="frames">
                 <!-- 0 · INIT -->
-                <svg class="fr f0" viewBox="0 0 900 420" role="img" aria-label="INIT_LIST_HEAD 뒤: 보초 S 의 next 와 prev 가 S 자신을 가리킨다">
+                <svg class="fr f0" viewBox="0 0 900 420" role="img" aria-label="INIT_LIST_HEAD 뒤: head 노드 ready_list 의 next 와 prev 가 S 자신을 가리킨다">
                     <defs>
                         <marker id="a-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0a0a0a"/></marker>
                         <marker id="a-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff3300"/></marker>
                     </defs>
-                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">INIT_LIST_HEAD(&amp;S)</text>
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">INIT_LIST_HEAD(&amp;ready_list)</text>
                     <rect x="375" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
-                    <text x="450" y="210" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600">S</text>
+                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-weight="600"><text x="450" y="206" font-size="22">ready_list</text><text x="450" y="230" font-size="15" font-weight="400" fill="#6b6b6b">head · 데이터 없음</text></g>
                     <g stroke="#ff3300" stroke-width="2.5" fill="none" marker-end="url(#a-r)">
                         <path d="M525,185 C650,185 650,75 450,75 L450,155"/>
                         <path d="M375,215 C250,215 250,330 450,330 L450,245"/>
                     </g>
                     <g font-family="'IBM Plex Mono', monospace" font-size="21" fill="#ff3300">
-                        <text x="560" y="68">next = &amp;S</text>
-                        <text x="205" y="360">prev = &amp;S</text>
+                        <text x="560" y="68">next = &amp;ready_list</text>
+                        <text x="205" y="360">prev = &amp;ready_list</text>
                     </g>
                     <text x="0" y="408" font-family="'IBM Plex Sans KR', sans-serif" font-size="23" fill="#0a0a0a">빈 리스트에도 <tspan font-weight="700" fill="#ff3300">NULL이 없다</tspan></text>
                 </svg>
                 <!-- 1 · add_tail(A) -->
-                <svg class="fr f1" viewBox="0 0 900 420" role="img" aria-label="list_add_tail(A): S 와 A 가 서로를 next 와 prev 로 가리키는 고리">
-                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add_tail(&amp;A, &amp;S)</text>
-                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(A, <tspan fill="#ff3300">S.prev</tspan> → S, S)</text>
+                <svg class="fr f1" viewBox="0 0 900 420" role="img" aria-label="list_add_tail(A): ready_list 와 A.list 가 서로를 next 와 prev 로 가리키는 고리">
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add_tail(&amp;A.list, &amp;ready_list)</text>
+                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(A.list, <tspan fill="#ff3300">ready_list.prev</tspan> → ready_list, ready_list)</text>
                     <rect x="200" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
                     <rect x="550" y="160" width="150" height="80" fill="#fff" stroke="#ff3300" stroke-width="2.5"/>
-                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="275" y="210">S</text><text x="625" y="210">A</text></g>
+                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="275" y="206" font-size="22">ready_list</text><text x="275" y="230" font-size="15" font-weight="400" fill="#6b6b6b">head · 데이터 없음</text><text x="625" y="210" font-size="24">A.list</text></g>
                     <g stroke="#ff3300" stroke-width="2.5" fill="none" marker-end="url(#a-r)">
                         <line x1="350" y1="185" x2="545" y2="185"/>
                         <line x1="550" y1="215" x2="355" y2="215"/>
@@ -1013,13 +1013,13 @@ __list_add(new, prev, next) {
                     <text x="0" y="408" font-family="'IBM Plex Sans KR', sans-serif" font-size="23" fill="#0a0a0a">빈 리스트에 넣어도 <tspan font-weight="700" fill="#ff3300">같은 4줄</tspan></text>
                 </svg>
                 <!-- 2 · add_tail(B) -->
-                <svg class="fr f2" viewBox="0 0 900 420" role="img" aria-label="list_add_tail(B): S, A, B 의 고리. A 와 S 사이에 B 가 들어갔다">
-                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add_tail(&amp;B, &amp;S)</text>
-                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(B, <tspan fill="#ff3300">S.prev</tspan> → A, S)</text>
+                <svg class="fr f2" viewBox="0 0 900 420" role="img" aria-label="list_add_tail(B): ready_list, A.list, B.list 의 고리. A 와 S 사이에 B 가 들어갔다">
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add_tail(&amp;B.list, &amp;ready_list)</text>
+                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(B.list, <tspan fill="#ff3300">ready_list.prev</tspan> → A.list, ready_list)</text>
                     <rect x="100" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
                     <rect x="375" y="160" width="150" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
                     <rect x="650" y="160" width="150" height="80" fill="#fff" stroke="#ff3300" stroke-width="2.5"/>
-                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="175" y="210">S</text><text x="450" y="210">A</text><text x="725" y="210">B</text></g>
+                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="175" y="206" font-size="22">ready_list</text><text x="175" y="230" font-size="15" font-weight="400" fill="#6b6b6b">head · 데이터 없음</text><text x="450" y="210" font-size="24">A.list</text><text x="725" y="210" font-size="24">B.list</text></g>
                     <g stroke="#0a0a0a" stroke-width="2" fill="none" marker-end="url(#a-k)">
                         <line x1="250" y1="185" x2="370" y2="185"/>
                         <line x1="375" y1="215" x2="255" y2="215"/>
@@ -1033,14 +1033,14 @@ __list_add(new, prev, next) {
                     <text x="0" y="408" font-family="'IBM Plex Sans KR', sans-serif" font-size="23" fill="#0a0a0a">원소가 있어도 <tspan font-weight="700" fill="#ff3300">같은 4줄</tspan> · "비었나?" 분기가 없다</text>
                 </svg>
                 <!-- 3 · list_add(C) -->
-                <svg class="fr f3" viewBox="0 0 900 420" role="img" aria-label="list_add(C): S 와 A 사이에 C 가 들어가 맨 앞이 되었다. 고리는 S, C, A, B">
-                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add(&amp;C, &amp;S)</text>
-                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(C, <tspan fill="#ff3300">S</tspan>, <tspan fill="#ff3300">S.next</tspan> → A)</text>
+                <svg class="fr f3" viewBox="0 0 900 420" role="img" aria-label="list_add(C): ready_list 와 A.list 사이에 C 가 들어가 맨 앞이 되었다. 고리는 ready_list, C.list, A.list, B.list">
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add(&amp;C.list, &amp;ready_list)</text>
+                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(C.list, <tspan fill="#ff3300">ready_list</tspan>, <tspan fill="#ff3300">ready_list.next</tspan> → A.list)</text>
                     <rect x="40" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
                     <rect x="260" y="160" width="150" height="80" fill="#fff" stroke="#ff3300" stroke-width="2.5"/>
                     <rect x="480" y="160" width="150" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
                     <rect x="700" y="160" width="150" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
-                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="115" y="210">S</text><text x="335" y="210">C</text><text x="555" y="210">A</text><text x="775" y="210">B</text></g>
+                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="115" y="206" font-size="22">ready_list</text><text x="115" y="230" font-size="15" font-weight="400" fill="#6b6b6b">head · 데이터 없음</text><text x="335" y="210" font-size="24">C.list</text><text x="555" y="210" font-size="24">A.list</text><text x="775" y="210" font-size="24">B.list</text></g>
                     <g stroke="#0a0a0a" stroke-width="2" fill="none" marker-end="url(#a-k)">
                         <line x1="630" y1="185" x2="695" y2="185"/>
                         <line x1="700" y1="215" x2="635" y2="215"/>
@@ -1060,7 +1060,7 @@ __list_add(new, prev, next) {
         <p class="punch at s3">맨 앞도 맨 뒤도 결국 두 이웃 사이. 그래서 인자는 <b>new · prev · next 3개</b>면 된다.</p>
     </div>
     <div class="step-dot" aria-hidden="true"></div>
-    <div class="foot"><span>PintOS 는 list_insert(before, elem) · 보초 2개 덕에 before-&gt;prev 가 늘 있다 (list.c:157)</span></div>
+    <div class="foot"><span>PintOS 는 list_insert(before, elem) · head · tail 노드 덕에 before-&gt;prev 가 늘 있다 (list.c:157)</span></div>
 </section>
 
 <!-- ============================================================
@@ -1079,7 +1079,7 @@ __list_add(new, prev, next) {
         <p class="sub reveal" style="font-size:var(--body-size)">같은 실수: <b>리스트(head)</b>를 원소(entry) 자리에 넘겼다</p>
         <div class="vs reveal">
             <div class="tcard">
-                <div class="tk">PintOS · 타입 2개</div>
+                <div class="tk">같은 실수를 PintOS로 썼다면 · 타입 2개</div>
                 <div class="call">list_remove (<u>&amp;ready_list</u>);</div>
                 <div class="types at s1">
                     <span class="tl">넘긴 것</span><code>struct list *</code>
@@ -1089,7 +1089,7 @@ __list_add(new, prev, next) {
                 <div class="verdict bad at s1">gcc: warning · incompatible pointer type</div>
             </div>
             <div class="tcard accent">
-                <div class="tk">jingeunOS · Linux list_head · 타입 1개 · <span class="ln">thread.c:42</span></div>
+                <div class="tk">내 코드 · jingeunOS · 타입 1개 · <span class="ln">thread.c:42</span></div>
                 <div class="call">__list_del_entry(<u>&amp;ready_list</u>);</div>
                 <div class="types at s2">
                     <span class="tl">넘긴 것</span><code>struct list_head *</code>
@@ -1119,7 +1119,7 @@ __list_add(new, prev, next) {
         <div class="takeaway reveal">
             <span class="k">정리</span>
             패딩 재배치: <b>0바이트</b> <small>시스템을 모르고 한 최적화</small><br>
-            원형 이중 연결 리스트: 보초 1개 · 16 B · <b>분기 없음</b> <small>Linux list.h</small><br>
+            원형 이중 연결 리스트: head 노드 1개 · 16 B · <b>분기 없음</b> <small>Linux list.h</small><br>
             대가: <b>타입 검사</b> <small>thread.c:42</small>
         </div>
         <p class="punch reveal">자료구조까지 내려가서 OS의 compact함을 쫓아 본, <b>재미있는</b> 경험이었다.</p>
