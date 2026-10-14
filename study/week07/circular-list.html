@@ -661,8 +661,8 @@ body.edit-active [contenteditable]:focus {
 .slide[data-step="3"] .hl.h3 { color: var(--red); font-weight: 600; }
 
 /* 01 의 단 한 번의 단계: Yena 줄에 빨간 선을 그려 넣는다 */
-.paint { stroke-dasharray: 170; stroke-dashoffset: 170; transition: stroke-dashoffset .9s var(--ease); }
-.slide[data-step="1"] .paint { stroke-dashoffset: 0; }
+.paint { stroke-dasharray: 210; stroke-dashoffset: 210; transition: stroke-dashoffset .9s var(--ease); }
+.slide[data-step="1"] .paint, .slide[data-step="2"] .paint { stroke-dashoffset: 0; }
 
 .slide[data-step="2"] .hl.h2 { color: var(--red); font-weight: 600; }
 
@@ -708,7 +708,7 @@ body.edit-active [contenteditable]:focus {
        #41 donation + MLFQS 10-14 22:10 (Yena) · Yena MLFQS 커밋 10-14 00:10–19:33
        각자 첫 alarm 커밋: Yena 10-09 17:26 · Jun 23:18 · benjohnbill 23:20
      ============================================================ -->
-<section class="slide" id="s2" data-step="0" data-max-step="1">
+<section class="slide" id="s2" data-step="0" data-max-step="2">
     <div class="head head-space">
         <span class="label">진행 · 협업 · AI 활용</span>
         <span class="num">01</span>
@@ -717,58 +717,29 @@ body.edit-active [contenteditable]:focus {
         <h2 class="thesis reveal">셋이 <b>각자</b> 짜고, 코어타임마다 리뷰해서, <b>donation까지</b> 함께 갔다</h2>
         <figure class="graph reveal">
             <svg viewBox="0 0 1400 330" preserveAspectRatio="xMinYMid meet" role="img"
-                 aria-label="10월 8일부터 15일까지 팀 브랜치. benjohnbill, Jun, Yena 세 줄이 10월 9일부터 같은 기능을 각자 구현했다. 10월 10일 alarm(#37), 12일 priority(#40), 14일 donation과 MLFQS(#41)가 master에 merge되었다. MLFQS는 Yena만 구현했다.">
-                <defs><marker id="g-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0a0a0a"/></marker></defs>
-                <g font-family="'IBM Plex Mono', monospace" font-size="21" fill="#0a0a0a">
-                    <text x="20" y="67" font-weight="600">master</text>
-                    <text x="20" y="142">benjohnbill</text>
-                    <text x="20" y="202">Jun</text>
-                    <text x="20" y="262">Yena</text>
-                </g>
-                <g font-family="'IBM Plex Mono', monospace" font-size="18" fill="#6b6b6b" text-anchor="middle">
-                    <text x="200" y="320">10-08 목</text><text x="355" y="320">10-09 금</text>
-                    <text x="510" y="320">10-10 토</text><text x="665" y="320">10-11 일</text>
-                    <text x="820" y="320">10-12 월</text><text x="975" y="320">10-13 화</text>
-                    <text x="1130" y="320">10-14 수</text><text x="1285" y="320">10-15 목</text>
-                </g>
-                <g stroke="#9a9a9a" stroke-width="1.5"><line x1="200" y1="288" x2="200" y2="298"/><line x1="355" y1="288" x2="355" y2="298"/><line x1="510" y1="288" x2="510" y2="298"/><line x1="665" y1="288" x2="665" y2="298"/><line x1="820" y1="288" x2="820" y2="298"/><line x1="975" y1="288" x2="975" y2="298"/><line x1="1130" y1="288" x2="1130" y2="298"/><line x1="1285" y1="288" x2="1285" y2="298"/></g>
-                <!-- 공통으로 간 구간 (donation 까지) -->
-                <rect x="460" y="112" width="815" height="165" fill="rgba(255,51,0,.08)"/>
-                <line x1="290" y1="60" x2="1330" y2="60" stroke="#0a0a0a" stroke-width="3"/>
-                <circle cx="290" cy="60" r="7" fill="#0a0a0a"/>
-                <!-- 각자 구현 -->
-                <g stroke="#0a0a0a" stroke-width="2.5">
-                    <line x1="506" y1="135" x2="1290" y2="135"/>
-                    <line x1="506" y1="195" x2="1290" y2="195"/>
-                    <line x1="467" y1="255" x2="1290" y2="255"/>
-                    <circle cx="506" cy="135" r="6" fill="#fff"/>
-                    <circle cx="506" cy="195" r="6" fill="#fff"/>
-                    <circle cx="467" cy="255" r="6" fill="#fff"/>
-                </g>
-                <!-- 단계 1: donation 통과(10-13 17:33) 뒤 MLFQS(~10-14 19:33)는 Yena 만 -->
-                <line class="paint" x1="1088" y1="255" x2="1256" y2="255" stroke="#ff3300" stroke-width="9"/>
-                <circle cx="1088" cy="255" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2.5"/>
-                <text class="at s1" x="1172" y="240" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="600" fill="#ff3300">donation → MLFQS</text>
-                <!-- 리뷰 뒤 merge -->
-                <g>
-                    <g stroke="#0a0a0a" stroke-width="2" marker-end="url(#g-arrow)">
-                        <line x1="518" y1="187" x2="518" y2="70"/>
-                        <line x1="935" y1="187" x2="935" y2="70"/>
-                        <line x1="1273" y1="247" x2="1273" y2="70"/>
-                    </g>
-                    <g fill="#0a0a0a"><circle cx="518" cy="60" r="7"/><circle cx="935" cy="60" r="7"/><circle cx="1273" cy="60" r="7"/></g>
-                    <g font-family="'IBM Plex Mono', monospace" font-size="18" fill="#0a0a0a" text-anchor="middle">
-                        <text x="518" y="38">#37 alarm</text>
-                        <text x="935" y="38">#40 priority</text>
-                        <text x="1240" y="38">#41 donation · MLFQS</text>
-                    </g>
-                </g>
+                 aria-label="10월 8일부터 15일까지 팀 브랜치. master 에 alarm, priority, donation, MLFQS 네 지점이 있다. 세 사람은 donation 까지 각자 구현했고, MLFQS 는 Yena 만 구현했다. merge 기준 코드는 alarm 과 priority 가 Jun, donation 과 MLFQS 가 Yena 였다.">
+<defs><marker id="g-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff3300"/></marker></defs>
+<g font-family="'IBM Plex Mono', monospace" font-size="21" fill="#0a0a0a"><text x="20" y="67" font-weight="600">master</text><text x="20" y="142">benjohnbill</text><text x="20" y="202">Jun</text><text x="20" y="262">Yena</text></g>
+<g font-family="'IBM Plex Mono', monospace" font-size="18" fill="#6b6b6b" text-anchor="middle"><text x="200" y="320">10-08 목</text><text x="355" y="320">10-09 금</text><text x="510" y="320">10-10 토</text><text x="665" y="320">10-11 일</text><text x="820" y="320">10-12 월</text><text x="975" y="320">10-13 화</text><text x="1130" y="320">10-14 수</text><text x="1285" y="320">10-15 목</text></g>
+<g stroke="#9a9a9a" stroke-width="1.5"><line x1="200" y1="288" x2="200" y2="298"/><line x1="355" y1="288" x2="355" y2="298"/><line x1="510" y1="288" x2="510" y2="298"/><line x1="665" y1="288" x2="665" y2="298"/><line x1="820" y1="288" x2="820" y2="298"/><line x1="975" y1="288" x2="975" y2="298"/><line x1="1130" y1="288" x2="1130" y2="298"/><line x1="1285" y1="288" x2="1285" y2="298"/></g>
+<!-- 공통으로 간 구간 (donation 까지) -->
+<rect x="455" y="112" width="845" height="165" fill="rgba(255,51,0,.08)"/>
+<line x1="290" y1="60" x2="1330" y2="60" stroke="#0a0a0a" stroke-width="3"/><circle cx="290" cy="60" r="7" fill="#0a0a0a"/>
+<!-- 각자 구현: benjohnbill 과 Jun 은 alarm 지점에 맞춰 그린다 (실제 첫 커밋 10-09 23:18–23:20), Yena 는 10-09 17:26 -->
+<g stroke="#0a0a0a" stroke-width="2.5"><line x1="518" y1="135" x2="1290" y2="135"/><line x1="518" y1="195" x2="1290" y2="195"/><line x1="467" y1="255" x2="1290" y2="255"/><circle cx="518" cy="135" r="6" fill="#fff"/><circle cx="518" cy="195" r="6" fill="#fff"/><circle cx="467" cy="255" r="6" fill="#fff"/></g>
+<!-- master 의 기능 지점 4개. donation 과 MLFQS 는 실제로는 같은 PR #41 -->
+<g fill="#0a0a0a"><circle cx="518" cy="60" r="7"/><circle cx="935" cy="60" r="7"/><circle cx="1150" cy="60" r="7"/><circle cx="1273" cy="60" r="7"/></g>
+<g font-family="'IBM Plex Mono', monospace" text-anchor="middle"><text x="518" y="14" font-size="15" fill="#6b6b6b">#37</text><text x="518" y="38" font-size="19" fill="#0a0a0a">alarm</text><text x="935" y="14" font-size="15" fill="#6b6b6b">#40</text><text x="935" y="38" font-size="19" fill="#0a0a0a">priority</text><text x="1150" y="14" font-size="15" fill="#6b6b6b">#41</text><text x="1150" y="38" font-size="19" fill="#0a0a0a">donation</text><text x="1273" y="14" font-size="15" fill="#6b6b6b">#41</text><text x="1273" y="38" font-size="19" fill="#0a0a0a">MLFQS</text></g>
+<!-- 단계 1: donation 통과(10-13 17:33) 뒤 MLFQS 는 Yena 만, 오늘까지 -->
+<line class="paint" x1="1088" y1="255" x2="1290" y2="255" stroke="#ff3300" stroke-width="9"/><circle cx="1088" cy="255" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2.5"/><text class="at s1" x="1074" y="246" text-anchor="end" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="600" fill="#ff3300">donation → MLFQS</text>
+<!-- 단계 2: merge 기준 코드가 누구 것이었나 -->
+<g class="at s2"><g stroke="#ff3300" stroke-width="2.5" marker-end="url(#g-arrow)"><line x1="518" y1="187" x2="518" y2="70"/><line x1="935" y1="187" x2="935" y2="70"/><line x1="1150" y1="247" x2="1150" y2="70"/><line x1="1273" y1="247" x2="1273" y2="70"/></g><g font-family="'IBM Plex Mono', monospace" fill="#ff3300"><text x="527" y="96" font-size="18" font-weight="600">Jun</text><text x="944" y="96" font-size="18" font-weight="600">Jun</text><text x="1159" y="96" font-size="18" font-weight="600">Yena</text><text x="1282" y="96" font-size="18" font-weight="600">Yena 단독</text></g></g>
             </svg>
         </figure>
         <div class="msgs">
-            <div class="msg"><span class="k">① 각자 구현</span>같은 기능을 셋이 <b>각자</b> 짜고, 로컬에서 테스트를 전부 통과한 뒤 리뷰</div>
-            <div class="msg"><span class="k">② 코어타임 리뷰 + AI 순위</span>복잡도 · 가독성 · edge case 기준으로 순위 → <b>1등 코드를 merge</b>, 더 나은 부분은 부분 반영</div>
-            <div class="msg"><span class="k">③ 공통 도달선</span><b>donation까지</b> 셋 모두, MLFQS는 Yena<br><span class="badge">make check <b>27/27</b> · Yena</span></div>
+            <div class="msg"><span class="k">① 각자 구현</span>같은 기능을 <b>각자</b> 짜고, 로컬 통과 후 리뷰</div>
+            <div class="msg"><span class="k">② 리뷰 + AI 순위</span>복잡도 · 가독성 · edge case → <b>1등 코드 merge</b></div>
+            <div class="msg"><span class="k">③ 공통 도달선</span><b>donation까지</b> 셋 모두 <span class="badge">27/27 · Yena</span></div>
         </div>
     </div>
     <div class="step-dot" aria-hidden="true"></div>
