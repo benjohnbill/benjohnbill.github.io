@@ -666,8 +666,25 @@ body.edit-active [contenteditable]:focus {
 
 .slide[data-step="2"] .hl.h2 { color: var(--red); font-weight: 600; }
 
+/* 07 · 같은 실수를 두 타입 체계에 넣어 본다 */
+.vs { display: grid; position: relative; z-index: 2; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(.6rem, 1.6vw, 1.4rem); }
+.tcard { border: 2px solid var(--ink); background: var(--paper); padding: clamp(.6rem, 1.6vh, 1.2rem) clamp(.7rem, 1.4vw, 1.3rem); display: flex; flex-direction: column; gap: clamp(.5rem, 1.4vh, 1rem); }
+.tcard.accent { border-color: var(--red); }
+.tcard .tk { font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut); }
+.tcard .tk .ln { color: var(--red); }
+.tcard .call { font-family: var(--font-mono); font-size: clamp(1rem, 1.6vw, 2.3rem); font-weight: 500; }
+.tcard .call u { text-decoration: none; border-bottom: 3px solid var(--red); }
+.types { display: grid; grid-template-columns: auto 1fr; column-gap: .8em; row-gap: .2em; align-items: baseline; font-size: var(--body-size); }
+.types .tl { color: var(--mut); font-size: var(--small-size); }
+.types code { font-family: var(--font-mono); font-weight: 500; }
+.types .rel { grid-column: 2; font-family: var(--font-mono); font-weight: 700; font-size: 1.4em; line-height: 1; }
+.types .ne { color: var(--red); }
+.verdict { align-self: flex-start; font-family: var(--font-mono); font-size: var(--small-size); padding: .3em .7em; border: 2px solid var(--ink); }
+.verdict.bad { border-color: var(--red); color: var(--red); font-weight: 600; }
+.verdict .memo { color: var(--red); font-weight: 700; font-family: var(--font-body); margin-left: .6em; }
+
 @media (max-width: 700px) {
-    .two, .three, .msgs { grid-template-columns: 1fr; }
+    .two, .three, .msgs, .vs { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -1052,42 +1069,40 @@ __list_add(new, prev, next) {
            lab/cost/pintos.log — 같은 실수(list 를 elem 자리에)를 Pintos list 로 쓰면 gcc 11.4 가 incompatible pointer type 경고
      ⚠ :42 가 왜 틀렸는지는 발표자가 직접 확인하고 말한다
      ============================================================ -->
-<section class="slide tight" id="s8">
+<section class="slide" id="s8" data-step="0" data-max-step="2">
     <div class="head head-space">
         <span class="label">대가 · trade-off</span>
         <span class="num">07</span>
     </div>
     <div class="slide-content">
         <h2 class="thesis reveal">대가: head와 entry가 <b>같은 타입</b>이라, 컴파일러가 실수를 못 잡는다</h2>
-        <div class="two reveal">
-            <div class="panel accent">
-                <div class="cap"><span>jingeunOS · threads/thread.c</span><span class="side">40 – 43</span></div>
-<pre><span class="c-dim">prev_context = list_first_entry(&amp;ready_list,
-                   struct thread, list)-&gt;context;</span>
-
-<span class="c-hit">__list_del_entry(&amp;ready_list);</span>   <span class="c-com">// :42 head를 entry 자리에</span>
-<span class="c-dim">list_add_tail(&amp;current_thread-&gt;list, &amp;ready_list);</span></pre>
+        <p class="sub reveal" style="font-size:var(--body-size)">같은 실수: <b>리스트(head)</b>를 원소(entry) 자리에 넘겼다</p>
+        <div class="vs reveal">
+            <div class="tcard">
+                <div class="tk">PintOS · 타입 2개</div>
+                <div class="call">list_remove (<u>&amp;ready_list</u>);</div>
+                <div class="types at s1">
+                    <span class="tl">넘긴 것</span><code>struct list *</code>
+                    <span class="rel ne">≠</span>
+                    <span class="tl">받는 것</span><code>struct list_elem *</code>
+                </div>
+                <div class="verdict bad at s1">gcc: warning · incompatible pointer type</div>
             </div>
-            <div class="stack">
-                <div class="panel machine">
-                    <div class="cap"><span>gcc 15.2 -Wall -Wextra · jingeunOS</span><span class="side">list_head</span></div>
-<pre><span class="m-dim">thread.h:15: warning: ‘child’ declared
-  ‘static’ but never defined</span>
-<b>thread.c:42 → 아무 말 없음</b></pre>
+            <div class="tcard accent">
+                <div class="tk">jingeunOS · Linux list_head · 타입 1개 · <span class="ln">thread.c:42</span></div>
+                <div class="call">__list_del_entry(<u>&amp;ready_list</u>);</div>
+                <div class="types at s2">
+                    <span class="tl">넘긴 것</span><code>struct list_head *</code>
+                    <span class="rel eq">=</span>
+                    <span class="tl">받는 것</span><code>struct list_head *</code>
                 </div>
-                <div class="panel machine">
-                    <div class="cap"><span>gcc 11.4 · 같은 실수를 PintOS list 로</span><span class="side">list ≠ list_elem</span></div>
-<pre>list_remove (&amp;ready_list);
-<span class="m-err">warning:</span> passing argument 1 of ‘list_remove’
-  from <span class="m-err">incompatible pointer type</span>
-<span class="m-dim">note: expected ‘struct list_elem *’
-  but argument is of type ‘struct list *’</span></pre>
-                </div>
+                <div class="verdict ok at s2">gcc: 경고 없음 <span class="memo">← head인데 그냥 통과</span></div>
             </div>
         </div>
-        <p class="punch reveal">끝을 없앤 대가로 <b>타입 검사</b>를 잃었다. head와 entry는 이제 내가 구분해야 한다.</p>
+        <p class="punch at s2">끝을 없앤 대가로 <b>타입 검사</b>를 잃었다. head와 entry는 이제 내가 구분해야 한다.</p>
     </div>
-    <div class="foot"><span>lab/cost · jingeunOS.log · pintos.log</span></div>
+    <div class="step-dot" aria-hidden="true"></div>
+    <div class="foot"><span>lab/cost · gcc 11.4 -Wall -W (PintOS) · gcc 15.2 -Wall -Wextra (jingeunOS)</span></div>
 </section>
 
 <!-- ============================================================
