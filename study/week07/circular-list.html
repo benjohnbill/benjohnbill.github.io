@@ -470,7 +470,8 @@ pre {
     animation: breathe 1.9s ease-in-out infinite;
 }
 .slide[data-max-step="3"][data-step="3"] .step-dot,
-.slide[data-max-step="2"][data-step="2"] .step-dot { display: none; }
+.slide[data-max-step="2"][data-step="2"] .step-dot,
+.slide[data-max-step="1"][data-step="1"] .step-dot { display: none; }
 @keyframes breathe { 50% { opacity: .25; } }
 
 /* ===========================================
@@ -659,6 +660,10 @@ body.edit-active [contenteditable]:focus {
 .slide[data-step="1"] .hl.h1, .slide[data-step="2"] .hl.h1,
 .slide[data-step="3"] .hl.h3 { color: var(--red); font-weight: 600; }
 
+/* 01 의 단 한 번의 단계: Yena 줄에 빨간 선을 그려 넣는다 */
+.paint { stroke-dasharray: 170; stroke-dashoffset: 170; transition: stroke-dashoffset .9s var(--ease); }
+.slide[data-step="1"] .paint { stroke-dashoffset: 0; }
+
 @media (max-width: 700px) {
     .two, .three, .msgs { grid-template-columns: 1fr; }
 }
@@ -701,7 +706,7 @@ body.edit-active [contenteditable]:focus {
        #41 donation + MLFQS 10-14 22:10 (Yena) · Yena MLFQS 커밋 10-14 00:10–19:33
        각자 첫 alarm 커밋: Yena 10-09 17:26 · Jun 23:18 · benjohnbill 23:20
      ============================================================ -->
-<section class="slide" id="s2" data-step="0" data-max-step="3">
+<section class="slide" id="s2" data-step="0" data-max-step="1">
     <div class="head head-space">
         <span class="label">진행 · 협업 · AI 활용</span>
         <span class="num">01</span>
@@ -724,21 +729,13 @@ body.edit-active [contenteditable]:focus {
                     <text x="820" y="320">10-12 월</text><text x="975" y="320">10-13 화</text>
                     <text x="1130" y="320">10-14 수</text><text x="1285" y="320">10-15 목</text>
                 </g>
-                <g stroke="#ebebeb" stroke-width="1.5">
-                    <line x1="200" y1="30" x2="200" y2="295"/><line x1="355" y1="30" x2="355" y2="295"/>
-                    <line x1="510" y1="30" x2="510" y2="295"/><line x1="665" y1="30" x2="665" y2="295"/>
-                    <line x1="820" y1="30" x2="820" y2="295"/><line x1="975" y1="30" x2="975" y2="295"/>
-                    <line x1="1130" y1="30" x2="1130" y2="295"/><line x1="1285" y1="30" x2="1285" y2="295"/>
-                </g>
-                <!-- 3단계: 공통 도달선 -->
-                <g class="at s3">
-                    <rect x="460" y="112" width="815" height="165" fill="rgba(255,51,0,.08)"/>
-                    <text x="1265" y="298" text-anchor="end" font-family="'IBM Plex Sans KR', sans-serif" font-size="19" font-weight="700" fill="#ff3300">공통: alarm → priority → donation</text>
-                </g>
+                <g stroke="#9a9a9a" stroke-width="1.5"><line x1="200" y1="288" x2="200" y2="298"/><line x1="355" y1="288" x2="355" y2="298"/><line x1="510" y1="288" x2="510" y2="298"/><line x1="665" y1="288" x2="665" y2="298"/><line x1="820" y1="288" x2="820" y2="298"/><line x1="975" y1="288" x2="975" y2="298"/><line x1="1130" y1="288" x2="1130" y2="298"/><line x1="1285" y1="288" x2="1285" y2="298"/></g>
+                <!-- 공통으로 간 구간 (donation 까지) -->
+                <rect x="460" y="112" width="815" height="165" fill="rgba(255,51,0,.08)"/>
                 <line x1="290" y1="60" x2="1330" y2="60" stroke="#0a0a0a" stroke-width="3"/>
                 <circle cx="290" cy="60" r="7" fill="#0a0a0a"/>
-                <!-- 1단계: 각자 구현 -->
-                <g class="at s1" stroke="#0a0a0a" stroke-width="2.5">
+                <!-- 각자 구현 -->
+                <g stroke="#0a0a0a" stroke-width="2.5">
                     <line x1="506" y1="135" x2="1290" y2="135"/>
                     <line x1="506" y1="195" x2="1290" y2="195"/>
                     <line x1="467" y1="255" x2="1290" y2="255"/>
@@ -746,13 +743,12 @@ body.edit-active [contenteditable]:focus {
                     <circle cx="506" cy="195" r="6" fill="#fff"/>
                     <circle cx="467" cy="255" r="6" fill="#fff"/>
                 </g>
-                <!-- 3단계: MLFQS 는 Yena 만 -->
-                <g class="at s3">
-                    <line x1="1131" y1="255" x2="1256" y2="255" stroke="#ff3300" stroke-width="9"/>
-                    <text x="1193" y="240" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="600" fill="#ff3300">MLFQS</text>
-                </g>
-                <!-- 2단계: 리뷰 뒤 merge -->
-                <g class="at s2">
+                <!-- 단계 1: donation 통과(10-13 17:33) 뒤 MLFQS(~10-14 19:33)는 Yena 만 -->
+                <line class="paint" x1="1088" y1="255" x2="1256" y2="255" stroke="#ff3300" stroke-width="9"/>
+                <circle cx="1088" cy="255" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2.5"/>
+                <text class="at s1" x="1172" y="240" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="600" fill="#ff3300">donation → MLFQS</text>
+                <!-- 리뷰 뒤 merge -->
+                <g>
                     <g stroke="#0a0a0a" stroke-width="2" marker-end="url(#g-arrow)">
                         <line x1="518" y1="187" x2="518" y2="70"/>
                         <line x1="935" y1="187" x2="935" y2="70"/>
@@ -768,9 +764,9 @@ body.edit-active [contenteditable]:focus {
             </svg>
         </figure>
         <div class="msgs">
-            <div class="msg at s1"><span class="k">① 각자 구현</span>같은 기능을 셋이 <b>각자</b> 짜고, 로컬에서 테스트를 전부 통과한 뒤 리뷰</div>
-            <div class="msg at s2"><span class="k">② 코어타임 리뷰 + AI 순위</span>복잡도 · 가독성 · edge case 기준으로 순위 → <b>1등 코드를 merge</b>, 더 나은 부분은 부분 반영</div>
-            <div class="msg at s3"><span class="k">③ 공통 도달선</span><b>donation까지</b> 셋 모두, MLFQS는 Yena<br><span class="badge">make check <b>27/27</b> · Yena</span></div>
+            <div class="msg"><span class="k">① 각자 구현</span>같은 기능을 셋이 <b>각자</b> 짜고, 로컬에서 테스트를 전부 통과한 뒤 리뷰</div>
+            <div class="msg"><span class="k">② 코어타임 리뷰 + AI 순위</span>복잡도 · 가독성 · edge case 기준으로 순위 → <b>1등 코드를 merge</b>, 더 나은 부분은 부분 반영</div>
+            <div class="msg"><span class="k">③ 공통 도달선</span><b>donation까지</b> 셋 모두, MLFQS는 Yena<br><span class="badge">make check <b>27/27</b> · Yena</span></div>
         </div>
     </div>
     <div class="step-dot" aria-hidden="true"></div>
