@@ -661,7 +661,7 @@ body.edit-active [contenteditable]:focus {
 .slide[data-step="3"] .hl.h3 { color: var(--red); font-weight: 600; }
 
 /* 01 의 단 한 번의 단계: Yena 줄에 빨간 선을 그려 넣는다 */
-.paint { stroke-dasharray: 210; stroke-dashoffset: 210; transition: stroke-dashoffset .9s var(--ease); }
+.paint { stroke-dasharray: 145; stroke-dashoffset: 145; transition: stroke-dashoffset .9s var(--ease); }
 .slide[data-step="1"] .paint, .slide[data-step="2"] .paint { stroke-dashoffset: 0; }
 
 .slide[data-step="2"] .hl.h2 { color: var(--red); font-weight: 600; }
@@ -747,8 +747,8 @@ body.edit-active [contenteditable]:focus {
 <!-- master 의 기능 지점 4개. donation 과 MLFQS 는 실제로는 같은 PR #41 -->
 <g fill="#0a0a0a"><circle cx="518" cy="60" r="7"/><circle cx="935" cy="60" r="7"/><circle cx="1150" cy="60" r="7"/><circle cx="1273" cy="60" r="7"/></g>
 <g font-family="'IBM Plex Mono', monospace" text-anchor="middle"><text x="518" y="14" font-size="15" fill="#6b6b6b">#37</text><text x="518" y="38" font-size="19" fill="#0a0a0a">alarm</text><text x="935" y="14" font-size="15" fill="#6b6b6b">#40</text><text x="935" y="38" font-size="19" fill="#0a0a0a">priority</text><text x="1150" y="14" font-size="15" fill="#6b6b6b">#41</text><text x="1150" y="38" font-size="19" fill="#0a0a0a">donation</text><text x="1273" y="14" font-size="15" fill="#6b6b6b">#41</text><text x="1273" y="38" font-size="19" fill="#0a0a0a">MLFQS</text></g>
-<!-- 단계 1: donation 통과(10-13 17:33) 뒤 MLFQS 는 Yena 만, 오늘까지 -->
-<line class="paint" x1="1088" y1="255" x2="1290" y2="255" stroke="#ff3300" stroke-width="9"/><circle cx="1088" cy="255" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2.5"/><text class="at s1" x="1074" y="246" text-anchor="end" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="600" fill="#ff3300">donation → MLFQS</text>
+<!-- 단계 1: master 의 donation 지점부터 MLFQS 는 Yena 만, 오늘까지 -->
+<line class="paint" x1="1150" y1="255" x2="1290" y2="255" stroke="#ff3300" stroke-width="9"/><circle cx="1150" cy="255" r="6" fill="#fff" stroke="#0a0a0a" stroke-width="2.5"/><text class="at s1" x="1136" y="246" text-anchor="end" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="600" fill="#ff3300">donation → MLFQS</text>
 <!-- 단계 2: merge 기준 코드가 누구 것이었나 -->
 <g class="at s2"><g stroke="#ff3300" stroke-width="2.5" marker-end="url(#g-arrow)"><line x1="518" y1="187" x2="518" y2="70"/><line x1="935" y1="187" x2="935" y2="70"/><line x1="1150" y1="247" x2="1150" y2="70"/><line x1="1273" y1="247" x2="1273" y2="70"/></g><g font-family="'IBM Plex Mono', monospace" fill="#ff3300"><text x="527" y="96" font-size="18" font-weight="600">Jun</text><text x="944" y="96" font-size="18" font-weight="600">Jun</text><text x="1159" y="96" font-size="18" font-weight="600">Yena</text><text x="1282" y="96" font-size="18" font-weight="600">Yena 단독</text></g></g>
             </svg>
