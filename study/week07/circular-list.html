@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>list에서 끝을 없앴더니</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2312201F'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%234FC5B3'%3EJ%3C/text%3E%3C/svg%3E">
+<meta name="description" content="PintOS 1주차 9팀 결과와, 패딩 재배치가 0바이트였던 일에서 출발해 Linux의 원형 이중 연결 리스트로 분기를 없앤 과정을 따라간 2분 20초 발표 슬라이드입니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="list에서 끝을 없앴더니">
+<meta property="og:description" content="PintOS 1주차 9팀 결과와, 패딩 재배치가 0바이트였던 일에서 출발해 Linux의 원형 이중 연결 리스트로 분기를 없앤 과정을 따라간 2분 20초 발표 슬라이드입니다.">
+<meta property="og:url" content="https://benjohnbill.github.io/study/week07/circular-list.html">
+
+<!-- 폰트: IBM Plex Sans KR(본문·제목) · IBM Plex Mono(코드). week05 oop-in-c 덱과 같은 디자인 · docs/slides/DESIGN.md -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================
+   1. 테마 변수 — 색과 크기는 전부 여기서 바꾼다
+   스타일: Swiss Modern (흰 바탕 · 격자 · 단일 빨강 악센트), week04 덱 재사용
+   =========================================== */
+:root {
+    --paper:  #ffffff;   /* 바탕 */
+    --ink:    #0a0a0a;   /* 본문 글자 */
+    --red:    #ff3300;   /* 유일한 악센트. 한 화면에 한두 군데만 */
+    --grid:   #ebebeb;   /* 배경 격자선 */
+    --mut:    #6b6b6b;   /* 보조 글자 */
+    --panel:  #f7f7f5;   /* 코드 패널 바탕 */
+    --panel-b:#0a0a0a;   /* 코드 패널 테두리 */
+
+    --font-body:    'IBM Plex Sans KR', sans-serif;
+    --font-mono:    'IBM Plex Mono', monospace;
+
+    /* 타이포 — 전부 clamp. 대형 모니터와 노트북 모두에서 깨지지 않는다 */
+    --title-size:    clamp(2.4rem, 4.8vw, 7.5rem);
+    --h2-size:       clamp(1.4rem, 2.3vw, 3.2rem);
+    --h3-size:       clamp(1.1rem, 1.6vw, 2.2rem);
+    --body-size:     clamp(0.95rem, 1.15vw, 1.65rem);
+    --small-size:    clamp(0.72rem, 0.78vw, 1.15rem);
+    --code-size:     clamp(0.85rem, min(1.4vw, 2.4vh), 2.1rem);
+
+    --slide-padding: clamp(1rem, 4vw, 4rem);
+    --content-gap:   clamp(0.5rem, 2vw, 2rem);
+    --element-gap:   clamp(0.25rem, 1vw, 1rem);
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur:  0.65s;
+}
+
+/* ===========================================
+   2. 기본 초기화
+   =========================================== */
+* { margin:0; padding:0; box-sizing:border-box; }
+
+/* ===========================================
+   3. VIEWPORT FITTING — 필수 기본 스타일
+   (viewport-base.css 전문. 슬라이드가 화면을 넘지 않게 하는 계약)
+   =========================================== */
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+}
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;            /* 중요: 어떤 경우에도 넘치지 않는다 */
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 100%;
+    overflow: hidden;
+    /* 세로 여백을 줄여서 그만큼을 코드 크기로 돌린다 */
+    padding: clamp(.5rem, 1.4vh, 1.1rem) var(--slide-padding);
+}
+.card, .container, .content-box {
+    max-width: min(90vw, 1000px);
+    max-height: min(80vh, 700px);
+}
+.feature-list, .bullet-list { gap: clamp(0.4rem, 1vh, 1rem); }
+.feature-list li, .bullet-list li { font-size: var(--body-size); line-height: 1.4; }
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+}
+img, .image-container {
+    max-width: 100%;
+    max-height: min(50vh, 400px);
+    object-fit: contain;
+}
+
+/* 낮은 화면 (700px 미만) */
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --content-gap:   clamp(0.4rem, 1.5vw, 1rem);
+        --title-size:    clamp(1.25rem, 4.5vw, 2.5rem);
+        --h2-size:       clamp(1rem, 3vw, 1.75rem);
+    }
+}
+/* 아주 낮은 화면 (600px 미만) */
+@media (max-height: 600px) {
+    :root {
+        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+        --content-gap:   clamp(0.3rem, 1vw, 0.75rem);
+        --title-size:    clamp(1.1rem, 4vw, 2rem);
+        --body-size:     clamp(0.7rem, 1.2vw, 0.95rem);
+    }
+    .nav-dots, .keyboard-hint, .decorative { display: none; }
+}
+/* 극단적으로 낮은 화면 (500px 미만) */
+@media (max-height: 500px) {
+    :root {
+        --slide-padding: clamp(0.4rem, 2vw, 1rem);
+        --title-size:    clamp(1rem, 3.5vw, 1.5rem);
+        --h2-size:       clamp(0.9rem, 2.5vw, 1.25rem);
+        --body-size:     clamp(0.65rem, 1vw, 0.85rem);
+    }
+}
+/* 좁은 화면 (600px 미만) */
+@media (max-width: 600px) {
+    :root { --title-size: clamp(1.25rem, 7vw, 2.5rem); }
+    .grid { grid-template-columns: 1fr; }
+}
+/* 모션 축소 선호 존중 */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+    html { scroll-behavior: auto; }
+}
+
+/* ===========================================
+   4. 슬라이드 뼈대 — 스위스 격자
+   위 머리띠 / 가운데 본문 / 아래 발띠 의 3단 구조
+   =========================================== */
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 400;
+}
+
+/* 배경 12열 격자 — 스위스 스타일의 서명 요소 */
+.slide::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 8.3333%);
+    opacity: .6;
+    z-index: 0;
+}
+
+.slide-content { gap: var(--content-gap); }
+
+/* 각 장의 핵심 문장 */
+h2.thesis {
+    font-size: var(--h3-size);
+    font-weight: 700;
+    letter-spacing: -.01em;
+    margin-bottom: clamp(.1rem, .4vh, .4rem);
+}
+h2.thesis b { color: var(--red); font-weight: 700; }
+h2.thesis code { font-family: var(--font-mono); font-weight: 600; letter-spacing: 0; }
+
+/* 머리띠: 왼쪽 구역 이름, 오른쪽 번호 */
+.head {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 2px solid var(--ink);
+    padding: 0 var(--slide-padding) clamp(.4rem, 1vh, .7rem);
+    margin: 0 0 0;
+}
+/* 머리띠에 Rec · main.c 같은 식별자가 들어간다. 대문자로 바꾸면 다른 이름이 된다 */
+.head .label {
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    letter-spacing: .02em;
+    color: var(--mut);
+}
+/* 슬라이드 번호는 장식이 아니라 셈이다. 머리띠 오른쪽에 작게 한 번만 둔다 */
+.head .num {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    font-size: var(--small-size);
+    letter-spacing: .1em;
+    color: var(--mut);
+    line-height: 1;
+}
+.head-space { padding-top: clamp(1.1rem, 3.5vh, 2.6rem); }
+
+/* 발띠 */
+.foot {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--ink);
+    margin: 0 var(--slide-padding) clamp(1rem, 3vh, 2.2rem);
+    padding-top: clamp(.35rem, 1vh, .6rem);
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    color: var(--mut);
+}
+
+/* 한국어는 어절 단위로 끊어야 읽힌다. 이 규칙이 없으면 아무 데서나 잘린다 */
+h1, h2, .sub, .punch, .takeaway, .foot span, .head .label {
+    word-break: keep-all;
+    text-wrap: pretty;
+}
+h1, h2 { text-wrap: balance; }
+
+/* ===========================================
+   5. 본문 요소
+   =========================================== */
+h1 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.02em;
+    font-size: var(--title-size);
+    max-width: 19ch;
+    position: relative; z-index: 2;
+}
+h1 em { font-style: normal; color: var(--red); }
+
+h2 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -.015em;
+    font-size: var(--h2-size);
+    position: relative; z-index: 2;
+}
+h2 em { font-style: normal; color: var(--red); }
+
+/* 표지의 태그 줄 */
+.tags { display: flex; gap: clamp(.4rem, .8vw, .8rem); align-self: flex-start; position: relative; z-index: 2; }
+.eyebrow {
+    display: inline-block; align-self: flex-start;
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    letter-spacing: .2em; text-transform: uppercase;
+    color: var(--paper); background: var(--red);
+    border: 2px solid var(--red);
+    padding: .35em .75em;
+    position: relative; z-index: 2;
+}
+/* study-cli 는 프로그램 이름이다. 대문자로 바꾸지 않는다 */
+.eyebrow.ghost {
+    text-transform: none; letter-spacing: .04em;
+    color: var(--red); background: var(--paper);
+}
+.rule {
+    width: clamp(70px, 9vw, 180px);
+    height: clamp(6px, .55vw, 12px); background: var(--ink);
+    margin-top: clamp(.3rem, 1vh, .9rem);   /* 큰 글자의 아래 삐침과 겹치지 않게 */
+    position: relative; z-index: 2;
+}
+.sub {
+    font-weight: 400; color: #444;
+    font-size: clamp(1.1rem, 1.5vw, 2.1rem);
+    line-height: 1.6; max-width: 38ch;
+    position: relative; z-index: 2;
+}
+.sub code { font-family: var(--font-mono); font-weight: 500; color: var(--ink); }
+/* 제목 슬라이드 오른쪽의 원 — 유일한 장식 */
+.dot {
+    position: absolute; z-index: 1;
+    right: var(--slide-padding); top: 50%;
+    transform: translateY(-50%);
+    width: clamp(36px, 5.5vw, 68px); aspect-ratio: 1;
+    background: var(--red); border-radius: 50%;
+}
+
+/* ===========================================
+   6. 코드 패널 — 이 발표의 주인공
+   얇은 테두리 머리띠에 파일명(왼쪽)과 줄 범위(오른쪽)
+   =========================================== */
+.panel {
+    border: 2px solid var(--panel-b);
+    background: var(--panel);
+    display: flex; flex-direction: column;
+    min-width: 0;                       /* 긴 코드 줄이 격자를 밀지 않게 */
+    overflow: hidden;
+}
+/* week04 는 검은 띠였다. 이번에는 파일명만 얇게, 아래 선 하나로 코드와 가른다 */
+.panel > .cap {
+    background: var(--paper); color: var(--ink);
+    font-family: var(--font-mono); font-weight: 500;
+    font-size: var(--small-size);
+    letter-spacing: .03em;
+    padding: .2em .7em;
+    border-bottom: 1.5px solid var(--panel-b);
+    display: flex; justify-content: space-between; gap: .6em;
+}
+.panel > .cap .side { color: var(--mut); font-weight: 400; }
+.panel.accent { border-color: var(--red); }
+.panel.accent > .cap { border-bottom-color: var(--red); }
+.panel.accent > .cap .side { color: var(--red); }
+
+pre {
+    font-family: var(--font-mono);
+    font-size: var(--code-size);
+    line-height: 1.6;
+    padding: clamp(.5rem, 1.4vh, 1rem) clamp(.7rem, 1.2vw, 1.1rem);
+    overflow: hidden;
+    white-space: pre;
+    tab-size: 4;
+    flex: 1;
+}
+/* 코드 안의 색 — 빨강은 "여기를 보라"는 표시로만 쓴다 */
+.c-hit { color: var(--red); font-weight: 600; }
+.c-com { color: #9a9a9a; }
+.c-dim { color: #b4b4b4; }
+
+/* 결론 한 줄 — 코드 아래에 붙는 굵은 문장 */
+.punch {
+    position: relative; z-index: 2;
+    padding: clamp(.3rem,.8vh,.6rem) 0;
+    font-size: clamp(1.05rem, 1.32vw, 1.95rem);
+    font-weight: 500; line-height: 1.5;
+    max-width: 66ch;
+}
+/* 문장 앞의 빨간 정사각형 — 세로 막대 대신 쓰는 표식 */
+.punch::before {
+    content: "";
+    display: inline-block;
+    width: .6em; height: .6em;
+    background: var(--red);
+    margin-right: .55em;
+    vertical-align: .02em;
+}
+.punch b { color: var(--red); font-weight: 700; }
+.punch code { font-family: var(--font-mono); font-weight: 600; }
+
+/* 마지막 장의 체크 항목 상자 */
+.takeaway {
+    position: relative; z-index: 2;
+    border: 2px solid var(--ink);
+    padding: clamp(.8rem,2vh,1.4rem) clamp(.9rem,1.8vw,1.6rem);
+    max-width: 58ch;
+    font-size: clamp(1rem, 1.28vw, 1.85rem);
+    line-height: 1.7;
+}
+.takeaway .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--small-size);
+    letter-spacing: .18em; text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: .5em;
+}
+.takeaway b { color: var(--red); }
+.takeaway small { color: var(--mut); font-size: .8em; }
+
+/* ===========================================
+   6-A. 기계가 한 말 (컴파일러 · nm)
+   터미널처럼 어둡게. 코드 패널과 성격을 구분한다
+   =========================================== */
+.machine { border: 2px solid var(--ink); background: #14171c; }
+.machine > .cap { background: #14171c; color: #d5d1c9; border-bottom-color: #3a3f47; }
+.machine > .cap .side { color: #e0a458; }
+.machine pre { color: #d5d1c9; }
+.m-err  { color: #ff6a3d; font-weight: 600; }
+.m-dim  { color: #7e858f; }
+.m-ok   { color: #8fbf8f; font-weight: 600; }
+/* 실제 코드에 있는 줄(O)과 쓸 수 없는 줄(X) 표시 */
+.ok { color: var(--ink); font-weight: 700; }
+.ng { color: var(--red); font-weight: 700; }
+
+/* ===========================================
+   6-B. 두 칸 배치 (S2 · S5)
+   =========================================== */
+.two {
+    display: grid; position: relative; z-index: 2;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(.6rem, 1.6vw, 1.4rem);
+    align-items: start;
+}
+.two.wide-r { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
+.stack { display: flex; flex-direction: column; gap: clamp(.45rem, 1.2vh, .9rem); min-width: 0; }
+
+/* ===========================================
+   6-C. 컴파일과 링크 그림 (S3)
+   윗줄: 소스 셋과 include 화살표
+   가운뎃줄: ① compile
+   아랫줄: 오브젝트 파일 둘과 ② link 화살표
+   =========================================== */
+.flow {
+    display: grid; position: relative; z-index: 2;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.1fr) auto minmax(0, 1fr);
+    column-gap: clamp(.4rem, .9vw, .9rem);
+    row-gap: clamp(.25rem, .8vh, .6rem);
+    align-items: center;
+}
+.flow pre { font-size: clamp(.85rem, min(1.3vw, 2.3vh), 2rem); }
+.flow .arrow, .flow .down {
+    font-family: var(--font-mono); font-size: var(--small-size);
+    color: var(--mut); white-space: nowrap;
+}
+.flow .down { text-align: center; }
+.flow .down b, .flow .link b { color: var(--red); font-weight: 600; }
+.flow .f-main { grid-column: 1; grid-row: 1; }
+.flow .a1     { grid-column: 2; grid-row: 1; }
+.flow .f-h    { grid-column: 3; grid-row: 1; }
+.flow .a2     { grid-column: 4; grid-row: 1; }
+.flow .f-rc   { grid-column: 5; grid-row: 1; }
+.flow .d1     { grid-column: 1; grid-row: 2; }
+.flow .d2     { grid-column: 5; grid-row: 2; }
+.flow .f-mo   { grid-column: 1; grid-row: 3; }
+.flow .link   { grid-column: 2 / 5; grid-row: 3; }
+.flow .f-ro   { grid-column: 5; grid-row: 3; }
+/* 링크 화살표: 선 · 이름표 · 선 · 화살촉 */
+.flow .link {
+    display: flex; align-items: center; gap: .6em;
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--red);
+    white-space: nowrap;
+}
+.flow .link i { flex: 1; height: 2px; background: var(--red); }
+
+/* ===========================================
+   6-D. 콜백 세 패널 (S4)
+   위: 둘이 공유하는 모양(record.h) / 아래 왼쪽: core / 아래 오른쪽: interface
+   =========================================== */
+.cb {
+    display: grid; position: relative; z-index: 2;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(.5rem, 1.4vw, 1.2rem);
+    align-items: start;
+}
+.cb .cb-h { grid-column: 1 / 3; }
+
+/* ===========================================
+   6-F. 구조도 (01) — 5초쯤 보여 주는 그림
+   SVG 안의 선과 글자는 currentColor 를 따른다. 빨강은 구조체 정의 한 곳에만
+   =========================================== */
+.map { position: relative; z-index: 2; margin: 0; color: var(--ink); display: flex; flex-direction: column; gap: clamp(.3rem, 1vh, .8rem); }
+.map svg { display: block; width: 100%; height: auto; max-height: 62vh; }
+
+/* ===========================================
+   6-E. 단계 공개 — 누를 때마다 하나씩
+   .at.s1 은 1단계부터, .s2 는 2단계부터, .s3 은 3단계부터 보인다
+   =========================================== */
+.at { opacity: 0; transform: translateY(.35em); transition: opacity .3s ease, transform .3s ease; }
+.slide[data-step="1"] .at.s1,
+.slide[data-step="2"] .at.s1, .slide[data-step="2"] .at.s2,
+.slide[data-step="3"] .at.s1, .slide[data-step="3"] .at.s2, .slide[data-step="3"] .at.s3 {
+    opacity: 1; transform: none;
+}
+/* 아직 누를 단계가 남았다는 표시 — 발표자가 보는 신호 */
+.step-dot {
+    position: absolute; right: var(--slide-padding); bottom: 0;
+    width: clamp(9px, .7vw, 14px); aspect-ratio: 1; border-radius: 50%;
+    background: var(--red); z-index: 3;
+    animation: breathe 1.9s ease-in-out infinite;
+}
+.slide[data-max-step="3"][data-step="3"] .step-dot,
+.slide[data-max-step="2"][data-step="2"] .step-dot { display: none; }
+@keyframes breathe { 50% { opacity: .25; } }
+
+/* ===========================================
+   7. 등장 애니메이션 — 슬라이드가 보일 때 한 번
+   =========================================== */
+.reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.slide.visible .reveal { opacity: 1; transform: translateY(0); }
+.slide.visible .reveal:nth-child(1) { transition-delay: .06s; }
+.slide.visible .reveal:nth-child(2) { transition-delay: .16s; }
+.slide.visible .reveal:nth-child(3) { transition-delay: .26s; }
+.slide.visible .reveal:nth-child(4) { transition-delay: .36s; }
+.slide.visible .reveal:nth-child(5) { transition-delay: .46s; }
+
+/* ===========================================
+   8. 진행 막대 · 이동 점 · 조작 안내
+   =========================================== */
+/* 진행 막대: width 대신 scaleX 를 움직인다. 레이아웃을 다시 계산하지 않는다 */
+.progress-bar {
+    position: fixed; top: 0; left: 0; height: 4px; width: 100%;
+    background: var(--red); z-index: 9999;
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform .18s linear;
+}
+.nav-dots {
+    position: fixed; right: clamp(.6rem, 1.4vw, 1.4rem); top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: .55rem; z-index: 9998;
+}
+.nav-dots button {
+    width: 9px; height: 9px; padding: 0; border: 1.5px solid var(--ink);
+    background: transparent; border-radius: 50%; cursor: pointer;
+    transition: background .2s, transform .2s;
+}
+.nav-dots button.active { background: var(--red); border-color: var(--red); transform: scale(1.35); }
+.keyboard-hint {
+    animation: hint-out .5s 5s forwards;
+    position: fixed; left: clamp(.6rem,1.4vw,1.4rem); bottom: clamp(.5rem,1.2vh,1rem);
+    font-family: var(--font-mono); font-size: clamp(.55rem,1vh,.72rem);
+    color: var(--mut); z-index: 9998; opacity: .75;
+}
+
+@keyframes hint-out { to { opacity: 0; visibility: hidden; } }
+
+/* ===========================================
+   9. 브라우저 편집 모드 (E 키 또는 왼쪽 위 모서리)
+   =========================================== */
+.edit-hotzone {
+    position: fixed; top: 0; left: 0; width: 80px; height: 80px;
+    z-index: 10000; cursor: pointer;
+}
+.edit-toggle {
+    position: fixed; top: 14px; left: 14px;
+    width: 42px; height: 42px; border: 2px solid var(--ink);
+    background: var(--paper); border-radius: 50%; cursor: pointer;
+    font-size: 17px; line-height: 1;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s ease;
+    z-index: 10001;
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.edit-toggle.active { background: var(--red); border-color: var(--red); }
+.edit-banner {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--font-mono); font-size: clamp(.6rem,1.1vh,.78rem);
+    padding: .55em 1em; text-align: center;
+    transform: translateY(100%); transition: transform .3s var(--ease);
+    z-index: 10001;
+}
+.edit-banner.active { transform: translateY(0); }
+body.edit-active [contenteditable] {
+    outline: 1px dashed var(--red);
+    outline-offset: 3px;
+}
+body.edit-active [contenteditable]:focus {
+    outline: 2px solid var(--red);
+    background: rgba(255,51,0,.05);
+}
+/* Way back to the study index. Bottom-right is the only corner the deck chrome leaves free */
+.home-link {
+    position: fixed; right: clamp(.6rem,1.4vw,1.4rem); bottom: clamp(.4rem,1vh,.8rem); z-index: 9998;
+    font-family: var(--font-mono, monospace); font-size: clamp(.55rem,1vh,.72rem);
+    color: var(--mut); text-decoration: none; opacity: .75;
+}
+.home-link:hover { opacity: 1; text-decoration: underline; }
+
+/* ===========================================
+   10. week07 circular-list 덱에서 더한 것
+   =========================================== */
+.sub b { color: var(--red); font-weight: 700; }
+
+/* 팀 그래프 + 메시지 세 칸 (01) */
+.graph { position: relative; z-index: 2; margin: 0; }
+.graph svg { display: block; width: 100%; height: auto; max-height: 40vh; }
+.msgs {
+    display: grid; position: relative; z-index: 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(.6rem, 1.6vw, 1.4rem);
+}
+.msg {
+    border-top: 2px solid var(--ink);
+    padding-top: clamp(.35rem, 1vh, .7rem);
+    font-size: var(--body-size); line-height: 1.5;
+    word-break: keep-all;
+}
+.msg .k {
+    display: block;
+    font-family: var(--font-mono); font-size: var(--small-size);
+    letter-spacing: .04em; color: var(--red); margin-bottom: .3em;
+}
+.msg b { font-weight: 700; }
+.badge {
+    display: inline-block; margin-top: .45em;
+    font-family: var(--font-mono); font-size: var(--small-size);
+    border: 2px solid var(--ink); padding: .15em .55em;
+}
+.badge b { color: var(--red); }
+
+/* 코드가 긴 장은 글자를 한 단계 줄인다 (03 · 06 · 07) */
+.tight pre { font-size: clamp(.72rem, min(1.08vw, 1.95vh), 1.7rem); line-height: 1.5; }
+
+/* 4096 바이트 막대 (03) */
+.pagebar {
+    position: relative; z-index: 2;
+    height: clamp(26px, 4.2vh, 46px);
+    border: 2px solid var(--ink); background: var(--paper);
+}
+.pagebar i { position: absolute; left: 0; top: 0; bottom: 0; width: 7.23%; background: var(--red); }
+.pagebar span {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut);
+}
+.pagebar .l { left: calc(7.23% + .7em); color: var(--ink); }
+.pagebar .r { right: .7em; }
+
+/* 대응 표 (04) */
+.tbl {
+    position: relative; z-index: 2;
+    border-collapse: collapse; width: 100%;
+    font-size: var(--body-size);
+}
+.tbl th, .tbl td {
+    text-align: left; padding: clamp(.4rem, 1.2vh, .8rem) clamp(.5rem, 1vw, 1rem);
+    border-bottom: 1px solid var(--ink);
+}
+.tbl th {
+    font-family: var(--font-mono); font-size: var(--small-size); font-weight: 500;
+    color: var(--mut); border-bottom-width: 2px;
+}
+.tbl td code { font-family: var(--font-mono); font-weight: 500; }
+.tbl td.hot code { color: var(--red); font-weight: 600; }
+
+/* 세 칸 비교 (05) */
+.three {
+    display: grid; position: relative; z-index: 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(.6rem, 1.6vw, 1.4rem);
+    align-items: stretch;
+}
+.col { display: flex; flex-direction: column; gap: clamp(.3rem, .8vh, .6rem); }
+.col svg { display: block; width: 100%; height: auto; max-height: 26vh; }
+.col h3 {
+    font-family: var(--font-mono); font-size: var(--small-size); font-weight: 500;
+    letter-spacing: .03em;
+}
+.col ul { list-style: none; font-size: var(--body-size); line-height: 1.45; word-break: keep-all; }
+.col li { padding-left: 1.3em; text-indent: -1.3em; }
+.col li::before { display: inline-block; width: 1.3em; text-indent: 0; font-family: var(--font-mono); font-weight: 700; }
+.col li.no::before  { content: "✗"; color: var(--red); }
+.col li.yes::before { content: "✓"; color: var(--ink); }
+.col li code { font-family: var(--font-mono); font-size: .92em; }
+
+/* 장면 바꾸기 (06): 같은 자리에 겹쳐 두고, 단계에 맞는 한 장만 보인다 */
+.frames { display: grid; position: relative; z-index: 2; }
+.frames > .fr { grid-area: 1 / 1; opacity: 0; transition: opacity .3s ease; }
+.slide[data-step="0"] .fr.f0, .slide[data-step="1"] .fr.f1,
+.slide[data-step="2"] .fr.f2, .slide[data-step="3"] .fr.f3 { opacity: 1; }
+.frames svg { display: block; width: 100%; height: auto; max-height: 52vh; }
+/* 지금 장면이 쓰는 코드 줄 */
+.hl { transition: color .3s ease; }
+.slide[data-step="0"] .hl.h0,
+.slide[data-step="1"] .hl.h1, .slide[data-step="2"] .hl.h1,
+.slide[data-step="3"] .hl.h3 { color: var(--red); font-weight: 600; }
+
+@media (max-width: 700px) {
+    .two, .three, .msgs { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<a class="home-link" href="https://benjohnbill.github.io/">← 학습 기록</a>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav-dots" id="navDots" aria-label="슬라이드 이동"></nav>
+<div class="keyboard-hint">← → 이동 · E 편집 · Ctrl+S 저장</div>
+
+<div class="edit-hotzone" aria-hidden="true"></div>
+<button class="edit-toggle" id="editToggle" title="편집 모드 (E)" aria-label="편집 모드 켜기">✏️</button>
+<div class="edit-banner" id="editBanner">편집 모드 · 글자를 눌러 고치세요 · Ctrl+S 로 파일 저장 · E 로 끄기</div>
+
+
+<!-- ============================================================
+     00 · 팀 표지 (팀 30초의 시작)
+     ============================================================ -->
+<section class="slide" id="s1">
+    <div class="head head-space">
+        <span class="label">Krafton Jungle · Week 07</span>
+        <span class="num">00</span>
+    </div>
+    <div class="slide-content">
+        <div class="dot decorative" aria-hidden="true"></div>
+        <div class="tags reveal"><span class="eyebrow">Team 9</span><span class="eyebrow ghost">pintos-team9</span></div>
+        <h1 class="reveal">PintOS 1주차 <em>[Thread]</em></h1>
+        <div class="rule reveal"></div>
+        <p class="sub reveal">9팀 · benjohnbill · Jun · Yena</p>
+    </div>
+    <div class="foot"><span>Project 1 · alarm clock · priority scheduling · donation · MLFQS</span><span>6 MIN</span></div>
+</section>
+
+<!-- ============================================================
+     01 · 진행 · 협업 · AI 활용   [3단계]
+     근거: git log --all (origin/*), gh pr list
+       #37 alarm 10-10 01:10 (Jun) · #40 priority 10-12 17:47 (Jun)
+       #41 donation + MLFQS 10-14 22:10 (Yena) · Yena MLFQS 커밋 10-14 00:10–19:33
+       각자 첫 alarm 커밋: Yena 10-09 17:26 · Jun 23:18 · benjohnbill 23:20
+     ============================================================ -->
+<section class="slide" id="s2" data-step="0" data-max-step="3">
+    <div class="head head-space">
+        <span class="label">진행 · 협업 · AI 활용</span>
+        <span class="num">01</span>
+    </div>
+    <div class="slide-content">
+        <h2 class="thesis reveal">셋이 <b>각자</b> 짜고, 코어타임마다 리뷰해서, <b>donation까지</b> 함께 갔다</h2>
+        <figure class="graph reveal">
+            <svg viewBox="0 0 1400 330" preserveAspectRatio="xMinYMid meet" role="img"
+                 aria-label="10월 8일부터 15일까지 팀 브랜치. benjohnbill, Jun, Yena 세 줄이 10월 9일부터 같은 기능을 각자 구현했다. 10월 10일 alarm(#37), 12일 priority(#40), 14일 donation과 MLFQS(#41)가 master에 merge되었다. MLFQS는 Yena만 구현했다.">
+                <defs><marker id="g-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0a0a0a"/></marker></defs>
+                <g font-family="'IBM Plex Mono', monospace" font-size="21" fill="#0a0a0a">
+                    <text x="20" y="67" font-weight="600">master</text>
+                    <text x="20" y="142">benjohnbill</text>
+                    <text x="20" y="202">Jun</text>
+                    <text x="20" y="262">Yena</text>
+                </g>
+                <g font-family="'IBM Plex Mono', monospace" font-size="18" fill="#6b6b6b" text-anchor="middle">
+                    <text x="200" y="320">10-08 목</text><text x="355" y="320">10-09 금</text>
+                    <text x="510" y="320">10-10 토</text><text x="665" y="320">10-11 일</text>
+                    <text x="820" y="320">10-12 월</text><text x="975" y="320">10-13 화</text>
+                    <text x="1130" y="320">10-14 수</text><text x="1285" y="320">10-15 목</text>
+                </g>
+                <g stroke="#ebebeb" stroke-width="1.5">
+                    <line x1="200" y1="30" x2="200" y2="295"/><line x1="355" y1="30" x2="355" y2="295"/>
+                    <line x1="510" y1="30" x2="510" y2="295"/><line x1="665" y1="30" x2="665" y2="295"/>
+                    <line x1="820" y1="30" x2="820" y2="295"/><line x1="975" y1="30" x2="975" y2="295"/>
+                    <line x1="1130" y1="30" x2="1130" y2="295"/><line x1="1285" y1="30" x2="1285" y2="295"/>
+                </g>
+                <!-- 3단계: 공통 도달선 -->
+                <g class="at s3">
+                    <rect x="460" y="112" width="815" height="165" fill="rgba(255,51,0,.08)"/>
+                    <text x="1265" y="298" text-anchor="end" font-family="'IBM Plex Sans KR', sans-serif" font-size="19" font-weight="700" fill="#ff3300">공통: alarm → priority → donation</text>
+                </g>
+                <line x1="290" y1="60" x2="1330" y2="60" stroke="#0a0a0a" stroke-width="3"/>
+                <circle cx="290" cy="60" r="7" fill="#0a0a0a"/>
+                <!-- 1단계: 각자 구현 -->
+                <g class="at s1" stroke="#0a0a0a" stroke-width="2.5">
+                    <line x1="506" y1="135" x2="1290" y2="135"/>
+                    <line x1="506" y1="195" x2="1290" y2="195"/>
+                    <line x1="467" y1="255" x2="1290" y2="255"/>
+                    <circle cx="506" cy="135" r="6" fill="#fff"/>
+                    <circle cx="506" cy="195" r="6" fill="#fff"/>
+                    <circle cx="467" cy="255" r="6" fill="#fff"/>
+                </g>
+                <!-- 3단계: MLFQS 는 Yena 만 -->
+                <g class="at s3">
+                    <line x1="1131" y1="255" x2="1256" y2="255" stroke="#ff3300" stroke-width="9"/>
+                    <text x="1193" y="240" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="18" font-weight="600" fill="#ff3300">MLFQS</text>
+                </g>
+                <!-- 2단계: 리뷰 뒤 merge -->
+                <g class="at s2">
+                    <g stroke="#0a0a0a" stroke-width="2" marker-end="url(#g-arrow)">
+                        <line x1="518" y1="187" x2="518" y2="70"/>
+                        <line x1="935" y1="187" x2="935" y2="70"/>
+                        <line x1="1273" y1="247" x2="1273" y2="70"/>
+                    </g>
+                    <g fill="#0a0a0a"><circle cx="518" cy="60" r="7"/><circle cx="935" cy="60" r="7"/><circle cx="1273" cy="60" r="7"/></g>
+                    <g font-family="'IBM Plex Mono', monospace" font-size="18" fill="#0a0a0a" text-anchor="middle">
+                        <text x="518" y="38">#37 alarm</text>
+                        <text x="935" y="38">#40 priority</text>
+                        <text x="1240" y="38">#41 donation · MLFQS</text>
+                    </g>
+                </g>
+            </svg>
+        </figure>
+        <div class="msgs">
+            <div class="msg at s1"><span class="k">① 각자 구현</span>같은 기능을 셋이 <b>각자</b> 짜고, 로컬에서 테스트를 전부 통과한 뒤 리뷰</div>
+            <div class="msg at s2"><span class="k">② 코어타임 리뷰 + AI 순위</span>복잡도 · 가독성 · edge case 기준으로 순위 → <b>1등 코드를 merge</b>, 더 나은 부분은 부분 반영</div>
+            <div class="msg at s3"><span class="k">③ 공통 도달선</span><b>donation까지</b> 셋 모두, MLFQS는 Yena<br><span class="badge">make check <b>27/27</b> · Yena</span></div>
+        </div>
+    </div>
+    <div class="step-dot" aria-hidden="true"></div>
+    <div class="foot"><span>cc8s/pintos-team9 · PR #37 · #40 · #41</span></div>
+</section>
+
+<!-- ============================================================
+     02 · 개인 표지 — 여기서부터 benjohnbill 개인 발표
+     ============================================================ -->
+<section class="slide" id="s3">
+    <div class="head head-space">
+        <span class="label">benjohnbill · 개인 발표</span>
+        <span class="num">02</span>
+    </div>
+    <div class="slide-content">
+        <div class="dot decorative" aria-hidden="true"></div>
+        <div class="tags reveal"><span class="eyebrow">Data Structure</span><span class="eyebrow ghost">jingeunOS</span></div>
+        <h1 class="reveal">list에서 <em>끝을 없앴더니</em>, 분기가 사라졌다</h1>
+        <div class="rule reveal"></div>
+        <p class="sub reveal">AI 순위 3번, <b>1등 0번</b>. 그래서 compact하게 짜는 연습을 하고 싶었다.</p>
+    </div>
+    <div class="foot"><span>alarm · priority · donation 리뷰 순위</span><span>2 MIN 20</span></div>
+</section>
+
+<!-- ============================================================
+     03 · 패딩 재배치 → 0바이트   [2단계]
+     근거: lab/sizeof/sizeof.log (pintosdev 컨테이너, gcc 11.4 · gdb 12.1, ptype /o)
+       338bac6 = 288 · 필드만 추가(순서 그대로, 비교용 변형) = 296 · baaa5e1 재배치 = 296
+       before 의 4-byte hole 은 base_priority 가 채운다. magic 뒤 4-byte padding 은 셋 다 남는다
+       PGSIZE = 4096 (include/threads/vaddr.h:20), struct thread 는 페이지 하나를 혼자 쓴다 (thread.h 주석)
+     ============================================================ -->
+<section class="slide tight" id="s4" data-step="0" data-max-step="2">
+    <div class="head head-space">
+        <span class="label">struct thread · padding</span>
+        <span class="num">03</span>
+    </div>
+    <div class="slide-content">
+        <h2 class="thesis reveal">패딩을 줄이려고 <b>8바이트 · 4바이트 · 배열</b> 순서로 재배치했다</h2>
+        <div class="two reveal">
+            <div class="panel">
+                <div class="cap"><span>threads/thread.h</span><span class="side">baaa5e1</span></div>
+<pre>struct thread {
+    struct list lock_list;
+    struct list_elem elem;
+    struct lock *waiting_lock;
+    int64_t local_tick;
+    <span class="c-hit">// ===== [8바이트 영역] =====</span>
+    tid_t tid;
+    enum thread_status status;
+    int priority;
+    int base_priority;
+    <span class="c-hit">// ===== [4바이트 영역] =====</span>
+    char name[16];
+    <span class="c-hit">// ===== [나머지 배열 영역] =====</span>
+    struct intr_frame tf;
+    unsigned magic;
+};</pre>
+            </div>
+            <div class="stack">
+                <div class="panel machine">
+                    <div class="cap"><span>gdb · ptype /o struct thread</span><span class="side">338bac6</span></div>
+<pre><span class="m-dim">/* offset | size */</span>
+<span class="m-dim">/*     24 |    4 */</span> int priority;
+<span class="m-err">/* XXX  4-byte hole */</span>
+<span class="m-dim">/*     32 |    8 */</span> int64_t local_tick;
+<span class="m-dim">   ...</span>
+<span class="m-dim">/*    280 |    4 */</span> unsigned magic;
+<span class="m-dim">/* XXX  4-byte padding */</span>
+<span class="m-dim">/* total size (bytes): </span>288 <span class="m-dim">*/</span></pre>
+                </div>
+                <div class="panel machine at s1">
+                    <div class="cap"><span>gdb · print sizeof(struct thread)</span><span class="side">PGSIZE 4096</span></div>
+<pre><span class="m-dim">338bac6  이전</span>             $1 = 288
+<span class="m-dim">필드 추가, 순서 그대로</span>    $1 = 296
+<span class="m-dim">필드 추가 + 재배치</span>        $1 = 296  <span class="m-err">← 차이 0</span></pre>
+                </div>
+            </div>
+        </div>
+        <div class="pagebar at s2" role="img" aria-label="4096바이트 페이지 중 struct thread 296바이트, 7.2%"><i></i><span class="l">296 B</span><span class="r">4096 B · 페이지 하나</span></div>
+        <p class="punch at s2">재보니 <b>0바이트</b>. 게다가 struct thread는 <b>4kB 페이지</b>를 혼자 쓴다. 전체 시스템을 모르고 짜고 있었다.</p>
+    </div>
+    <div class="step-dot" aria-hidden="true"></div>
+    <div class="foot"><span>pintosdev · gcc 11.4 · gdb 12.1 · lab/sizeof/sizeof.log</span></div>
+</section>
+
+<!-- ============================================================
+     04 · 그래서 직접 짰다: jingeunOS
+     근거: jingeunOS/CLAUDE.md:86–88 (하드웨어 ↔ 시그널 대응), devices/timer.c:130, threads/interrupt.c:151, threads/thread.c:673
+     ⚠ 발표 시점의 실제 상태(stage 1 통과 여부)에 맞춰 punch 문구를 고칠 것
+     ============================================================ -->
+<section class="slide" id="s5">
+    <div class="head head-space">
+        <span class="label">jingeunOS</span>
+        <span class="num">04</span>
+    </div>
+    <div class="slide-content">
+        <h2 class="thesis reveal">그래서 직접 짰다. 커널이 아니라 <b>user stack 위에서</b> 스케줄링하는 OS</h2>
+        <table class="tbl reveal">
+            <thead><tr><th>하드웨어가 하는 일</th><th>PintOS</th><th>jingeunOS · 시그널로 흉내</th></tr></thead>
+            <tbody>
+                <tr><td>타이머 인터럽트</td><td><code>timer_interrupt</code></td><td class="hot"><code>SIGALRM</code> · setitimer</td></tr>
+                <tr><td>인터럽트 끄기</td><td><code>intr_disable</code></td><td class="hot"><code>sigprocmask</code></td></tr>
+                <tr><td>문맥 교환</td><td><code>do_iret</code></td><td class="hot"><code>swapcontext</code></td></tr>
+            </tbody>
+        </table>
+        <p class="punch reveal">직접 짜다 보니 잘 짜고 싶었다. 특별하고 싶었다. 그래서 <b>list</b>부터 다시 봤다.</p>
+    </div>
+    <div class="foot"><span>Linux 프로세스 하나 · ucontext · signal</span></div>
+</section>
+
+<!-- ============================================================
+     05 · 불편함의 사슬   [2단계]
+     근거:
+       ① head/tail 포인터 시도 — 2026-10-14 05:46 질문, lab/p1.c 11–69 (주석으로 남은 손 구현)
+          빈 리스트 = NULL → 삽입·삭제마다 빈 리스트/맨 앞/맨 뒤 분기, 맨 앞 삭제는 list->head 도 고쳐야 해서 list 인자가 필요
+       ② Pintos list.h:87–96 · struct list = 32 B, head.prev · tail.next 는 항상 NULL (list.c:58–64)
+       ③ jingeunOS include/lib/kernel/list.h:23 · 69 · list_head = 16 B (Linux list.h 의 부분집합)
+     ============================================================ -->
+<section class="slide" id="s6" data-step="0" data-max-step="2">
+    <div class="head head-space">
+        <span class="label">불편함 → 해결 → 새 불편함</span>
+        <span class="num">05</span>
+    </div>
+    <div class="slide-content">
+        <h2 class="thesis reveal">list를 줄여 보자: head와 tail을 <b>포인터</b>로 바꾸면?</h2>
+        <div class="three reveal">
+            <div class="col panel">
+                <div class="cap"><span>① 포인터 head/tail</span><span class="side">내 시도</span></div>
+                <svg viewBox="0 0 400 200" role="img" aria-label="빈 리스트에서 head 와 tail 이 모두 NULL">
+                    <g font-family="'IBM Plex Mono', monospace" fill="#0a0a0a" text-anchor="middle">
+                        <rect x="60" y="60" width="140" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <rect x="200" y="60" width="140" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <text x="130" y="92" font-size="20">head</text><text x="270" y="92" font-size="20">tail</text>
+                        <text x="130" y="124" font-size="22" font-weight="600" fill="#ff3300">NULL</text>
+                        <text x="270" y="124" font-size="22" font-weight="600" fill="#ff3300">NULL</text>
+                        <text x="200" y="180" font-size="18" fill="#6b6b6b">빈 리스트 · 16 B</text>
+                    </g>
+                </svg>
+                <ul style="padding:0 .7em .7em">
+                    <li class="no">삽입·삭제마다 비었나 · 맨 앞 · 맨 뒤 <b>분기</b></li>
+                    <li class="no"><code>list_remove(elem)</code>만으로 못 지운다 → <code>list</code> 인자가 필요</li>
+                </ul>
+            </div>
+            <div class="col panel at s1">
+                <div class="cap"><span>② PintOS</span><span class="side">보초 2개</span></div>
+                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Pintos 리스트. head 와 tail 보초가 서로를 가리키고, head.prev 와 tail.next 는 NULL">
+                    <defs><marker id="p-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0a0a0a"/></marker></defs>
+                    <g font-family="'IBM Plex Mono', monospace" text-anchor="middle">
+                        <rect x="90" y="65" width="80" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <rect x="230" y="65" width="80" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <text x="130" y="108" font-size="24" font-weight="600">H</text>
+                        <text x="270" y="108" font-size="24" font-weight="600">T</text>
+                        <g stroke="#0a0a0a" stroke-width="2" marker-end="url(#p-arr)">
+                            <line x1="170" y1="85" x2="226" y2="85"/>
+                            <line x1="230" y1="115" x2="174" y2="115"/>
+                        </g>
+                        <g stroke="#ff3300" stroke-width="2"><line x1="90" y1="115" x2="62" y2="115"/><line x1="310" y1="85" x2="338" y2="85"/></g>
+                        <text x="32" y="121" font-size="18" font-weight="600" fill="#ff3300">NULL</text>
+                        <text x="368" y="91" font-size="18" font-weight="600" fill="#ff3300">NULL</text>
+                        <text x="200" y="180" font-size="18" fill="#6b6b6b">빈 리스트 · 32 B</text>
+                    </g>
+                </svg>
+                <ul style="padding:0 .7em .7em">
+                    <li class="yes">분기 없음 · <code>list_remove(elem)</code>로 끝</li>
+                    <li class="no"><code>head.prev</code> · <code>tail.next</code>는 <b>항상 NULL</b></li>
+                    <li class="no"><code>list</code> ≠ <code>list_elem</code>, 타입 2개</li>
+                </ul>
+            </div>
+            <div class="col panel accent at s2">
+                <div class="cap"><span>③ Linux list_head</span><span class="side">원형 · 보초 1개</span></div>
+                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Linux 리스트. 보초 S 하나의 next 와 prev 가 모두 자기 자신을 가리킨다">
+                    <defs><marker id="l-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff3300"/></marker></defs>
+                    <g font-family="'IBM Plex Mono', monospace" text-anchor="middle">
+                        <rect x="160" y="65" width="80" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <text x="200" y="108" font-size="24" font-weight="600">S</text>
+                        <g stroke="#ff3300" stroke-width="2" fill="none" marker-end="url(#l-arr)">
+                            <path d="M240,85 C310,85 310,22 200,22 L200,61"/>
+                            <path d="M160,115 C90,115 90,160 200,160 L200,139"/>
+                        </g>
+                        <text x="320" y="40" font-size="17" fill="#ff3300">next</text>
+                        <text x="80" y="160" font-size="17" fill="#ff3300">prev</text>
+                        <text x="200" y="192" font-size="18" fill="#6b6b6b">빈 리스트 · 16 B</text>
+                    </g>
+                </svg>
+                <ul style="padding:0 .7em .7em">
+                    <li class="yes">빈 리스트도 <b>자기 자신</b>을 가리킨다 → NULL이 없다</li>
+                    <li class="yes">16 B · 리스트와 노드가 <b>같은 타입</b></li>
+                </ul>
+            </div>
+        </div>
+        <p class="punch at s2">맨 뒤를 맨 앞에 이으면 끝이 없어진다. <b>원형 이중 연결 리스트</b>, Linux가 쓰는 구조였다.</p>
+    </div>
+    <div class="step-dot" aria-hidden="true"></div>
+    <div class="foot"><span>PintOS lib/kernel/list.c · Linux include/linux/list.h (jingeunOS 에 일부를 가져옴)</span></div>
+</section>
+
+<!-- ============================================================
+     06 · __list_add   [장면 4개: 0 → 3]
+     근거: jingeunOS include/lib/kernel/list.h:69–73 (INIT_LIST_HEAD), 83–91 (__list_add), 101–104 (list_add), 114–117 (list_add_tail)
+       Pintos 대응: list_insert(before, elem), list.c:157–165 — 보초 2개 덕에 before->prev 가 항상 있다
+     장면: 0 INIT · 1 add_tail(A) · 2 add_tail(B) · 3 list_add(C)
+     빨간 화살표 = 이번 호출이 쓴 포인터 4개 (__list_add 의 네 줄)
+     ============================================================ -->
+<section class="slide tight" id="s7" data-step="0" data-max-step="3">
+    <div class="head head-space">
+        <span class="label">__list_add(new, prev, next)</span>
+        <span class="num">06</span>
+    </div>
+    <div class="slide-content">
+        <h2 class="thesis reveal">원형이면 끝이 없다. 그래서 모든 삽입이 <b>두 이웃 사이</b>다</h2>
+        <div class="two wide-r reveal" style="align-items:center">
+            <div class="panel">
+                <div class="cap"><span>include/lib/kernel/list.h</span><span class="side">69 · 83 · 101 · 114</span></div>
+<pre><span class="hl h0">INIT_LIST_HEAD(list) {
+    list-&gt;next = list;
+    list-&gt;prev = list;
+}</span>
+
+__list_add(new, prev, next) {
+    next-&gt;prev = new;
+    new-&gt;next  = next;
+    new-&gt;prev  = prev;
+    prev-&gt;next = new;
+}
+
+<span class="hl h3">list_add(new, head)
+  = __list_add(new, head, head-&gt;next);</span>
+<span class="hl h1">list_add_tail(new, head)
+  = __list_add(new, head-&gt;prev, head);</span></pre>
+            </div>
+            <div class="frames">
+                <!-- 0 · INIT -->
+                <svg class="fr f0" viewBox="0 0 900 420" role="img" aria-label="INIT_LIST_HEAD 뒤: 보초 S 의 next 와 prev 가 S 자신을 가리킨다">
+                    <defs>
+                        <marker id="a-k" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0a0a0a"/></marker>
+                        <marker id="a-r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff3300"/></marker>
+                    </defs>
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">INIT_LIST_HEAD(&amp;S)</text>
+                    <rect x="375" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
+                    <text x="450" y="210" text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600">S</text>
+                    <g stroke="#ff3300" stroke-width="2.5" fill="none" marker-end="url(#a-r)">
+                        <path d="M525,185 C650,185 650,75 450,75 L450,155"/>
+                        <path d="M375,215 C250,215 250,330 450,330 L450,245"/>
+                    </g>
+                    <g font-family="'IBM Plex Mono', monospace" font-size="21" fill="#ff3300">
+                        <text x="560" y="68">next = &amp;S</text>
+                        <text x="205" y="360">prev = &amp;S</text>
+                    </g>
+                    <text x="0" y="408" font-family="'IBM Plex Sans KR', sans-serif" font-size="23" fill="#0a0a0a">빈 리스트에도 <tspan font-weight="700" fill="#ff3300">NULL이 없다</tspan></text>
+                </svg>
+                <!-- 1 · add_tail(A) -->
+                <svg class="fr f1" viewBox="0 0 900 420" role="img" aria-label="list_add_tail(A): S 와 A 가 서로를 next 와 prev 로 가리키는 고리">
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add_tail(&amp;A, &amp;S)</text>
+                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(A, <tspan fill="#ff3300">S.prev</tspan> → S, S)</text>
+                    <rect x="200" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
+                    <rect x="550" y="160" width="150" height="80" fill="#fff" stroke="#ff3300" stroke-width="2.5"/>
+                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="275" y="210">S</text><text x="625" y="210">A</text></g>
+                    <g stroke="#ff3300" stroke-width="2.5" fill="none" marker-end="url(#a-r)">
+                        <line x1="350" y1="185" x2="545" y2="185"/>
+                        <line x1="550" y1="215" x2="355" y2="215"/>
+                        <path d="M625,160 C625,85 275,85 275,155"/>
+                        <path d="M275,240 C275,330 625,330 625,245"/>
+                    </g>
+                    <text x="0" y="408" font-family="'IBM Plex Sans KR', sans-serif" font-size="23" fill="#0a0a0a">빈 리스트에 넣어도 <tspan font-weight="700" fill="#ff3300">같은 4줄</tspan></text>
+                </svg>
+                <!-- 2 · add_tail(B) -->
+                <svg class="fr f2" viewBox="0 0 900 420" role="img" aria-label="list_add_tail(B): S, A, B 의 고리. A 와 S 사이에 B 가 들어갔다">
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add_tail(&amp;B, &amp;S)</text>
+                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(B, <tspan fill="#ff3300">S.prev</tspan> → A, S)</text>
+                    <rect x="100" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
+                    <rect x="375" y="160" width="150" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                    <rect x="650" y="160" width="150" height="80" fill="#fff" stroke="#ff3300" stroke-width="2.5"/>
+                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="175" y="210">S</text><text x="450" y="210">A</text><text x="725" y="210">B</text></g>
+                    <g stroke="#0a0a0a" stroke-width="2" fill="none" marker-end="url(#a-k)">
+                        <line x1="250" y1="185" x2="370" y2="185"/>
+                        <line x1="375" y1="215" x2="255" y2="215"/>
+                    </g>
+                    <g stroke="#ff3300" stroke-width="2.5" fill="none" marker-end="url(#a-r)">
+                        <line x1="525" y1="185" x2="645" y2="185"/>
+                        <line x1="650" y1="215" x2="530" y2="215"/>
+                        <path d="M725,160 C725,85 175,85 175,155"/>
+                        <path d="M175,240 C175,330 725,330 725,245"/>
+                    </g>
+                    <text x="0" y="408" font-family="'IBM Plex Sans KR', sans-serif" font-size="23" fill="#0a0a0a">원소가 있어도 <tspan font-weight="700" fill="#ff3300">같은 4줄</tspan> · "비었나?" 분기가 없다</text>
+                </svg>
+                <!-- 3 · list_add(C) -->
+                <svg class="fr f3" viewBox="0 0 900 420" role="img" aria-label="list_add(C): S 와 A 사이에 C 가 들어가 맨 앞이 되었다. 고리는 S, C, A, B">
+                    <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">list_add(&amp;C, &amp;S)</text>
+                    <text x="0" y="60" font-family="'IBM Plex Mono', monospace" font-size="20" fill="#6b6b6b">= __list_add(C, <tspan fill="#ff3300">S</tspan>, <tspan fill="#ff3300">S.next</tspan> → A)</text>
+                    <rect x="40" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
+                    <rect x="260" y="160" width="150" height="80" fill="#fff" stroke="#ff3300" stroke-width="2.5"/>
+                    <rect x="480" y="160" width="150" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                    <rect x="700" y="160" width="150" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                    <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-size="30" font-weight="600"><text x="115" y="210">S</text><text x="335" y="210">C</text><text x="555" y="210">A</text><text x="775" y="210">B</text></g>
+                    <g stroke="#0a0a0a" stroke-width="2" fill="none" marker-end="url(#a-k)">
+                        <line x1="630" y1="185" x2="695" y2="185"/>
+                        <line x1="700" y1="215" x2="635" y2="215"/>
+                        <path d="M775,160 C775,85 115,85 115,155"/>
+                        <path d="M115,240 C115,330 775,330 775,245"/>
+                    </g>
+                    <g stroke="#ff3300" stroke-width="2.5" fill="none" marker-end="url(#a-r)">
+                        <line x1="190" y1="185" x2="255" y2="185"/>
+                        <line x1="260" y1="215" x2="195" y2="215"/>
+                        <line x1="410" y1="185" x2="475" y2="185"/>
+                        <line x1="480" y1="215" x2="415" y2="215"/>
+                    </g>
+                    <text x="0" y="408" font-family="'IBM Plex Sans KR', sans-serif" font-size="23" fill="#0a0a0a">같은 함수, <tspan font-weight="700" fill="#ff3300">이웃만 바꾸면</tspan> 맨 앞</text>
+                </svg>
+            </div>
+        </div>
+        <p class="punch at s3">맨 앞도 맨 뒤도 결국 두 이웃 사이. 그래서 인자는 <b>new · prev · next 3개</b>면 된다.</p>
+    </div>
+    <div class="step-dot" aria-hidden="true"></div>
+    <div class="foot"><span>PintOS 는 list_insert(before, elem) · 보초 2개 덕에 before-&gt;prev 가 늘 있다 (list.c:157)</span></div>
+</section>
+
+<!-- ============================================================
+     07 · 대가: 타입이 하나
+     근거: lab/cost/jingeunOS.log — gcc 15.2 -Wall -Wextra, thread.c 에 대한 진단은 thread.h:15 의 child 경고 하나뿐, :42 는 조용
+           lab/cost/pintos.log — 같은 실수(list 를 elem 자리에)를 Pintos list 로 쓰면 gcc 11.4 가 incompatible pointer type 경고
+     ⚠ :42 가 왜 틀렸는지는 발표자가 직접 확인하고 말한다
+     ============================================================ -->
+<section class="slide tight" id="s8">
+    <div class="head head-space">
+        <span class="label">대가 · trade-off</span>
+        <span class="num">07</span>
+    </div>
+    <div class="slide-content">
+        <h2 class="thesis reveal">대가: head와 entry가 <b>같은 타입</b>이라, 컴파일러가 실수를 못 잡는다</h2>
+        <div class="two reveal">
+            <div class="panel accent">
+                <div class="cap"><span>jingeunOS · threads/thread.c</span><span class="side">40 – 43</span></div>
+<pre><span class="c-dim">prev_context = list_first_entry(&amp;ready_list,
+                   struct thread, list)-&gt;context;</span>
+
+<span class="c-hit">__list_del_entry(&amp;ready_list);</span>   <span class="c-com">// :42 head를 entry 자리에</span>
+<span class="c-dim">list_add_tail(&amp;current_thread-&gt;list, &amp;ready_list);</span></pre>
+            </div>
+            <div class="stack">
+                <div class="panel machine">
+                    <div class="cap"><span>gcc 15.2 -Wall -Wextra · jingeunOS</span><span class="side">list_head</span></div>
+<pre><span class="m-dim">thread.h:15: warning: ‘child’ declared
+  ‘static’ but never defined</span>
+<b>thread.c:42 → 아무 말 없음</b></pre>
+                </div>
+                <div class="panel machine">
+                    <div class="cap"><span>gcc 11.4 · 같은 실수를 PintOS list 로</span><span class="side">list ≠ list_elem</span></div>
+<pre>list_remove (&amp;ready_list);
+<span class="m-err">warning:</span> passing argument 1 of ‘list_remove’
+  from <span class="m-err">incompatible pointer type</span>
+<span class="m-dim">note: expected ‘struct list_elem *’
+  but argument is of type ‘struct list *’</span></pre>
+                </div>
+            </div>
+        </div>
+        <p class="punch reveal">끝을 없앤 대가로 <b>타입 검사</b>를 잃었다. head와 entry는 이제 내가 구분해야 한다.</p>
+    </div>
+    <div class="foot"><span>lab/cost · jingeunOS.log · pintos.log</span></div>
+</section>
+
+<!-- ============================================================
+     08 · 마무리 — 제목을 다시 말한다
+     ============================================================ -->
+<section class="slide" id="s9">
+    <div class="head head-space">
+        <span class="label">가져가실 것</span>
+        <span class="num">08</span>
+    </div>
+    <div class="slide-content">
+        <h1 class="reveal">list에서 <em>끝을 없앴더니</em>, 분기가 사라졌다</h1>
+        <div class="rule reveal"></div>
+        <div class="takeaway reveal">
+            <span class="k">정리</span>
+            패딩 재배치: <b>0바이트</b> <small>시스템을 모르고 한 최적화</small><br>
+            원형 이중 연결 리스트: 보초 1개 · 16 B · <b>분기 없음</b> <small>Linux list.h</small><br>
+            대가: <b>타입 검사</b> <small>thread.c:42</small>
+        </div>
+        <p class="punch reveal">자료구조까지 내려가서 OS의 compact함을 쫓아 본, <b>재미있는</b> 경험이었다.</p>
+    </div>
+    <div class="foot"><span>WEEK 07 · jingeunOS · benjohnbill</span></div>
+</section>
+
+<script>
+/* ===========================================
+   슬라이드 조작기
+   키보드 · 휠 · 터치 · 이동 점 · 진행 막대
+   =========================================== */
+class SlidePresentation {
+    constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.current = 0;
+        this.progressBar = document.getElementById('progressBar');
+        this.navDotsContainer = document.getElementById('navDots');
+        this.setupIntersectionObserver();
+        this.setupNavDots();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupProgressBar();
+    }
+
+    /* 화면에 들어온 슬라이드에 .visible 을 붙여 등장 애니메이션을 켠다 */
+    setupIntersectionObserver() {
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    this.current = this.slides.indexOf(e.target);
+                    this.updateNavDots();
+                }
+            });
+        }, { threshold: 0.5 });
+        this.slides.forEach(s => io.observe(s));
+    }
+
+    /* 오른쪽 이동 점. 다시 그리기 전에 반드시 비운다
+       (편집 모드에서 저장한 파일을 다시 열면 점이 겹쳐 쌓이기 때문) */
+    setupNavDots() {
+        this.navDotsContainer.innerHTML = '';
+        this.slides.forEach((s, i) => {
+            const b = document.createElement('button');
+            b.setAttribute('aria-label', (i + 1) + '번 슬라이드로');
+            b.addEventListener('click', () => this.goTo(i));
+            this.navDotsContainer.appendChild(b);
+        });
+        this.updateNavDots();
+    }
+    updateNavDots() {
+        Array.from(this.navDotsContainer.children).forEach((b, i) => {
+            b.classList.toggle('active', i === this.current);
+        });
+        this.updateProgress();
+    }
+
+    goTo(i) {
+        if (i < 0 || i >= this.slides.length) return;
+        this.slides[i].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /* 단계가 있는 슬라이드: 화살표가 먼저 단계를 넘기고,
+       단계를 다 쓰면 그때 다음 장으로 간다 (reveal.js 의 fragment 와 같은 규칙) */
+    maxStep(slide) { return slide.dataset.maxStep ? Number(slide.dataset.maxStep) : (slide.querySelector('.swap') ? 1 : 0); }
+
+    next() {
+        const s = this.slides[this.current];
+        const step = Number(s.dataset.step || 0);
+        if (step < this.maxStep(s)) { s.dataset.step = step + 1; return; }
+        this.goTo(this.current + 1);
+    }
+    prev() {
+        const s = this.slides[this.current];
+        const step = Number(s.dataset.step || 0);
+        if (step > 0) { s.dataset.step = step - 1; return; }
+        /* 앞 장으로 돌아갈 때는 그 장을 마지막 단계로 열어 둔다 */
+        const t = this.slides[this.current - 1];
+        if (t) t.dataset.step = this.maxStep(t);
+        this.goTo(this.current - 1);
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            if (e.target.getAttribute('contenteditable')) return;  /* 편집 중에는 이동하지 않는다 */
+            switch (e.key) {
+                case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ':
+                    e.preventDefault(); this.next(); break;
+                case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+                    e.preventDefault(); this.prev(); break;
+                case 'Home': e.preventDefault(); this.goTo(0); break;
+                case 'End':  e.preventDefault(); this.goTo(this.slides.length - 1); break;
+            }
+        });
+    }
+
+    setupTouchNav() {
+        let y0 = null;
+        document.addEventListener('touchstart', e => { y0 = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener('touchend', e => {
+            if (y0 === null) return;
+            const dy = y0 - e.changedTouches[0].clientY;
+            if (Math.abs(dy) > 50) { dy > 0 ? this.next() : this.prev(); }
+            y0 = null;
+        }, { passive: true });
+    }
+
+    setupProgressBar() {
+        window.addEventListener('scroll', () => this.updateProgress(), { passive: true });
+        this.updateProgress();
+    }
+    updateProgress() {
+        const p = this.current / Math.max(1, this.slides.length - 1);
+        this.progressBar.style.transform = 'scaleX(' + p + ')';
+    }
+}
+
+/* ===========================================
+   브라우저 편집기
+   E 키 또는 왼쪽 위 모서리 → 글자를 눌러 수정 → Ctrl+S 로 파일 저장
+   수정한 내용은 localStorage 에 자동 보관된다
+   =========================================== */
+class InlineEditor {
+    constructor() {
+        this.isActive = false;
+        this.key = 'week07-circular-list-slides';
+        this.targets = 'h1, h2, p.sub, p.punch, .takeaway, .cap span, .foot span, .msg, .tbl th, .tbl td, .col li';
+        this.toggleBtn = document.getElementById('editToggle');
+        this.signature();   /* 원본 서명을 먼저 굳힌다 */
+        this.banner = document.getElementById('editBanner');
+        this.restore();
+        this.bindSave();
+    }
+
+    toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('edit-active', this.isActive);
+        this.toggleBtn.classList.toggle('active', this.isActive);
+        this.banner.classList.toggle('active', this.isActive);
+        document.querySelectorAll(this.targets).forEach(el => {
+            if (this.isActive) {
+                el.setAttribute('contenteditable', 'true');
+                el.addEventListener('input', this.save);
+            } else {
+                el.removeAttribute('contenteditable');
+            }
+        });
+    }
+
+    save = () => {
+        const data = {};
+        document.querySelectorAll('.slide').forEach((s, i) => { data[i] = s.innerHTML; });
+        try {
+            localStorage.setItem(this.key, JSON.stringify({ sig: this.signature(), data }));
+        } catch (e) {}
+    }
+
+    /* 파일이 바뀌면 저장본은 버린다.
+       이게 없으면 한 번 저장한 내용이 파일을 영원히 덮어써서,
+       소스를 고쳐도 브라우저에 옛 화면이 계속 나온다 */
+    signature() {
+        /* restore() 보다 먼저 한 번만 계산해 둔다 — 그래야 '파일 원본'의 서명이 된다 */
+        if (this._sig) return this._sig;
+        const src = [...document.querySelectorAll('.slide')].map(s => s.innerHTML).join('\u0000');
+        let h = 5381;
+        for (let i = 0; i < src.length; i++) h = ((h * 33) ^ src.charCodeAt(i)) >>> 0;
+        return (this._sig = src.length + '-' + h.toString(36));
+    }
+
+    restore() {
+        try {
+            const raw = localStorage.getItem(this.key);
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+            if (!saved || saved.sig !== this.signature()) {
+                localStorage.removeItem(this.key);   /* 파일이 바뀌었다 — 저장본 폐기 */
+                return;
+            }
+            document.querySelectorAll('.slide').forEach((s, i) => {
+                if (saved.data[i]) s.innerHTML = saved.data[i];
+            });
+        } catch (e) {}
+    }
+
+    bindSave() {
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); this.exportFile(); }
+        });
+    }
+
+    /* 저장 전에 편집 흔적을 걷어낸다.
+       그러지 않으면 저장된 파일이 편집 모드에 갇힌 채로 열린다 */
+    exportFile() {
+        const editableEls = Array.from(document.querySelectorAll('[contenteditable]'));
+        editableEls.forEach(el => el.removeAttribute('contenteditable'));
+        document.body.classList.remove('edit-active');
+        this.toggleBtn.classList.remove('active', 'show');
+        this.banner.classList.remove('active', 'show');
+
+        const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+
+        if (this.isActive) {
+            document.body.classList.add('edit-active');
+            editableEls.forEach(el => el.setAttribute('contenteditable', 'true'));
+            this.toggleBtn.classList.add('active');
+            this.banner.classList.add('active');
+        }
+
+        const blob = new Blob([html], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'circular-list.html';
+        a.click();
+        URL.revokeObjectURL(a.href);
+    }
+}
+
+const deck = new SlidePresentation();
+const editor = new InlineEditor();
+
+/* 편집 버튼 노출 — 왼쪽 위 모서리에 400ms 유예를 두고 나타난다
+   (CSS 형제 선택자로는 버튼에 닿기 전에 사라져서 누를 수 없다) */
+const hotzone = document.querySelector('.edit-hotzone');
+const editToggle = document.getElementById('editToggle');
+let hideTimeout = null;
+
+hotzone.addEventListener('mouseenter', () => {
+    clearTimeout(hideTimeout);
+    editToggle.classList.add('show');
+});
+hotzone.addEventListener('mouseleave', () => {
+    hideTimeout = setTimeout(() => {
+        if (!editor.isActive) editToggle.classList.remove('show');
+    }, 400);
+});
+editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+editToggle.addEventListener('mouseleave', () => {
+    hideTimeout = setTimeout(() => {
+        if (!editor.isActive) editToggle.classList.remove('show');
+    }, 400);
+});
+hotzone.addEventListener('click', () => editor.toggleEditMode());
+editToggle.addEventListener('click', () => editor.toggleEditMode());
+
+document.addEventListener('keydown', (e) => {
+    if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+        editor.toggleEditMode();
+    }
+});
+
+/* 첫 슬라이드는 바로 보이게 */
+document.getElementById('s1').classList.add('visible');
+</script>
+</body>
+</html>
