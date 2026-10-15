@@ -28,11 +28,14 @@ let cur = 0;
 const FWD = ['ArrowRight', 'ArrowDown', 'PageDown', ' '];
 const BACK = ['ArrowLeft', 'ArrowUp', 'PageUp'];
 
-/* What the deck shows now: its scroll position and every slide's classes and data attributes */
+/* What the deck shows now: where each slide sits on screen, and its classes and data attributes.
+   The position comes from the slide's box, not window.scrollY: in circular-list.html the body,
+   not the window, is the scroller, so window.scrollY stays 0 while the slides move. */
 function state(w) {
     const secs = [...w.document.querySelectorAll('section')];
-    return w.scrollY + '|' + secs.map(s =>
-        s.className + [...s.attributes].filter(a => a.name.startsWith('data-')).map(a => a.name + '=' + a.value).join(';')
+    return secs.map(s =>
+        Math.round(s.getBoundingClientRect().top) + ':' + s.className + ':' +
+        [...s.attributes].filter(a => a.name.startsWith('data-')).map(a => a.name + '=' + a.value).join(';')
     ).join('|');
 }
 
@@ -51,7 +54,7 @@ frames.forEach((f, i) => f.addEventListener('load', () => {
         const dir = FWD.includes(e.key) ? 1 : BACK.includes(e.key) ? -1 : 0;
         if (!dir) return;
         const before = state(w);
-        setTimeout(() => { if (i === cur && state(w) === before) go(cur + dir); }, 150);
+        setTimeout(() => { if (i === cur && state(w) === before) go(cur + dir); }, 250);
     }, true);
     if (i === cur) w.focus();
 }));
