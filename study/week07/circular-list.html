@@ -888,23 +888,23 @@ body.edit-active [contenteditable]:focus {
                         <g stroke="#ff3300" stroke-width="2"><line x1="90" y1="115" x2="62" y2="115"/><line x1="310" y1="85" x2="338" y2="85"/></g>
                         <text x="32" y="121" font-size="18" font-weight="600" fill="#ff3300">NULL</text>
                         <text x="368" y="91" font-size="18" font-weight="600" fill="#ff3300">NULL</text>
-                        <text x="200" y="180" font-size="18" fill="#6b6b6b">빈 리스트 · <tspan font-size="22" font-weight="700" fill="#ff3300">32 B</tspan></text>
+                        <text x="200" y="180" font-size="18" fill="#6b6b6b">list 구조체의 크기 · <tspan font-size="22" font-weight="700" fill="#ff3300">32 B</tspan></text>
                     </g>
                 </svg>
                 <ul style="padding:0 .7em .7em">
-                    <li class="no"><code>list</code> ≠ <code>list_elem</code>, 타입 2개</li>
+                    <li class="no">list 구조체가 <b>32 B</b></li>
                 </ul>
             </div>
             <div class="col panel at s1">
                 <div class="cap"><span>② 포인터 head/tail</span><span class="side">내 시도</span></div>
-                <svg viewBox="0 0 400 200" role="img" aria-label="빈 리스트에서 head 와 tail 이 모두 NULL">
+                <svg viewBox="0 0 400 200" role="img" aria-label="빈 리스트에서 head 와 tail 이 모두 NULL. list 구조체의 크기 16 B">
                     <g font-family="'IBM Plex Mono', monospace" fill="#0a0a0a" text-anchor="middle">
                         <rect x="60" y="60" width="140" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
                         <rect x="200" y="60" width="140" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
                         <text x="130" y="92" font-size="20">head</text><text x="270" y="92" font-size="20">tail</text>
                         <text x="130" y="124" font-size="22" font-weight="600" fill="#ff3300">NULL</text>
                         <text x="270" y="124" font-size="22" font-weight="600" fill="#ff3300">NULL</text>
-                        <text x="200" y="180" font-size="18" fill="#6b6b6b">빈 리스트 · <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
+                        <text x="200" y="180" font-size="18" fill="#6b6b6b">list 구조체의 크기 · <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
                     </g>
                 </svg>
                 <ul style="padding:0 .7em .7em">
@@ -924,7 +924,7 @@ body.edit-active [contenteditable]:focus {
                         </g>
                         <text x="355" y="40" font-size="17" fill="#ff3300">next</text>
                         <text x="45" y="160" font-size="17" fill="#ff3300">prev</text>
-                        <text x="200" y="192" font-size="18" fill="#6b6b6b">빈 리스트 · <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
+                        <text x="200" y="192" font-size="18" fill="#6b6b6b">list 구조체의 크기 · <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
                     </g>
                 </svg>
                 <ul style="padding:0 .7em .7em">
