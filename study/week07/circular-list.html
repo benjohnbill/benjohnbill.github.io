@@ -459,7 +459,8 @@ pre {
 .at { opacity: 0; transform: translateY(.35em); transition: opacity .3s ease, transform .3s ease; }
 .slide[data-step="1"] .at.s1,
 .slide[data-step="2"] .at.s1, .slide[data-step="2"] .at.s2,
-.slide[data-step="3"] .at.s1, .slide[data-step="3"] .at.s2, .slide[data-step="3"] .at.s3 {
+.slide[data-step="3"] .at.s1, .slide[data-step="3"] .at.s2, .slide[data-step="3"] .at.s3,
+.slide[data-step="4"] .at.s1, .slide[data-step="4"] .at.s2, .slide[data-step="4"] .at.s3, .slide[data-step="4"] .at.s4 {
     opacity: 1; transform: none;
 }
 /* 아직 누를 단계가 남았다는 표시 — 발표자가 보는 신호 */
@@ -469,6 +470,7 @@ pre {
     background: var(--red); z-index: 3;
     animation: breathe 1.9s ease-in-out infinite;
 }
+.slide[data-max-step="4"][data-step="4"] .step-dot,
 .slide[data-max-step="3"][data-step="3"] .step-dot,
 .slide[data-max-step="2"][data-step="2"] .step-dot,
 .slide[data-max-step="1"][data-step="1"] .step-dot { display: none; }
@@ -651,14 +653,22 @@ body.edit-active [contenteditable]:focus {
 /* 장면 바꾸기 (06): 같은 자리에 겹쳐 두고, 단계에 맞는 한 장만 보인다 */
 .frames { display: grid; position: relative; z-index: 2; }
 .frames > .fr { grid-area: 1 / 1; opacity: 0; transition: opacity .3s ease; }
-.slide[data-step="0"] .fr.f0, .slide[data-step="1"] .fr.f1,
-.slide[data-step="2"] .fr.f2, .slide[data-step="3"] .fr.f3 { opacity: 1; }
+.slide[data-step="0"] .fr.f0, .slide[data-step="1"] .fr.f0, .slide[data-step="2"] .fr.f1,
+.slide[data-step="3"] .fr.f2, .slide[data-step="4"] .fr.f3 { opacity: 1; }
+/* 06 의 첫 장면: 1단계에서 next · prev 화살표가 자기 자신으로 그려진다 */
+.self path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .8s var(--ease); }
+.self-tip, .self-a { opacity: 0; transition: opacity .25s ease; }
+.self-q { transition: opacity .25s ease; }
+.slide:not([data-step="0"]) .self path { stroke-dashoffset: 0; }
+.slide:not([data-step="0"]) .self-tip { opacity: 1; transition-delay: .65s; }
+.slide:not([data-step="0"]) .self-a { opacity: 1; transition-delay: .5s; }
+.slide:not([data-step="0"]) .self-q { opacity: 0; }
 .frames svg { display: block; width: 100%; height: auto; max-height: 62vh; }
 /* 지금 장면이 쓰는 코드 줄 */
 .hl { transition: color .3s ease; }
-.slide[data-step="0"] .hl.h0,
-.slide[data-step="1"] .hl.h1, .slide[data-step="2"] .hl.h1,
-.slide[data-step="3"] .hl.h3 { color: var(--red); font-weight: 600; }
+.slide[data-step="0"] .hl.h0, .slide[data-step="1"] .hl.h0,
+.slide[data-step="2"] .hl.h1, .slide[data-step="3"] .hl.h1,
+.slide[data-step="4"] .hl.h3 { color: var(--red); font-weight: 600; }
 
 /* 01 의 단 한 번의 단계: Yena 줄에 빨간 선을 그려 넣는다 */
 .paint { stroke-dasharray: 145; stroke-dashoffset: 145; transition: stroke-dashoffset .9s var(--ease); }
@@ -873,21 +883,14 @@ body.edit-active [contenteditable]:focus {
         <div class="three reveal">
             <div class="col panel">
                 <div class="cap"><span>① PintOS</span><span class="side">head · tail 노드 2개</span></div>
-                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Pintos 리스트. head 와 tail 노드가 서로를 가리키고, head.prev 와 tail.next 는 NULL">
+                <svg viewBox="0 0 400 200" role="img" aria-label="Pintos list 구조체: 점선 테두리 안에 prev·next 노드 두 개(head, tail)가 통째로 들어 있다. 16 + 16 = 32 B">
                     <defs><marker id="p-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#0a0a0a"/></marker></defs>
                     <g font-family="'IBM Plex Mono', monospace" text-anchor="middle">
-                        <rect x="90" y="65" width="80" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
-                        <rect x="230" y="65" width="80" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
-                        <text x="130" y="108" font-size="24" font-weight="600">H</text>
-                        <text x="270" y="108" font-size="24" font-weight="600">T</text>
-                        <g stroke="#0a0a0a" stroke-width="2" marker-end="url(#p-arr)">
-                            <line x1="170" y1="85" x2="226" y2="85"/>
-                            <line x1="230" y1="115" x2="174" y2="115"/>
-                        </g>
-                        <g stroke="#ff3300" stroke-width="2"><line x1="90" y1="115" x2="62" y2="115"/><line x1="310" y1="85" x2="338" y2="85"/></g>
-                        <text x="32" y="121" font-size="18" font-weight="600" fill="#ff3300">NULL</text>
-                        <text x="368" y="91" font-size="18" font-weight="600" fill="#ff3300">NULL</text>
-                        <text x="200" y="180" font-size="18" fill="#6b6b6b">list 구조체의 크기 · <tspan font-size="22" font-weight="700" fill="#ff3300">32 B</tspan></text>
+                        <rect x="30" y="22" width="340" height="128" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-dasharray="7 5"/>
+                        <text x="110" y="52" font-size="16" font-weight="600">head</text><text x="290" y="52" font-size="16" font-weight="600">tail</text>
+                        <rect x="50" y="62" width="120" height="60" fill="#fff" stroke="#0a0a0a" stroke-width="2"/><line x1="110" y1="62" x2="110" y2="122" stroke="#0a0a0a" stroke-width="2"/><text x="80" y="98" font-size="15" fill="#6b6b6b">prev</text><text x="140" y="98" font-size="15" fill="#6b6b6b">next</text><rect x="230" y="62" width="120" height="60" fill="#fff" stroke="#0a0a0a" stroke-width="2"/><line x1="290" y1="62" x2="290" y2="122" stroke="#0a0a0a" stroke-width="2"/><text x="260" y="98" font-size="15" fill="#6b6b6b">prev</text><text x="320" y="98" font-size="15" fill="#6b6b6b">next</text>
+                        <g stroke="#0a0a0a" stroke-width="2" marker-end="url(#p-arr)"><line x1="170" y1="80" x2="228" y2="80"/><line x1="230" y1="106" x2="172" y2="106"/></g>
+                        <text x="200" y="182" font-size="18" fill="#6b6b6b">16 + 16 = <tspan font-size="22" font-weight="700" fill="#ff3300">32 B</tspan></text>
                     </g>
                 </svg>
                 <ul style="padding:0 .7em .7em">
@@ -896,14 +899,18 @@ body.edit-active [contenteditable]:focus {
             </div>
             <div class="col panel at s1">
                 <div class="cap"><span>② 포인터 head/tail</span><span class="side">내 시도</span></div>
-                <svg viewBox="0 0 400 200" role="img" aria-label="빈 리스트에서 head 와 tail 이 모두 NULL. list 구조체의 크기 16 B">
-                    <g font-family="'IBM Plex Mono', monospace" fill="#0a0a0a" text-anchor="middle">
-                        <rect x="60" y="60" width="140" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
-                        <rect x="200" y="60" width="140" height="80" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
-                        <text x="130" y="92" font-size="20">head</text><text x="270" y="92" font-size="20">tail</text>
-                        <text x="130" y="124" font-size="22" font-weight="600" fill="#ff3300">NULL</text>
-                        <text x="270" y="124" font-size="22" font-weight="600" fill="#ff3300">NULL</text>
-                        <text x="200" y="180" font-size="18" fill="#6b6b6b">list 구조체의 크기 · <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
+                <svg viewBox="0 0 400 200" role="img" aria-label="포인터 head/tail: 점선 테두리 안에 화살표 칸 두 개만 있다. 빈 리스트에서는 둘 다 NULL. 8 + 8 = 16 B">
+                    <g font-family="'IBM Plex Mono', monospace" text-anchor="middle">
+                        <rect x="105" y="22" width="190" height="98" fill="none" stroke="#0a0a0a" stroke-width="2" stroke-dasharray="7 5"/>
+                        <text x="160" y="50" font-size="16" font-weight="600">head</text><text x="240" y="50" font-size="16" font-weight="600">tail</text>
+                        <rect x="125" y="60" width="70" height="44" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <rect x="205" y="60" width="70" height="44" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
+                        <circle cx="160" cy="82" r="5" fill="#0a0a0a"/><circle cx="240" cy="82" r="5" fill="#0a0a0a"/>
+                        <g stroke="#ff3300" stroke-width="2.5">
+                            <line x1="160" y1="82" x2="160" y2="146"/><line x1="146" y1="146" x2="174" y2="146"/><line x1="152" y1="153" x2="168" y2="153"/>
+                            <line x1="240" y1="82" x2="240" y2="146"/><line x1="226" y1="146" x2="254" y2="146"/><line x1="232" y1="153" x2="248" y2="153"/>
+                        </g>
+                        <text x="200" y="186" font-size="18" fill="#6b6b6b">8 + 8 = <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
                     </g>
                 </svg>
                 <ul style="padding:0 .7em .7em">
@@ -912,18 +919,16 @@ body.edit-active [contenteditable]:focus {
             </div>
             <div class="col panel accent at s2">
                 <div class="cap"><span>③ Linux list_head</span><span class="side">원형 · head 노드 1개</span></div>
-                <svg viewBox="0 0 400 200" role="img" aria-label="빈 Linux 리스트. head 노드 ready_list 의 next 와 prev 가 모두 자기 자신을 가리킨다">
+                <svg viewBox="0 0 400 200" role="img" aria-label="Linux list_head: 테두리가 없다. 리스트 ready_list 와 thread A 안의 원소가 똑같은 prev·next 상자 하나다. 16 B">
                     <defs><marker id="l-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#ff3300"/></marker></defs>
                     <g font-family="'IBM Plex Mono', monospace" text-anchor="middle">
-                        <rect x="120" y="65" width="160" height="70" fill="#fff" stroke="#0a0a0a" stroke-width="2"/>
-                        <text x="200" y="106" font-size="20" font-weight="600">ready_list</text>
-                        <g stroke="#ff3300" stroke-width="2" fill="none" marker-end="url(#l-arr)">
-                            <path d="M280,85 C350,85 350,22 200,22 L200,61"/>
-                            <path d="M120,115 C50,115 50,160 200,160 L200,139"/>
-                        </g>
-                        <text x="355" y="40" font-size="17" fill="#ff3300">next</text>
-                        <text x="45" y="160" font-size="17" fill="#ff3300">prev</text>
-                        <text x="200" y="192" font-size="18" fill="#6b6b6b">list 구조체의 크기 · <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
+                        <text x="85" y="52" font-size="16" font-weight="600">ready_list</text>
+                        <rect x="25" y="62" width="120" height="60" fill="#fff" stroke="#ff3300" stroke-width="2.5"/><line x1="85" y1="62" x2="85" y2="122" stroke="#ff3300" stroke-width="2.5"/><text x="55" y="98" font-size="15" fill="#6b6b6b">prev</text><text x="115" y="98" font-size="15" fill="#6b6b6b">next</text>
+                        <rect x="200" y="22" width="185" height="128" fill="#f7f7f5" stroke="#6b6b6b" stroke-width="2"/>
+                        <text x="292" y="48" font-size="15" fill="#6b6b6b">thread A</text>
+                        <rect x="232" y="62" width="120" height="60" fill="#fff" stroke="#ff3300" stroke-width="2.5"/><line x1="292" y1="62" x2="292" y2="122" stroke="#ff3300" stroke-width="2.5"/><text x="262" y="98" font-size="15" fill="#6b6b6b">prev</text><text x="322" y="98" font-size="15" fill="#6b6b6b">next</text>
+                        <g stroke="#ff3300" stroke-width="2.5" marker-end="url(#l-arr)"><line x1="145" y1="80" x2="228" y2="80"/><line x1="232" y1="106" x2="149" y2="106"/></g>
+                        <text x="200" y="186" font-size="18" fill="#6b6b6b">list 구조체의 크기 · <tspan font-size="22" font-weight="700" fill="#0a0a0a">16 B</tspan></text>
                     </g>
                 </svg>
                 <ul style="padding:0 .7em .7em">
@@ -944,13 +949,13 @@ body.edit-active [contenteditable]:focus {
      장면: 0 INIT · 1 add_tail(A) · 2 add_tail(B) · 3 list_add(C)
      빨간 화살표 = 이번 호출이 쓴 포인터 4개 (__list_add 의 네 줄)
      ============================================================ -->
-<section class="slide tight" id="s7" data-step="0" data-max-step="3">
+<section class="slide tight" id="s7" data-step="0" data-max-step="4">
     <div class="head head-space">
         <span class="label">__list_add(new, prev, next)</span>
         <span class="num">06</span>
     </div>
     <div class="slide-content">
-        <h2 class="thesis reveal">원형이면 끝이 없다. 그래서 모든 삽입이 <b>두 이웃 사이</b>다</h2>
+        <h2 class="thesis reveal">알고 있는 것은 ready_list의 주소. 모든 삽입은 <b>prev, next </b>사이에 넣는 방식</h2>
         <div class="two reveal" style="align-items:center;grid-template-columns:minmax(0,.8fr) minmax(0,1.6fr)">
             <div class="panel">
                 <div class="cap"><span>include/lib/kernel/list.h</span><span class="side">69 · 83 · 101 · 114</span></div>
@@ -981,11 +986,16 @@ __list_add(new, prev, next) {
                     <text x="0" y="28" font-family="'IBM Plex Mono', monospace" font-size="24" font-weight="600" fill="#0a0a0a">INIT_LIST_HEAD(&amp;ready_list)</text>
                     <rect x="375" y="160" width="150" height="80" fill="#f7f7f5" stroke="#0a0a0a" stroke-width="2"/>
                     <g text-anchor="middle" font-family="'IBM Plex Mono', monospace" font-weight="600"><text x="450" y="211" font-size="22">ready_list</text></g>
-                    <g stroke="#ff3300" stroke-width="2.5" fill="none" marker-end="url(#a-r)">
-                        <path d="M525,185 C650,185 650,75 450,75 L450,155"/>
-                        <path d="M375,215 C250,215 250,330 450,330 L450,245"/>
+                    <g class="self" stroke="#ff3300" stroke-width="2.5" fill="none">
+                        <path pathLength="1" d="M525,185 C650,185 650,75 450,75 L450,157"/>
+                        <path pathLength="1" d="M375,215 C250,215 250,330 450,330 L450,243"/>
                     </g>
-                    <g font-family="'IBM Plex Mono', monospace" font-size="21" fill="#ff3300">
+                    <g class="self-tip" fill="#ff3300"><path d="M441,140 L459,140 L450,158 z"/><path d="M441,260 L459,260 L450,242 z"/></g>
+                    <g class="self-q" font-family="'IBM Plex Mono', monospace" font-size="21" fill="#6b6b6b">
+                        <text x="560" y="68">next = ?</text>
+                        <text x="205" y="360">prev = ?</text>
+                    </g>
+                    <g class="self-a" font-family="'IBM Plex Mono', monospace" font-size="21" fill="#ff3300">
                         <text x="560" y="68">next = &amp;ready_list</text>
                         <text x="205" y="360">prev = &amp;ready_list</text>
                     </g>
@@ -1051,7 +1061,7 @@ __list_add(new, prev, next) {
                 </svg>
             </div>
         </div>
-        <p class="punch at s3">맨 앞도 맨 뒤도 결국 두 이웃 사이. 그래서 인자는 <b>new · prev · next 3개</b>면 된다.</p>
+        <p class="punch at s4">맨 앞도 맨 뒤도 결국 두 이웃 사이. 그래서 인자는 <b>new · prev · next 3개</b>면 된다.</p>
     </div>
     <div class="step-dot" aria-hidden="true"></div>
     <div class="foot"><span>PintOS 는 list_insert(before, elem) · head · tail 노드 덕에 before-&gt;prev 가 늘 있다 (list.c:157)</span></div>
