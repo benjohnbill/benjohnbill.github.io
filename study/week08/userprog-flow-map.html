@@ -52,6 +52,11 @@ details.fold li { margin: 2px 0; }
 .q p { margin: 8px 0 0; }
 .q .var { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
 .q .var b { font-family: var(--font-code); font-size: .85rem; font-weight: 400; color: var(--muted); margin-right: .6em; }
+/* answer box: typed answer stays in this browser; shown again atop 답 */
+.q textarea { display: block; width: 100%; box-sizing: border-box; min-height: 4.5em; margin: 12px 0 0; padding: 8px 10px; font: inherit; font-size: .95rem; line-height: 1.6; color: var(--ink); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; resize: vertical; }
+.q textarea:focus-visible { outline: 2px solid var(--s3); outline-offset: -1px; }
+.q .mine { margin: 12px 0 0; padding: 8px 12px; border-left: 2px solid var(--s3); white-space: pre-wrap; font-size: .95rem; color: var(--ink-2); }
+.q .mine b { display: block; font: 400 .75rem var(--font-code); color: var(--muted); margin-bottom: 2px; }
 @media (max-width: 760px) { pre { font-size: 13px; } }
 </style>
 </head>
@@ -443,5 +448,30 @@ Run didn't produce any output</pre>
 </section>
 
 </main>
+<script>
+/* one textarea per question; text kept in localStorage, echoed atop the 답 fold */
+document.querySelectorAll('section.q').forEach(function (q) {
+  var n = q.querySelector('.chip').textContent.trim();
+  var key = 'userprog-flow-map:q' + n;
+  var box = document.createElement('textarea');
+  box.setAttribute('aria-label', n + '번 내 답');
+  box.placeholder = '내 답 (이 브라우저에만 저장)';
+  try { box.value = localStorage.getItem(key) || ''; } catch (e) {}
+  box.addEventListener('input', function () {
+    try { localStorage.setItem(key, box.value); } catch (e) {}
+  });
+  q.insertBefore(box, q.querySelector('details.fold'));
+  var ans = q.querySelectorAll('details.fold')[1];
+  if (!ans) return;
+  var mine = document.createElement('div');
+  mine.className = 'mine';
+  ans.querySelector('.in').prepend(mine);
+  ans.addEventListener('toggle', function () {
+    if (!ans.open) return;
+    mine.innerHTML = '<b>내 답</b>';
+    mine.append(box.value.trim() || '(비어 있음)');
+  });
+});
+</script>
 </body>
 </html>
