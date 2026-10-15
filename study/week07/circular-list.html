@@ -841,28 +841,16 @@ body.edit-active [contenteditable]:focus {
 </section>
 
 <!-- ============================================================
-     04 · 그래서 직접 짰다: jingeunOS
-     근거: jingeunOS/CLAUDE.md:86–88 (하드웨어 ↔ 시그널 대응), devices/timer.c:130, threads/interrupt.c:151, threads/thread.c:673
-     ⚠ 발표 시점의 실제 상태(stage 1 통과 여부)에 맞춰 punch 문구를 고칠 것
+     04 · 전환 — 질문 한 문장 (jingeunOS 대응 표는 시간 때문에 뺐다, 2026-10-15)
      ============================================================ -->
 <section class="slide" id="s5">
     <div class="head head-space">
-        <span class="label">jingeunOS</span>
+        <span class="label">질문</span>
         <span class="num">04</span>
     </div>
     <div class="slide-content">
-        <h2 class="thesis reveal">커널이 아니라 <b>user stack 위에서</b> 스케줄링</h2>
-        <table class="tbl reveal">
-            <thead><tr><th>하드웨어가 하는 일</th><th>PintOS</th><th>jingeunOS · 시그널로 흉내</th></tr></thead>
-            <tbody>
-                <tr><td>타이머 인터럽트</td><td><code>timer_interrupt</code></td><td class="hot"><code>SIGALRM</code> · setitimer</td></tr>
-                <tr><td>인터럽트 끄기</td><td><code>intr_disable</code></td><td class="hot"><code>sigprocmask</code></td></tr>
-                <tr><td>문맥 교환</td><td><code>do_iret</code></td><td class="hot"><code>swapcontext</code></td></tr>
-            </tbody>
-        </table>
-        <p class="punch reveal">자료구조를 의심했다. 그래서 <b>list</b>부터 다시 봤다.</p>
+        <h1 class="reveal">자료구조는 최적일까? : <em>List</em></h1>
     </div>
-    <div class="foot"><span>Linux 프로세스 하나 · ucontext · signal</span></div>
 </section>
 
 <!-- ============================================================
