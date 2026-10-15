@@ -1058,54 +1058,12 @@ __list_add(new, prev, next) {
 </section>
 
 <!-- ============================================================
-     07 · 대가: 타입이 하나
-     근거: lab/cost/jingeunOS.log — gcc 15.2 -Wall -Wextra, thread.c 에 대한 진단은 thread.h:15 의 child 경고 하나뿐, :42 는 조용
-           lab/cost/pintos.log — 같은 실수(list 를 elem 자리에)를 Pintos list 로 쓰면 gcc 11.4 가 incompatible pointer type 경고
-     ⚠ :42 가 왜 틀렸는지는 발표자가 직접 확인하고 말한다
-     ============================================================ -->
-<section class="slide" id="s8" data-step="0" data-max-step="2">
-    <div class="head head-space">
-        <span class="label">대가 · trade-off</span>
-        <span class="num">07</span>
-    </div>
-    <div class="slide-content">
-        <h2 class="thesis reveal">대가: head와 entry가 <b>같은 타입</b>이라, 컴파일러가 실수를 못 잡는다</h2>
-        <p class="sub reveal" style="font-size:var(--body-size)">같은 실수: <b>리스트(head)</b>를 원소(entry) 자리에 넘겼다</p>
-        <div class="vs reveal">
-            <div class="tcard">
-                <div class="tk">같은 실수를 PintOS로 썼다면 · 타입 2개</div>
-                <div class="call">list_remove (<u>&amp;ready_list</u>);</div>
-                <div class="types at s1">
-                    <span class="tl">넘긴 것</span><code>struct list *</code>
-                    <span class="rel ne">≠</span>
-                    <span class="tl">받는 것</span><code>struct list_elem *</code>
-                </div>
-                <div class="verdict bad at s1">gcc: warning · incompatible pointer type</div>
-            </div>
-            <div class="tcard accent">
-                <div class="tk">내 코드 · jingeunOS · 타입 1개 · <span class="ln">thread.c:42</span></div>
-                <div class="call">__list_del_entry(<u>&amp;ready_list</u>);</div>
-                <div class="types at s2">
-                    <span class="tl">넘긴 것</span><code>struct list_head *</code>
-                    <span class="rel eq">=</span>
-                    <span class="tl">받는 것</span><code>struct list_head *</code>
-                </div>
-                <div class="verdict ok at s2">gcc: 경고 없음 <span class="memo">← head인데 그냥 통과</span></div>
-            </div>
-        </div>
-        <p class="punch at s2">끝을 없앤 대가로 <b>타입 검사</b>를 잃었다. head와 entry는 이제 내가 구분해야 한다.</p>
-    </div>
-    <div class="step-dot" aria-hidden="true"></div>
-    <div class="foot"><span>lab/cost · gcc 11.4 -Wall -W (PintOS) · gcc 15.2 -Wall -Wextra (jingeunOS)</span></div>
-</section>
-
-<!-- ============================================================
-     08 · 마무리 — 제목을 다시 말한다
+     07 · 마무리 — 제목을 다시 말한다
      ============================================================ -->
 <section class="slide" id="s9">
     <div class="head head-space">
         <span class="label">가져가실 것</span>
-        <span class="num">08</span>
+        <span class="num">07</span>
     </div>
     <div class="slide-content">
         <h1 class="reveal">Re: <em>Zero</em>부터 시작하는 OS</h1>
@@ -1113,8 +1071,7 @@ __list_add(new, prev, next) {
         <div class="takeaway reveal">
             <span class="k">정리</span>
             패딩 재배치: <b>0바이트</b> <small>시스템을 모르고 한 최적화</small><br>
-            원형 이중 연결 리스트: head 노드 1개 · 16 B · <b>분기 없음</b> <small>Linux list.h</small><br>
-            대가: <b>타입 검사</b> <small>thread.c:42</small>
+            원형 이중 연결 리스트: head 노드 1개 · 16 B · <b>분기 없음</b> <small>Linux list.h</small>
         </div>
         <p class="punch reveal">자료구조까지 내려가서 OS의 compact함을 쫓아 본, <b>재미있는</b> 경험이었다.</p>
     </div>
