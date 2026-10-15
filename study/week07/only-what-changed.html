@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4틱마다 전부? 바뀐 것만</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2312201F'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%234FC5B3'%3EJ%3C/text%3E%3C/svg%3E">
+<meta name="description" content="Pintos MLFQS의 4틱 priority 재계산을 dirty_list로 바뀐 스레드만 계산하게 줄인 과정">
+<meta property="og:type" content="website">
+<meta property="og:title" content="4틱마다 전부? 바뀐 것만">
+<meta property="og:description" content="Pintos MLFQS의 4틱 priority 재계산을 dirty_list로 바뀐 스레드만 계산하게 줄인 과정">
+
+<!-- Fonts: DESIGN.md (Plex Swiss Grid) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!--
+  Stage runtime (jungle-deck templates/stage.html)
+
+  Keys
+    → / Space / PageDown : next step on this slide; after the last step, next slide
+    ← / PageUp           : hide the last step; with none shown, previous slide
+    N                    : toggle the speaker-notes panel
+    E (or top-left corner): edit mode; click slide text or notes to change it
+    Ctrl+S               : download the edited deck as an HTML file (Esc leaves the caret)
+    Home / End           : first / last slide
+    #3 at the end of the URL : open slide 3
+
+  Authoring
+    Steps : put data-step="1", "2", ... on elements; they appear in that order
+    Notes : edit <aside class="notes" data-sec="15"> inside each <section>
+            (hidden on the slide). Start a paragraph with <span class="st">▸2</span>
+            to tie it to step 2.
+    Ids   : keep <section id="sN">; the merge-back script matches edits by it.
+-->
+
+<style>
+/* ===========================================
+   1. Theme tokens. Every color lives here.
+   PLACEHOLDER values: the real style comes from the student's DESIGN.md,
+   or from frontend-slides style discovery (Phase 2) for a first deck.
+   =========================================== */
+:root {
+    /* Style: ~/.jungle-deck/DESIGN.md (Plex Swiss Grid), accent from BRIEF.md */
+    --paper:   #ffffff;
+    --ink:     #0a0a0a;
+    --acc:     #ff3300;
+    --hl:      rgba(255,51,0,.13);
+    --edit-bg: rgba(255,51,0,.05);
+    --grid:    #ebebeb;
+    --mut:     #6b6b6b;
+    --dim:     #9a9a9a;
+    --panel:   #f7f7f5;
+    --panel-b: #0a0a0a;
+    --cap-b:   rgba(10,10,10,.25);
+    --shadow:  rgba(0,0,0,.08);
+
+    --font-body: 'IBM Plex Sans KR', system-ui, 'Malgun Gothic', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'IBM Plex Sans KR', ui-monospace, Consolas, monospace;
+
+    --title-size: clamp(2.4rem, 4.8vw, 7.5rem);
+    --h2-size:    clamp(1.4rem, 2.3vw, 3.2rem);
+    --h3-size:    clamp(1.1rem, 1.6vw, 2.2rem);
+    --body-size:  clamp(0.95rem, 1.15vw, 1.65rem);
+    --small-size: clamp(0.72rem, 0.78vw, 1.15rem);
+    --code-size:  clamp(0.85rem, min(1.25vw, 2.2vh), 2.1rem);
+
+    --slide-padding: clamp(1rem, 4vw, 4rem);
+    --content-gap:   clamp(0.5rem, 1.8vh, 1.6rem);
+    --element-gap:   clamp(0.25rem, 1vw, 1rem);
+
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur:  0.5s;
+}
+
+/* ===========================================
+   2. Viewport contract, from vendor/frontend-slides/viewport-base.css.
+   The scroll-snap rules are left out: the stage shows one fixed slide at a time.
+   =========================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+}
+
+.slide {
+    position: fixed; inset: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;   /* dynamic viewport height for mobile browsers */
+    display: flex; flex-direction: column;
+    overflow: hidden; /* never let a slide scroll */
+}
+.slide-content {
+    flex: 1; min-height: 0; max-height: 100%;
+    display: flex; flex-direction: column; justify-content: center;
+    overflow: hidden;
+    gap: var(--content-gap);
+    padding: clamp(.5rem, 1.4vh, 1.1rem) var(--slide-padding);
+    position: relative; z-index: 2;
+}
+.card, .container, .content-box {
+    max-width: min(90vw, 1000px);
+    max-height: min(80vh, 700px);
+}
+.feature-list, .bullet-list { gap: clamp(0.4rem, 1vh, 1rem); }
+.feature-list li, .bullet-list li { font-size: var(--body-size); line-height: 1.4; }
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+    gap: clamp(0.5rem, 1.5vw, 1rem);
+}
+img, .image-container {
+    max-width: 100%;
+    max-height: min(50vh, 400px);
+    object-fit: contain;
+}
+
+/* Short viewports (< 700px height) */
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(0.75rem, 3vw, 2rem);
+        --content-gap:   clamp(.35rem, 1.2vh, .8rem);
+        --title-size:    clamp(1.4rem, 4.2vw, 2.6rem);
+        --h2-size:       clamp(1.05rem, 2.6vw, 1.8rem);
+    }
+}
+/* Very short viewports (< 600px height) */
+@media (max-height: 600px) {
+    :root {
+        --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+        --content-gap:   clamp(0.3rem, 1vw, 0.75rem);
+        --title-size:    clamp(1.1rem, 4vw, 2rem);
+        --body-size:     clamp(0.7rem, 1.2vw, 0.95rem);
+    }
+    /* Hide non-essential elements */
+    .nav-dots, .keyboard-hint, .decorative { display: none; }
+}
+/* Extremely short (landscape phones, < 500px height) */
+@media (max-height: 500px) {
+    :root {
+        --slide-padding: clamp(0.4rem, 2vw, 1rem);
+        --title-size:    clamp(1rem, 3.5vw, 1.5rem);
+        --h2-size:       clamp(0.9rem, 2.5vw, 1.25rem);
+        --body-size:     clamp(0.65rem, 1vw, 0.85rem);
+    }
+}
+/* Narrow viewports (< 600px width) */
+@media (max-width: 600px) {
+    :root { --title-size: clamp(1.3rem, 7vw, 2.4rem); }
+    .grid, .panels { grid-template-columns: 1fr !important; }
+}
+
+/* ===========================================
+   3. Stage: one slide visible at a time
+   =========================================== */
+.slide {
+    background: var(--paper);
+    opacity: 0; visibility: hidden;
+    transition: opacity .35s ease, visibility 0s linear .35s;
+}
+.slide.active {
+    opacity: 1; visibility: visible; z-index: 2;
+    transition: opacity .35s ease, visibility 0s;
+}
+/* The leaving slide does not fade; it stays underneath. If both slides were
+   half-transparent at once, lines in the same place (head rule, grid) would
+   dim and come back. */
+.slide.leaving {
+    opacity: 1; visibility: visible; z-index: 1;
+    transition: none;
+}
+/* Background 12-column grid */
+.slide::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(90deg, var(--grid) 0 1px, transparent 1px 8.3333%);
+    opacity: .6; z-index: 0;
+}
+
+/* Head and foot bands */
+.head {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 2px solid var(--ink);
+    padding: clamp(1rem, 3.2vh, 2.4rem) var(--slide-padding) clamp(.4rem, 1vh, .7rem);
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut);
+}
+.head .num { letter-spacing: .1em; }
+.foot {
+    position: relative; z-index: 2;
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--ink);
+    margin: 0 var(--slide-padding) clamp(1rem, 3vh, 2.2rem);
+    padding-top: clamp(.35rem, 1vh, .6rem);
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut);
+}
+
+h1, h2, p, li, td, .foot span, .head span { word-break: keep-all; text-wrap: pretty; }
+h1, h2 { text-wrap: balance; }
+
+/* ===========================================
+   4. Text elements
+   =========================================== */
+h1 {
+    font-weight: 700; line-height: 1.22; letter-spacing: -.02em;
+    font-size: var(--title-size); max-width: 20ch;
+}
+h1 em, h2 em { font-style: normal; color: var(--acc); }
+h2 {
+    font-weight: 700; line-height: 1.3; letter-spacing: -.015em;
+    font-size: var(--h2-size); max-width: 34ch;
+}
+.kicker {
+    align-self: flex-start;
+    font-family: var(--font-mono); font-size: var(--small-size);
+    letter-spacing: .2em; text-transform: uppercase;
+    color: var(--acc); border: 1.5px solid var(--acc); padding: .3em .7em;
+}
+.rule { width: clamp(70px, 9vw, 180px); height: clamp(6px, .55vw, 12px); background: var(--ink); }
+
+/* One-line conclusion */
+.punch {
+    font-size: clamp(1rem, 1.3vw, 1.9rem); font-weight: 500; line-height: 1.5;
+    max-width: 62ch;
+}
+.punch::before {
+    content: ""; display: inline-block; width: .6em; height: .6em;
+    background: var(--acc); margin-right: .55em; vertical-align: .02em;
+}
+.punch b { color: var(--acc); font-weight: 700; }
+.punch code, .rows code, .hint code { font-family: var(--font-mono); font-weight: 600; }
+.hint {
+    font-size: var(--small-size); color: var(--mut); line-height: 1.55;
+    margin-top: .25em; padding-left: 1.15em;
+}
+.ask { font-size: clamp(1.2rem, 1.7vw, 2.4rem); font-weight: 700; }
+
+/* ===========================================
+   5. Code panels: code, debugger, and compiler output share one light panel
+   =========================================== */
+.panels {
+    display: grid; gap: clamp(.6rem, 1.6vw, 1.4rem);
+    grid-template-columns: 1fr 1fr; align-items: start;
+}
+.panel {
+    border: 2px solid var(--panel-b);
+    background: var(--panel);
+    min-width: 0; overflow: hidden;
+}
+.panel.accent { border-color: var(--acc); }
+/* Panel caption: light, no dark band */
+.cap {
+    display: flex; justify-content: space-between; gap: .8em;
+    font-family: var(--font-mono); font-size: var(--small-size); font-weight: 500;
+    letter-spacing: .04em; color: var(--mut);
+    padding: .4em .8em; border-bottom: 1.5px solid var(--cap-b);
+}
+.cap .side { color: var(--acc); }
+pre {
+    font-family: var(--font-mono); font-size: var(--code-size);
+    line-height: 1.55; white-space: pre; tab-size: 4;
+    padding: clamp(.5rem, 1.4vh, 1rem) clamp(.7rem, 1.3vw, 1.2rem);
+    overflow: hidden;
+}
+pre.wrap { white-space: pre-wrap; overflow-wrap: anywhere; }
+.c-hit { color: var(--acc); font-weight: 600; }
+.c-com, .c-dim { color: var(--dim); }
+.hl { background: var(--hl); color: var(--acc); font-weight: 600; display: block; }
+.hl .c-com { color: var(--acc); opacity: .75; }
+
+/* Comparison table */
+.rows {
+    border-collapse: collapse; background: var(--paper);
+    font-size: clamp(.9rem, 1.15vw, 1.7rem);
+}
+.rows th, .rows td { border: 2px solid var(--ink); padding: .45em .9em; text-align: left; vertical-align: top; }
+.rows th { font-family: var(--font-mono); font-weight: 500; font-size: var(--small-size); letter-spacing: .06em; color: var(--mut); }
+.rows tr.hit td { color: var(--acc); font-weight: 600; }
+
+.closing h1 { max-width: none; text-wrap: wrap; font-size: clamp(1.8rem, 3.3vw, 5.2rem); }
+.closing h1 + h1 { color: var(--acc); }
+.thanks { font-family: var(--font-mono); font-size: var(--body-size); color: var(--mut); }
+
+/* ===========================================
+   6. Step reveal: space is reserved, only visibility changes (no layout jump)
+   =========================================== */
+[data-step] {
+    opacity: 0; visibility: hidden; transform: translateY(14px);
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s linear var(--dur);
+}
+[data-step].on {
+    opacity: 1; visibility: visible; transform: none;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s;
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; transition-delay: 0s !important; animation-duration: .01ms !important; }
+    [data-step] { transform: none; }
+}
+
+/* ===========================================
+   7. Speaker notes: N key, hidden by default
+   =========================================== */
+aside.notes { display: none; }
+#notesPanel {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 9997;
+    max-height: 42vh; overflow: auto;
+    background: var(--paper); border-top: 2px solid var(--ink);
+    box-shadow: 0 -8px 24px var(--shadow);
+    padding: clamp(.7rem, 1.6vh, 1.2rem) var(--slide-padding);
+}
+#notesPanel[hidden] { display: none; }
+#notesPanel .meta {
+    display: flex; gap: 1.4em; flex-wrap: wrap;
+    font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut);
+    margin-bottom: .5em;
+}
+#notesPanel .meta b { color: var(--acc); font-weight: 600; }
+#notesPanel .body { font-size: clamp(1rem, 1.25vw, 1.6rem); line-height: 1.65; }
+#notesPanel .body p + p { margin-top: .35em; }
+#notesPanel .body .st { font-family: var(--font-mono); color: var(--acc); font-weight: 600; margin-right: .4em; }
+
+/* Progress bar, nav dots, key hint */
+.progress-bar {
+    position: fixed; top: 0; left: 0; height: 4px; width: 100%;
+    background: var(--acc); z-index: 9999;
+    transform: scaleX(0); transform-origin: left center; transition: transform .2s linear;
+}
+.nav-dots {
+    position: fixed; right: clamp(.6rem, 1.4vw, 1.4rem); top: 50%; transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: .55rem; z-index: 9998;
+}
+.nav-dots button {
+    width: 9px; height: 9px; padding: 0; border: 1.5px solid var(--ink);
+    background: transparent; border-radius: 50%; cursor: pointer;
+}
+.nav-dots button.active { background: var(--acc); border-color: var(--acc); transform: scale(1.35); }
+.keyboard-hint {
+    position: fixed; left: clamp(.6rem,1.4vw,1.4rem); bottom: clamp(.4rem,1vh,.8rem);
+    font-family: var(--font-mono); font-size: clamp(.55rem,1vh,.72rem); color: var(--mut);
+    z-index: 9998; opacity: .75; animation: hint-out .5s 5s forwards;
+}
+@keyframes hint-out { to { opacity: 0; visibility: hidden; } }
+
+/* ===========================================
+   8. In-browser edit mode: E key or the top-left corner
+   =========================================== */
+.edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; }
+.edit-toggle {
+    position: fixed; top: 14px; left: 14px;
+    width: 42px; height: 42px; border: 2px solid var(--ink);
+    background: var(--paper); border-radius: 50%; cursor: pointer;
+    font-size: 17px; line-height: 1;
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+    z-index: 10001;
+}
+.edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+.edit-toggle.active { background: var(--acc); border-color: var(--acc); }
+.edit-banner {
+    position: fixed; top: 4px; left: 0; right: 0;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--font-mono); font-size: clamp(.6rem,1.1vh,.78rem);
+    padding: .45em 1em; text-align: center;
+    transform: translateY(-120%); transition: transform .3s var(--ease);
+    z-index: 10000;
+}
+body.edit-active .edit-banner { transform: none; }
+/* While editing, show every step so hidden text can be edited too */
+body.edit-active [data-step] { opacity: 1; visibility: visible; transform: none; }
+body.edit-active [contenteditable] { outline: 1px dashed var(--acc); outline-offset: 3px; }
+body.edit-active [contenteditable]:focus { outline: 2px solid var(--acc); background: var(--edit-bg); }
+/* Way back to the study index: ../../ from study/weekNN/<slug>.html. Bottom-right is the only corner the deck chrome leaves free */
+.home-link {
+    position: fixed; right: clamp(.6rem,1.4vw,1.4rem); bottom: clamp(.4rem,1vh,.8rem); z-index: 9998;
+    font-family: var(--font-mono, monospace); font-size: clamp(.55rem,1vh,.72rem);
+    color: var(--mut); text-decoration: none; opacity: .75;
+}
+.home-link:hover { opacity: 1; text-decoration: underline; }
+
+/* ===========================================
+   Deck-specific additions (this deck only)
+   =========================================== */
+.sub { font-size: clamp(1.05rem, 1.5vw, 2.1rem); color: var(--mut); line-height: 1.6; word-break: keep-all; }
+.ticks { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(.4rem, 1vw, 1rem); max-width: 70ch; }
+.tk { border: 2px solid var(--ink); background: var(--panel); display: flex; flex-direction: column; gap: .3em; padding: .6em .9em; }
+.tk.now { border-color: var(--acc); }
+.tk .tn { font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut); }
+.tk .tr { font-family: var(--font-mono); font-weight: 600; font-size: clamp(1.4rem, 2.4vw, 3.2rem); }
+.steps { list-style: none; display: flex; flex-direction: column; gap: clamp(.5rem, 1.6vh, 1.2rem); align-self: start; }
+.steps li { font-size: var(--body-size); line-height: 1.5; padding-left: 1.2em; position: relative; }
+.steps li::before { content: ""; position: absolute; left: 0; top: .55em; width: .5em; height: .5em; background: var(--ink); }
+.steps li b { font-weight: 700; }
+.panels { grid-template-columns: 1.15fr 1fr; }
+.two { display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(.6rem, 1.6vw, 1.4rem); align-items: start; }
+.two > * { min-width: 0; }
+.rows td.acc { color: var(--acc); font-weight: 600; }
+.rows code { font-size: .92em; }
+.hl { display: inline-block; width: 100%; }
+.leftcol { display: flex; flex-direction: column; gap: clamp(.5rem, 1.4vh, 1rem); min-width: 0; }
+.mem { display: flex; flex-direction: column; gap: .45em; }
+.mrow { display: grid; grid-template-columns: 4.2em 1fr; align-items: center; gap: .6em; }
+.mlab { font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut); }
+.bytes { display: grid; grid-template-columns: repeat(8, 1fr); border: 2px solid var(--ink); }
+.bytes .b { height: clamp(1.7rem, 4.2vh, 3rem); border-right: 1px solid var(--cap-b); display: flex; align-items: center; padding-left: .4em;
+    font-family: var(--font-mono); font-size: var(--small-size); white-space: nowrap; overflow: visible; }
+.bytes .b:last-child { border-right: 0; }
+.bytes .b:nth-child(4) { border-right: 2px dashed var(--ink); }   /* 4바이트 경계 */
+.b.mg { background: var(--panel); }
+.b.pd { background: repeating-linear-gradient(135deg, transparent 0 5px, var(--grid) 5px 7px); color: var(--mut); }
+.b.dt { background: var(--hl); color: var(--acc); font-weight: 600; }
+.mnote { font-size: var(--small-size); color: var(--mut); line-height: 1.5; }
+.mnote b { color: var(--ink); font-weight: 600; }   /* block + newline left an empty line */
+.two .rows { width: 100%; font-size: clamp(1rem, 1.35vw, 1.9rem); }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<nav class="nav-dots" id="navDots" aria-label="슬라이드 이동"></nav>
+<div class="keyboard-hint">→ 다음 단계 · ← 이전 · N 발표자 노트 · E 편집 · Ctrl+S 저장</div>
+
+<div class="edit-hotzone" aria-hidden="true"></div>
+<button class="edit-toggle" id="editToggle" title="편집 모드 (E)" aria-label="편집 모드 켜기">✏️</button>
+<div class="edit-banner" id="editBanner">편집 모드 · 글자를 눌러 고치세요 · N 노트도 고칠 수 있어요 · Esc 커서 빼기 · Ctrl+S 파일 저장 · E 끄기</div>
+
+<!-- ============================================================
+     01 · Title
+     ============================================================ -->
+<section class="slide" id="s1">
+    <div class="head"><span>week7 신예나</span><span class="num"></span></div>
+    <div class="slide-content">
+        <span class="kicker">Krafton Jungle · Week 07</span>
+        <h1>4틱마다 <em>전부</em>?<br>바뀐 것만</h1>
+        <div class="rule"></div>
+        <p class="sub">Pintos MLFQS — priority 재계산을 dirty_list로 줄인 과정</p>
+    </div>
+    <div class="foot"><span>pintos-team9 · threads/thread.c</span><span>MLFQS</span></div>
+    <aside class="notes" data-sec="5">
+        <p>7주차 신예나입니다.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     02 · Hook
+     ============================================================ -->
+<section class="slide" id="s2">
+    <div class="head"><span>들어가기 전에 · 명세</span><span class="num"></span></div>
+    <div class="slide-content">
+        <h2>명세는 4틱마다 <em>모든 스레드</em>의 priority를 다시 계산하라고 한다</h2>
+        <table class="rows">
+            <tr><th>언제</th><th>무엇을</th><th>누구를</th></tr>
+            <tr><td>매 tick</td><td><code>recent_cpu += 1</code></td><td>실행 중인 스레드</td></tr>
+            <tr class="hit"><td>4틱마다</td><td>priority 재계산 + ready_list 정렬</td><td>모든 스레드</td></tr>
+            <tr><td>1초마다</td><td>load_avg, recent_cpu 감쇠</td><td>모든 스레드</td></tr>
+        </table>
+        <p class="punch" data-step="1">전부 <b>인터럽트를 끈 채로</b>, 초당 100번 도는 타이머 핸들러 안에서 돈다</p>
+    </div>
+    <div class="foot"><span>devices/timer.c · timer_interrupt → mlfqs_tick</span><span>TIMER_FREQ = 100</span></div>
+    <aside class="notes" data-sec="17">
+        <p>지난주 malloc lab에서 다들 바이트 하나씩 아끼셨죠. 이번 주 MLFQS에도 아낄 데가 있었습니다.</p>
+        <p>명세는 4틱마다 모든 스레드를 다시 계산하라고 하고, 저도 처음엔 그대로 짜서 다 통과했습니다.</p>
+        <p><span class="st">▸1</span>그런데 이 코드는 인터럽트를 끈 채로, 초당 백 번 도는 타이머 핸들러 안에 있습니다.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     03 · 관찰
+     ============================================================ -->
+<section class="slide" id="s3">
+    <div class="head"><span>관찰 · 4틱 동안 바뀌는 것</span><span class="num"></span></div>
+    <div class="slide-content">
+        <h2>4틱 동안 recent_cpu가 오르는 건 <em>그사이 실행된</em> 스레드뿐</h2>
+        <div class="ticks">
+            <div class="tk"><span class="tn">tick 1</span><span class="tr">A</span></div>
+            <div class="tk"><span class="tn">tick 2</span><span class="tr">A</span></div>
+            <div class="tk"><span class="tn">tick 3</span><span class="tr">B</span></div>
+            <div class="tk now"><span class="tn">tick 4 · 재계산</span><span class="tr">B</span></div>
+        </div>
+        <p class="hint"><code>priority = 63 − recent_cpu/4 − nice×2</code> · recent_cpu = 최근에 CPU를 쓴 양 (실행 중인 스레드만 매 tick +1)</p>
+        <p class="punch" data-step="1">"지금 스레드(B)만 계산하면?" → 4틱 안에 교체되면 <b>A를 놓친다</b></p>
+        <p class="punch" data-step="2">그래서 <b>바뀐 스레드들</b>을 따로 표시해 둬야 했다</p>
+    </div>
+    <div class="foot"><span>threads/thread.c · thread_tick</span><span>TIME_SLICE = 4</span></div>
+    <aside class="notes" data-sec="17">
+        <p>priority는 recent_cpu로 정해지는데, 4틱 동안 recent_cpu가 오르는 건 그사이 CPU를 쓴 스레드뿐입니다. 보통 한두 개.</p>
+        <p><span class="st">▸1</span>지금 스레드만 계산하면 될 것 같지만, 4틱 안에 교체되면 앞에 돌던 스레드를 놓칩니다.</p>
+        <p><span class="st">▸2</span>그래서 바뀐 스레드들을 따로 표시해 둬야 했습니다.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     04 · 결정 1~2
+     ============================================================ -->
+<section class="slide" id="s4">
+    <div class="head"><span>결정 과정 1 · 비트를 달다</span><span class="num"></span></div>
+    <div class="slide-content">
+        <h2>처음엔 스레드마다 <em>dirty 비트</em>를 달았다</h2>
+        <div class="panels">
+            <div class="leftcol">
+                <div class="panel">
+                    <div class="cap"><span>include/threads/thread.h · struct thread 끝</span><span class="side">당시 코드</span></div>
+<pre>    struct intr_frame tf;
+<span class="hl">    bool dirty_bit;      <span class="c-com">/* magic 바로 앞 */</span></span>
+    unsigned magic;
+};</pre>
+                </div>
+                <div class="mem">
+                    <div class="mrow">
+                        <span class="mlab">넣기 전</span>
+                        <div class="bytes">
+                            <span class="b mg">magic</span><span class="b mg"></span><span class="b mg"></span><span class="b mg"></span>
+                            <span class="b pd">패딩</span><span class="b pd"></span><span class="b pd"></span><span class="b pd"></span>
+                        </div>
+                    </div>
+                    <div class="mrow">
+                        <span class="mlab">넣은 뒤</span>
+                        <div class="bytes">
+                            <span class="b dt">dirty</span><span class="b pd">패딩</span><span class="b pd"></span><span class="b pd"></span>
+                            <span class="b mg">magic</span><span class="b mg"></span><span class="b mg"></span><span class="b mg"></span>
+                        </div>
+                    </div>
+                    <p class="mnote">struct 끝 8바이트 · 8바이트 정렬로 비어 있던 4바이트에 들어감 → <b>sizeof(struct thread) +0</b></p>
+                </div>
+            </div>
+            <ol class="steps">
+                <li data-step="1"><b>그런데</b> 비트만 있으면 누가 dirty인지 보려고 <b>결국 전체를 돈다</b></li>
+                <li data-step="2">→ 바뀐 스레드를 all 리스트 <b>맨 앞으로 모으고</b>, 깨끗한 스레드가 나오면 멈추자</li>
+                <li data-step="3"><b>그런데</b> 어디서 멈출지 알려면 <b>여전히 비트가 필요</b>하다</li>
+            </ol>
+        </div>
+    </div>
+    <div class="foot"><span>노션 기록 · mlfqs 튜닝</span><span>시도 1 → 2</span></div>
+    <aside class="notes" data-sec="22">
+        <p>처음엔 스레드마다 dirty 비트를 달았습니다. struct 끝은 8바이트 정렬 때문에 4바이트가 비어 있어서, magic 바로 앞에 넣으면 그 빈자리에 들어가 크기가 안 늘어납니다.</p>
+        <p><span class="st">▸1</span>그런데 비트만 있으면, 누가 dirty인지 알려고 결국 전체 리스트를 다 돌아야 합니다.</p>
+        <p><span class="st">▸2</span>그래서 바뀐 스레드를 all 리스트 맨 앞으로 옮겨서, 깨끗한 스레드가 나오면 멈추게 했습니다.</p>
+        <p><span class="st">▸3</span>그런데 어디서 멈출지 알려면 여전히 비트가 필요했습니다.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     05 · 결정 3~4
+     ============================================================ -->
+<section class="slide" id="s5">
+    <div class="head"><span>결정 과정 2 · 고리를 옮기다</span><span class="num"></span></div>
+    <div class="slide-content">
+        <h2>새 고리 대신, 이미 있는 <em>all 고리</em>를 옮기면 되지 않나</h2>
+        <table class="rows">
+            <tr><th>방법</th><th>추가 메모리</th><th>비트</th></tr>
+            <tr><td>all 리스트 앞에 모으기</td><td>비트</td><td>필요 (멈출 위치)</td></tr>
+            <tr data-step="1"><td>전용 리스트 + 새 <code>dirty_elem</code></td><td>스레드당 고리 16B + 비트</td><td>필요 (중복 push 방지)</td></tr>
+            <tr class="hit" data-step="2"><td>기존 <code>all</code> 고리로 all ↔ dirty 이동</td><td>리스트 헤드 1개</td><td>없음</td></tr>
+        </table>
+        <div class="panel accent" data-step="3">
+            <div class="cap"><span>threads/thread.c · thread_tick</span><span class="side">매 tick</span></div>
+<pre>t-&gt;recent_cpu = add_mixed(t-&gt;recent_cpu, 1);
+<span class="hl">list_remove(&amp;(t-&gt;all));                  <span class="c-com">/* 어느 리스트에 있든 빠진다 */</span></span>
+<span class="hl">list_push_front(&amp;dirty_list, &amp;(t-&gt;all));  <span class="c-com">/* 이미 dirty여도 자리만 이동 */</span></span></pre>
+        </div>
+        <p class="hint" data-step="3"><code>list_remove</code>는 앞뒤 원소만 이어 붙이고 리스트 헤드는 보지 않는다 → 소속을 몰라도 뺄 수 있다</p>
+    </div>
+    <div class="foot"><span>threads/thread.c · thread_tick / lib/kernel/list.c · list_remove</span><span>시도 3 → 4</span></div>
+    <aside class="notes" data-sec="28">
+        <p>그럼 바뀐 스레드만 담는 리스트를 따로 두면 됩니다.</p>
+        <p><span class="st">▸1</span>그런데 스레드마다 고리를 하나 더 달아야 하고, 핀토스 리스트 고리는 자기가 리스트에 있는지 모르니까, 두 번 들어가는 걸 막으려면 또 비트가 필요합니다.</p>
+        <p><span class="st">▸2</span>그때 든 생각. 이미 all 고리가 있는데, 이걸 옮기면 되지 않나.</p>
+        <p><span class="st">▸3</span>list_remove는 헤드를 안 보니까 어느 리스트에 있든 빼 줍니다. 매번 뺐다 넣으면 중복이 안 생기고, 어느 리스트에 있느냐가 곧 표시가 됩니다.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     06 · 동작
+     ============================================================ -->
+<section class="slide" id="s6">
+    <div class="head"><span>동작 · tick / 4틱 / 1초</span><span class="num"></span></div>
+    <div class="slide-content">
+        <h2>4틱마다 <em>dirty만</em> 계산하고, 1초에만 전체를 돈다</h2>
+        <div class="panels">
+            <div class="panel accent">
+                <div class="cap"><span>thread.c · dirty_update</span><span class="side">4틱마다</span></div>
+<pre>for (dirty_list의 각 t) {
+<span class="hl">    thread_calc_priority(t);       <span class="c-com">// 그 스레드만</span></span>
+    list_remove(&amp;(t-&gt;all));
+    list_push_front(&amp;all_list, &amp;(t-&gt;all));
+<span class="hl">    thread_reorder_ready(t);       <span class="c-com">// 그 하나만 제자리로</span></span>
+}
+<span class="c-dim">   ⋮   전체 list_sort 없음</span></pre>
+            </div>
+            <div class="panel" data-step="1">
+                <div class="cap"><span>thread.c · mlfqs_tick</span><span class="side">매 tick</span></div>
+<pre>if (ticks % TIME_SLICE == 0) {
+    if (ticks % TIMER_FREQ == 0) {
+        recalc_load_avg();
+<span class="hl">        mlfqs_update_all(); <span class="c-com">// 전체 + sort</span></span>
+    } else
+<span class="hl">        dirty_update();     <span class="c-com">// 바뀐 것만</span></span>
+    thread_check_preempt();
+}</pre>
+            </div>
+        </div>
+    </div>
+    <div class="foot"><span>threads/thread.c · dirty_update / mlfqs_tick (요약)</span><span>O(바뀐 수)</span></div>
+    <aside class="notes" data-sec="20">
+        <p>tick마다 실행 중인 스레드를 dirty로 옮깁니다. 둘 다 상수 시간입니다.</p>
+        <p>4틱마다 dirty에 있는 스레드만 다시 계산하고, 그 스레드만 ready 리스트 제자리에 넣은 뒤 all로 돌려보냅니다. 전체 정렬은 안 합니다.</p>
+        <p><span class="st">▸1</span>모든 값이 실제로 바뀌는 1초 때만 dirty를 합쳐서 전체를 한 번 돌고 정렬합니다.</p>
+    </aside>
+</section>
+
+<!-- ============================================================
+     07 · 결과 / Closing
+     ============================================================ -->
+<section class="slide closing" id="s7">
+    <div class="head"><span>가져가실 것</span><span class="num"></span></div>
+    <div class="slide-content">
+        <h2>4틱 재계산은 <em>바뀐 스레드 수</em>만큼만 돈다</h2>
+        <div class="two">
+            <div>
+                <table class="rows">
+                    <tr><th>4틱 재계산</th><th>전</th><th>후</th></tr>
+                    <tr><td>도는 스레드</td><td>전체</td><td><b>실행된 1~2개</b></td></tr>
+                    <tr><td>ready_list</td><td>전체 sort</td><td><b>바뀐 것만 재배치</b></td></tr>
+                    <tr><td>추가 메모리</td><td>—</td><td><b>리스트 헤드 1개</b></td></tr>
+                </table>
+            </div>
+            <div class="panel">
+                <div class="cap"><span>make · tests/threads/mlfqs</span><span class="side">실제 기록</span></div>
+<pre>pass mlfqs-load-1
+pass mlfqs-load-60
+pass mlfqs-load-avg
+pass mlfqs-recent-1
+pass mlfqs-fair-2
+pass mlfqs-fair-20
+pass mlfqs-nice-2
+pass mlfqs-nice-10
+pass mlfqs-block</pre>
+            </div>
+        </div>
+        <p class="punch" data-step="1">패딩까지 계산해 넣은 비트는 결국 지웠다 — <b>어느 리스트에 있느냐가 곧 표시</b>였다</p>
+    </div>
+    <div class="foot"><span>week7 신예나 · 2026-10</span><span>MLFQS · dirty_list</span></div>
+    <aside class="notes" data-sec="6">
+        <p>그렇게 4틱 재계산은 바뀐 스레드 수만큼만 돌고, 테스트 아홉 개도 그대로 통과했습니다.</p>
+        <p><span class="st">▸1</span>패딩까지 계산해서 넣은 비트는 결국 지웠습니다. 감사합니다.</p>
+    </aside>
+</section>
+
+<div id="notesPanel" hidden aria-live="polite">
+    <div class="meta"><span id="nSlide"></span><span>목표 <b id="nSec"></b>초</span><span id="nStep"></span><span id="nTotal"></span></div>
+    <div class="body" id="nBody"></div>
+</div>
+
+<script>
+/* ===========================================
+   Deck controller: steps, hash, notes
+   =========================================== */
+const slides = Array.from(document.querySelectorAll('.slide'));
+const total = slides.length;
+
+/* ===========================================
+   In-browser editor: edits autosave to localStorage,
+   Ctrl+S downloads the deck as an HTML file
+   =========================================== */
+/* One key per deck file, so two decks on the same origin do not collide */
+const STORE = 'jungle-deck:' + location.pathname;
+const EDITABLE = '.slide > .head span:not(.num), .slide > .foot span, '
+               + '.slide-content :is(h1, h2, .kicker, p, th, td, .cap span)';
+
+/* Strip edit traces (contenteditable, step state) */
+function scrub(root) {
+    root.querySelectorAll('[contenteditable]').forEach(e => e.removeAttribute('contenteditable'));
+    root.querySelectorAll('.on').forEach(e => e.classList.remove('on'));
+    root.querySelectorAll('[class=""]').forEach(e => e.removeAttribute('class'));
+    return root;
+}
+const slideHTML = () => slides.map(s => scrub(s.cloneNode(true)).innerHTML);
+
+/* If the file itself changed, do not restore an older autosave */
+const signature = (() => {
+    const src = slideHTML().join('\u0000');
+    let h = 5381;
+    for (let i = 0; i < src.length; i++) h = ((h * 33) ^ src.charCodeAt(i)) >>> 0;
+    return src.length + '-' + h.toString(36);
+})();
+
+function saveLocal() {
+    try { localStorage.setItem(STORE, JSON.stringify({ sig: signature, data: slideHTML() })); } catch (e) {}
+}
+(function restoreLocal() {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+        if (!saved) return;
+        if (saved.sig !== signature) {
+            /* The file changed. Move the old autosave aside instead of deleting it */
+            localStorage.setItem(STORE + ':stale', JSON.stringify(saved));
+            localStorage.removeItem(STORE);
+            return;
+        }
+        slides.forEach((s, i) => { if (saved.data[i]) s.innerHTML = saved.data[i]; });
+    } catch (e) {}
+})();
+const pad = n => String(n).padStart(2, '0');
+let cur = 0;
+
+/* Steps on a slide = the largest data-step in it */
+const maxStep = s => Math.max(0, ...Array.from(s.querySelectorAll('[data-step]'), e => Number(e.dataset.step)));
+const shown = s => Number(s.dataset.shown || 0);
+
+function setShown(s, n) {
+    s.dataset.shown = n;
+    s.querySelectorAll('[data-step]').forEach(e => e.classList.toggle('on', Number(e.dataset.step) <= n));
+    renderNotes();
+}
+
+function show(i, n) {
+    i = Math.max(0, Math.min(total - 1, i));
+    if (i !== cur) {
+        const out = slides[cur];
+        slides.forEach(s => s.classList.remove('leaving'));
+        out.classList.add('leaving');
+        clearTimeout(show.t);
+        show.t = setTimeout(() => out.classList.remove('leaving'), 400);   /* after the new slide's .35s fade */
+    }
+    cur = i;
+    slides.forEach((s, k) => {
+        s.classList.toggle('active', k === i);
+        s.setAttribute('aria-hidden', k === i ? 'false' : 'true');
+    });
+    setShown(slides[i], n);
+    if (location.hash !== '#' + (i + 1)) history.replaceState(null, '', '#' + (i + 1));
+    document.getElementById('progressBar').style.transform = 'scaleX(' + (i / Math.max(1, total - 1)) + ')';
+    Array.from(document.getElementById('navDots').children).forEach((b, k) => b.classList.toggle('active', k === i));
+}
+
+function next() {
+    const s = slides[cur];
+    if (shown(s) < maxStep(s)) setShown(s, shown(s) + 1);
+    else if (cur < total - 1) show(cur + 1, 0);
+}
+function prev() {
+    const s = slides[cur];
+    if (shown(s) > 0) setShown(s, shown(s) - 1);
+    else if (cur > 0) show(cur - 1, maxStep(slides[cur - 1]));   /* going back shows that slide fully */
+}
+
+/* Speaker notes */
+const notesPanel = document.getElementById('notesPanel');
+const totalSec = slides.reduce((a, s) => a + Number((s.querySelector('aside.notes') || {}).dataset?.sec || 0), 0);
+function renderNotes() {
+    const s = slides[cur];
+    const a = s.querySelector('aside.notes');
+    document.getElementById('nSlide').textContent = pad(cur + 1) + ' / ' + pad(total);
+    document.getElementById('nSec').textContent = a ? a.dataset.sec : '–';
+    document.getElementById('nStep').textContent = maxStep(s) ? '단계 ' + shown(s) + ' / ' + maxStep(s) : '단계 없음';
+    document.getElementById('nTotal').textContent = '전체 ' + totalSec + '초';
+    document.getElementById('nBody').innerHTML = a ? a.innerHTML : '';
+}
+
+/* Slide numbers and nav dots */
+slides.forEach((s, i) => {
+    const num = s.querySelector('.head .num');
+    if (num) num.textContent = pad(i + 1) + ' / ' + pad(total);
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', (i + 1) + '번 슬라이드로');
+    b.addEventListener('click', () => show(i, 0));
+    document.getElementById('navDots').appendChild(b);
+});
+
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') { e.preventDefault(); exportFile(); return; }
+    if (e.target.isContentEditable) {
+        if (e.key === 'Escape') e.target.blur();   /* leave the caret so arrows navigate again */
+        return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    /* e.code, not e.key, so E and N work with a Korean IME on */
+    if (e.code === 'KeyE') { toggleEdit(); return; }
+    if (e.code === 'KeyN') { notesPanel.hidden = !notesPanel.hidden; return; }
+    switch (e.key) {
+        case 'ArrowRight': case 'ArrowDown': case 'PageDown': case ' ':
+            e.preventDefault(); next(); break;
+        case 'ArrowLeft': case 'ArrowUp': case 'PageUp':
+            e.preventDefault(); prev(); break;
+        case 'Home': e.preventDefault(); show(0, 0); break;
+        case 'End':  e.preventDefault(); show(total - 1, 0); break;
+    }
+});
+
+let x0 = null;
+document.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = x0 - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 50) dx > 0 ? next() : prev();
+    x0 = null;
+}, { passive: true });
+
+/* Edit mode */
+let editing = false;
+const editToggle = document.getElementById('editToggle');
+const nBody = document.getElementById('nBody');
+
+function toggleEdit() {
+    editing = !editing;
+    document.body.classList.toggle('edit-active', editing);
+    editToggle.classList.toggle('active', editing);
+    editToggle.setAttribute('aria-label', editing ? '편집 모드 끄기' : '편집 모드 켜기');
+    const els = [...document.querySelectorAll(EDITABLE), nBody];
+    els.forEach(el => editing ? el.setAttribute('contenteditable', 'true') : el.removeAttribute('contenteditable'));
+    if (!editing && document.activeElement) document.activeElement.blur();
+}
+
+/* Any edit is saved at once */
+document.addEventListener('input', e => {
+    if (e.target === nBody) {
+        const a = slides[cur].querySelector('aside.notes');   /* notes panel writes back to its aside */
+        if (a) a.innerHTML = nBody.innerHTML;
+    }
+    saveLocal();
+});
+/* Paste plain text only, so outside formatting does not come in */
+document.addEventListener('paste', e => {
+    if (!e.target.closest || !e.target.closest('[contenteditable]')) return;
+    e.preventDefault();
+    document.execCommand('insertText', false, e.clipboardData.getData('text/plain'));
+});
+
+function exportFile() {
+    const doc = document.documentElement.cloneNode(true);
+    scrub(doc);
+    doc.querySelector('body').removeAttribute('class');
+    doc.querySelectorAll('.slide').forEach(s => {
+        s.classList.remove('active', 'leaving'); s.removeAttribute('aria-hidden'); s.removeAttribute('data-shown');
+    });
+    doc.querySelector('#navDots').innerHTML = '';          /* the script rebuilds them */
+    doc.querySelector('#progressBar').removeAttribute('style');
+    doc.querySelector('#notesPanel').setAttribute('hidden', '');
+    doc.querySelectorAll('#notesPanel span[id], #notesPanel b[id], #nBody').forEach(e => e.textContent = '');
+    doc.querySelector('#editToggle').className = 'edit-toggle';
+    doc.querySelector('#editToggle').setAttribute('aria-label', '편집 모드 켜기');
+    scrub(doc);
+    const blob = new Blob(['<!DOCTYPE html>\n' + doc.outerHTML], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    /* Same file name as the open deck, so the export can replace it */
+    a.download = decodeURIComponent(location.pathname.split('/').pop()) || 'deck.html';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+/* Edit button: appears when the mouse reaches the top-left corner */
+let hideTimer = null;
+const hotzone = document.querySelector('.edit-hotzone');
+hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimer); editToggle.classList.add('show'); });
+hotzone.addEventListener('mouseleave', () => {
+    hideTimer = setTimeout(() => { if (!editing) editToggle.classList.remove('show'); }, 400);
+});
+editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimer));
+editToggle.addEventListener('click', toggleEdit);
+
+/* #3 opens slide 3 */
+const fromHash = () => {
+    const n = parseInt(location.hash.slice(1), 10);
+    return Number.isFinite(n) ? n - 1 : 0;
+};
+window.addEventListener('hashchange', () => { if (fromHash() !== cur) show(fromHash(), 0); });
+show(fromHash(), 0);
+</script>
+</body>
+</html>
