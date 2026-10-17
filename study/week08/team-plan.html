@@ -118,7 +118,7 @@ details.fold ul { margin: 12px 0 0; padding-left: 1.2em; }
 </details>
 
 <h2>2. 할 일</h2>
-<p class="lead">체크 = 이 브라우저에만 저장 · 팀 공용 진척은 <a href="https://github.com/users/benjohnbill/projects/6">Board 6</a></p>
+<p class="lead"><span id="sync">체크 = 팀 전원에게 공유 · 10초마다 갱신</span> · 팀 공용 진척은 <a href="https://github.com/users/benjohnbill/projects/6">Board 6</a></p>
 <div id="days"></div>
 
 <h2>3. 나눈 기준</h2>
@@ -167,6 +167,41 @@ var KEY = "team-plan:";
 function get(k) { try { return localStorage.getItem(KEY + k); } catch (e) { return null; } }
 function set(k, v) { try { v === null ? localStorage.removeItem(KEY + k) : localStorage.setItem(KEY + k, v); } catch (e) {} }
 
+/* shared checks: Firebase Realtime DB over REST; rules accept only
+   /team-plan/checks/<who|block|item> = boolean. Unreachable → this browser only. */
+var DB = "https://pintos-userprog-default-rtdb.asia-southeast1.firebasedatabase.app/team-plan/checks";
+var boxes = [];   /* {key, cb, tally} */
+var online = true;
+function dbKey(who, block, item) {
+  return (who === "*" ? "all" : who) + "|" + block + "|" + item.replace(/[.#$\[\]\/]/g, "_");
+}
+function status(ok) {
+  online = ok;
+  document.getElementById("sync").textContent = ok
+    ? "체크 = 팀 전원에게 공유 · 10초마다 갱신"
+    : "공유 서버 연결 끊김 → 체크는 이 브라우저에만 저장";
+}
+function pull() {
+  fetch(DB + ".json", { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw r; return r.json(); })
+    .then(function (data) {
+      data = data || {};
+      boxes.forEach(function (b) { b.cb.checked = data[b.key] === true; b.tally(); });
+      status(true);
+    })
+    .catch(function () {
+      boxes.forEach(function (b) { b.cb.checked = get(b.key) === "1"; b.tally(); });
+      status(false);
+    });
+}
+function push(key, on) {
+  set(key, on ? "1" : null);
+  var url = DB + "/" + encodeURIComponent(key) + ".json";
+  fetch(url, on ? { method: "PUT", body: "true" } : { method: "DELETE" })
+    .then(function (r) { if (!r.ok) throw r; status(true); })
+    .catch(function () { status(false); });
+}
+
 var root = document.getElementById("days");
 DAYS.forEach(function (d) {
   /* a block owned by two people is drawn once per person, each with its own checks */
@@ -193,8 +228,7 @@ DAYS.forEach(function (d) {
       var li = document.createElement("li"); li.className = "task";
       var lab = document.createElement("label");
       var cb = document.createElement("input"); cb.type = "checkbox";
-      var key = p + ":" + d.id + ":" + it.name;
-      cb.checked = get(key) === "1";
+      var key = dbKey(p, d.id, it.name);
       var tn = document.createElement("span"); tn.className = "tn"; tn.textContent = it.name;
       if (!it.test) tn.style.fontFamily = "var(--font-body)";
       lab.append(cb, tn); li.append(lab);
@@ -205,7 +239,8 @@ DAYS.forEach(function (d) {
         a.setAttribute("aria-label", it.name + " 이슈");
         lab.append(a);
       }
-      cb.addEventListener("change", function () { set(key, cb.checked ? "1" : null); tally(); });
+      cb.addEventListener("change", function () { push(key, cb.checked); tally(); });
+      boxes.push({ key: key, cb: cb, tally: tally });
       ul.append(li);
     });
     box.append(ul);
@@ -235,6 +270,8 @@ function pick(w) {
 }
 btns.forEach(function (b) { b.addEventListener("click", function () { pick(b.dataset.who); }); });
 pick(get("who") || "all");
+pull();
+setInterval(pull, 10000);
 </script>
 </body>
 </html>
