@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>userprog 팀 분업표</title>
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+/* type scale follows DESIGN.md §1 (root 19px, major third headings) */
+html { font-size: 19px; }
+body { font-size: 1rem; }
+.lead { font-size: 1.1rem; line-height: 1.75; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 16px 64px; display: flex; flex-direction: column; }
+h1 { font-family: var(--font-head); font-size: 1.95rem; line-height: 1.25; margin: 12px 0 4px; }
+h2 { font-family: var(--font-head); font-size: 1.56rem; line-height: 1.35; margin: 56px 0 10px; }
+h3 { font-family: var(--font-head); font-size: 1.25rem; line-height: 1.4; margin: 0; }
+.sub { color: var(--ink-2); margin: 0 0 16px; }
+p { margin: 8px 0 0; }
+
+/* person picker: one pressed button; choice kept in this browser */
+.who { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+.who button { font: 500 .85rem var(--font-code); color: var(--ink-2); background: none; border: 1px solid var(--line); border-radius: 4px; padding: 6px 14px; cursor: pointer; }
+.who button:hover { background: var(--surface-2); }
+.who button[aria-pressed="true"] { color: var(--ink); border-color: var(--ink); }
+.who button:focus-visible, .task input:focus-visible { outline: 2px solid var(--s3); outline-offset: 2px; }
+
+/* overview: row = person; selected row gets the one-level fill (box rule 2) */
+table { border-collapse: collapse; width: 100%; font-size: .9rem; line-height: 1.6; border: 1px solid var(--line); }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+thead th { color: var(--muted); font-weight: 600; }
+tbody th { font: 600 .85rem var(--font-code); white-space: nowrap; }
+tr.on td, tr.on th { background: var(--surface-2); }
+td .n { font-family: var(--font-code); color: var(--ink-2); }
+@media (max-width: 760px) {
+  thead { display: none; }
+  table, tbody, tr, th, td { display: block; }
+  tr { border-bottom: 1px solid var(--line); padding: 6px 0; }
+  th, td { border: 0; padding: 2px 12px; }
+  td::before { content: attr(data-day) "  "; font: 600 .8rem var(--font-code); color: var(--muted); }
+}
+
+/* day block: outer box = line only (box rule 1) */
+.day { border: 1px solid var(--line); border-radius: 4px; padding: 16px; margin: 16px 0 0; }
+.day .hd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.chip { font: 400 .75rem var(--font-code); border: 1px solid var(--line); border-radius: 3px; padding: 1px 8px; color: var(--ink-2); }
+.count { margin-left: auto; font: 500 .85rem var(--font-code); color: var(--ink-2); }
+.bar { height: 6px; background: var(--surface-2); border-radius: 3px; margin: 10px 0 0; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--s2); transform: scaleX(0); transform-origin: left; transition: transform .2s; }
+.day.done .count { color: var(--s2); }
+.list { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 2px 16px; }
+.list.wide { grid-template-columns: 1fr; }
+.task label { display: flex; align-items: baseline; gap: 8px; cursor: pointer; padding: 2px 0; }
+.task input { accent-color: var(--s2); width: 1rem; height: 1rem; flex: none; position: relative; top: 2px; }
+.task .tn { font-family: var(--font-code); font-size: .85rem; }
+.task.chk .tn { color: var(--muted); }
+.task a { font: .8rem var(--font-code); color: var(--muted); }
+.task a:hover { color: var(--s2); }
+
+/* fold card: DESIGN.md §6 */
+details.fold { border: 1px solid var(--line); border-radius: 4px; margin: 16px 0 0; }
+details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: .6em; padding: 10px 16px; font-weight: 600; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before { content: ""; flex: none; width: .5em; height: .5em; border-right: 2px solid var(--ink-2); border-bottom: 2px solid var(--ink-2); transform: rotate(-45deg); transition: transform .15s; align-self: center; }
+details.fold[open] > summary::before { transform: rotate(45deg); }
+details.fold > summary::after { content: "펼치기"; margin-left: auto; flex: none; font: 400 .75rem var(--font-code); color: var(--muted); border: 1px solid var(--line); border-radius: 3px; padding: 1px 8px; }
+details.fold[open] > summary::after { content: "접기"; }
+details.fold > summary:hover { background: var(--surface-2); }
+details.fold[open] > summary { border-bottom: 1px solid var(--line); }
+details.fold > .in { padding: 4px 16px 16px; }
+details.fold ul { margin: 12px 0 0; padding-left: 1.2em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>
+<h1>수요일 저녁까지 userprog 95개</h1>
+<p class="sub">fork·wait·exec는 셋이 각자 · 파일 쪽은 분업. 가른 기준은 결합도와 fork 의존 여부</p>
+
+<div class="who" role="group" aria-label="누구의 할 일을 볼지">
+  <button type="button" data-who="all">전체</button>
+  <button type="button" data-who="benjohnbill">benjohnbill</button>
+  <button type="button" data-who="Hannuri-Song">Hannuri-Song</button>
+  <button type="button" data-who="JSZeroDev">JSZeroDev</button>
+</div>
+
+<h2>1. 한눈에</h2>
+<table id="overview">
+  <thead><tr><th>사람</th><th>주말</th><th>월</th><th>화</th><th>수</th></tr></thead>
+  <tbody>
+    <tr data-who="benjohnbill"><th>benjohnbill</th>
+      <td data-day="주말">fork·wait·exec + 포인터 검증 <span class="n">21</span></td>
+      <td data-day="월">fd 테이블 초안 + 파일 syscall <span class="n">29</span></td>
+      <td data-day="화">filesys/base <span class="n">13</span></td>
+      <td data-day="수">마무리 공통</td></tr>
+    <tr data-who="Hannuri-Song"><th>Hannuri-Song</th>
+      <td data-day="주말">—</td>
+      <td data-day="월">fork·wait·exec 각자 <span class="n">14</span></td>
+      <td data-day="화">fork의 fd 복제 <span class="n">4</span></td>
+      <td data-day="수">마무리 공통</td></tr>
+    <tr data-who="JSZeroDev"><th>JSZeroDev</th>
+      <td data-day="주말">—</td>
+      <td data-day="월">fork·wait·exec 각자 <span class="n">14</span></td>
+      <td data-day="화">rox <span class="n">3</span></td>
+      <td data-day="수">마무리 공통</td></tr>
+    <tr data-who="shared"><th>공통</th>
+      <td data-day="주말">—</td>
+      <td data-day="월">저녁 회의: 3버전 비교 → develop</td>
+      <td data-day="화">—</td>
+      <td data-day="수">multi-oom · 회귀 · 최종 dcheck</td></tr>
+  </tbody>
+</table>
+<details class="fold">
+  <summary>develop에서 이미 통과 <span class="chip">6</span></summary>
+  <div class="in"><ul>
+    <li><code>args-none</code> · <code>args-single</code> · <code>args-multiple</code> · <code>args-many</code> · <code>args-dbl-space</code></li>
+    <li><code>exit</code></li>
+  </ul></div>
+</details>
+
+<h2>2. 할 일</h2>
+<p class="lead">체크 = 이 브라우저에만 저장 · 팀 공용 진척은 <a href="https://github.com/users/benjohnbill/projects/6">Board 6</a></p>
+<div id="days"></div>
+
+<h2>3. 나눈 기준</h2>
+<p><b>각자</b> = fork·wait·exec. 세 콜이 "부모가 자식에 대해 아는 것" 하나를 같이 씀 → 결합 최강 → 셋 다 직접 겪을 가치 최대</p>
+<p><b>분업</b> = 파일 syscall. fork 없이 통과 → 순서 자유. 중요도가 낮다는 뜻은 아님. fd 테이블이 정해지면 핸들러 모양이 반복</p>
+<p><b>이음매</b> = fd 복제 · rox. 프로세스 쪽과 파일 쪽이 만나는 곳 → 팀원이 fd 테이블을 직접 다루는 자리</p>
+<p><b>주말 선구현</b> = 월요일 저녁 비교 전까지 push 없음. 팀원 구현이 막혀도 마감을 지킬 베이스</p>
+</div>
+
+<script>
+var ISSUE = {"halt":13,"exit":14,"create-normal":15,"create-empty":16,"create-null":17,"create-bad-ptr":18,"create-long":19,"create-exists":20,"create-bound":21,"open-normal":22,"open-missing":23,"open-boundary":24,"open-empty":25,"open-null":26,"open-bad-ptr":27,"open-twice":28,"close-normal":29,"close-twice":30,"close-bad-fd":31,"read-normal":32,"read-bad-ptr":33,"read-boundary":34,"read-zero":35,"read-stdout":36,"read-bad-fd":37,"write-normal":38,"write-bad-ptr":39,"write-boundary":40,"write-zero":41,"write-stdin":42,"write-bad-fd":43,"fork-once":44,"fork-multiple":45,"fork-recursive":46,"fork-read":47,"fork-close":48,"fork-boundary":49,"exec-once":50,"exec-arg":51,"exec-boundary":52,"exec-missing":53,"exec-bad-ptr":54,"exec-read":55,"wait-simple":56,"wait-twice":57,"wait-killed":58,"wait-bad-pid":59,"multi-recurse":60,"multi-child-fd":61,"rox-simple":62,"rox-child":63,"rox-multichild":64,"bad-read":65,"bad-write":66,"bad-read2":67,"bad-write2":68,"bad-jump":69,"bad-jump2":70,"lg-create":71,"lg-full":72,"lg-random":73,"lg-seq-block":74,"lg-seq-random":75,"sm-create":76,"sm-full":77,"sm-random":78,"sm-seq-block":79,"sm-seq-random":80,"syn-remove":81,"syn-write":82,"multi-oom":83};
+var PROC = ["fork-once","fork-multiple","fork-recursive","fork-boundary","exec-once","exec-arg","exec-boundary","exec-missing","exec-bad-ptr","wait-simple","wait-twice","wait-killed","wait-bad-pid","multi-recurse"];
+var FILE = ["create-normal","create-empty","create-null","create-bad-ptr","create-long","create-exists","create-bound","open-normal","open-missing","open-boundary","open-empty","open-null","open-bad-ptr","open-twice","close-normal","close-twice","close-bad-fd","read-normal","read-bad-ptr","read-boundary","read-zero","read-stdout","read-bad-fd","write-normal","write-bad-ptr","write-boundary","write-zero","write-stdin","write-bad-fd"];
+var BASE = ["lg-create","lg-full","lg-random","lg-seq-block","lg-seq-random","sm-create","sm-full","sm-random","sm-seq-block","sm-seq-random","syn-read","syn-remove","syn-write"];
+
+/* who: owners; "*" = everyone. t = tests, k = non-test tasks */
+var DAYS = [
+  { id: "sat-proc", day: "주말", who: ["benjohnbill"], h: "fork·wait·exec + 포인터 검증",
+    lead: "월 저녁 회의 전까지 push 없음 · 커밋은 로컬에 자주",
+    t: PROC.concat(["halt","bad-read","bad-write","bad-read2","bad-write2","bad-jump","bad-jump2"]) },
+  { id: "mon-proc", day: "월", who: ["Hannuri-Song","JSZeroDev"], h: "fork·wait·exec 각자 구현",
+    lead: "각자 브랜치에서 처음부터 · fd를 쓰는 4개(fork-read, fork-close, multi-child-fd, exec-read)는 화요일",
+    t: PROC },
+  { id: "mon-file", day: "월", who: ["benjohnbill"], h: "fd 테이블 초안 + 파일 syscall",
+    lead: "filesize · seek · tell · remove까지 → 전용 테스트 없음, 화요일 filesys/base에서 검증",
+    t: FILE },
+  { id: "mon-meet", day: "월 저녁", who: ["*"], h: "회의: 프로세스 3버전 비교 → develop",
+    k: ["브랜치별 측정: lint · 프로세스 테스트 14개 · threads 회귀 18개",
+        "베이스 선택 → 좋은 부분 합치기 → develop PR",
+        "포인터 검증 = benjohnbill 버전",
+        "fd 테이블 초안 설명 10분: 크기 · fd 0/1 · 위치 · fork/exit 때 할 일"] },
+  { id: "tue-fd", day: "화", who: ["Hannuri-Song"], h: "fork의 fd 복제",
+    lead: "자식이 부모의 열린 파일을 같은 fd 번호로 이어받기",
+    t: ["fork-read","fork-close","multi-child-fd","exec-read"] },
+  { id: "tue-rox", day: "화", who: ["JSZeroDev"], h: "rox: 실행 중인 파일에 쓰기 금지",
+    lead: "실행 파일이 열려 있는 동안 write 거부 → 프로세스 끝날 때 해제",
+    t: ["rox-simple","rox-child","rox-multichild"] },
+  { id: "tue-base", day: "화", who: ["benjohnbill"], h: "파일 쪽 실패 정리 + filesys/base",
+    t: BASE },
+  { id: "wed", day: "수", who: ["*"], h: "여유 하루 · 최종 확인",
+    t: ["multi-oom"],
+    k: ["threads 회귀 18개", "icount shift 3–8 반복 → 경쟁 상태 점검", "make dcheck 95개 전체 통과 (icount 없이)"] }
+];
+
+var KEY = "team-plan:";
+function get(k) { try { return localStorage.getItem(KEY + k); } catch (e) { return null; } }
+function set(k, v) { try { v === null ? localStorage.removeItem(KEY + k) : localStorage.setItem(KEY + k, v); } catch (e) {} }
+
+var root = document.getElementById("days");
+DAYS.forEach(function (d) {
+  /* a block owned by two people is drawn once per person, each with its own checks */
+  var owners = d.who[0] === "*" ? ["*"] : d.who;
+  owners.forEach(function (p) {
+    var box = document.createElement("section");
+    box.className = "day";
+    box.dataset.who = p;
+    var hd = document.createElement("div");
+    hd.className = "hd";
+    hd.innerHTML = '<span class="chip"></span><h3></h3><span class="chip"></span><span class="count"></span>';
+    hd.children[0].textContent = d.day;
+    hd.children[1].textContent = d.h;
+    hd.children[2].textContent = p === "*" ? "전원" : p;
+    box.append(hd);
+    if (d.lead) { var l = document.createElement("p"); l.textContent = d.lead; box.append(l); }
+    var bar = document.createElement("div"); bar.className = "bar"; bar.innerHTML = "<i></i>";
+    box.append(bar);
+    var items = (d.t || []).map(function (t) { return { name: t, test: true }; })
+      .concat((d.k || []).map(function (k) { return { name: k, test: false }; }));
+    var ul = document.createElement("ul");
+    ul.className = d.t ? "list" : "list wide";
+    items.forEach(function (it) {
+      var li = document.createElement("li"); li.className = "task";
+      var lab = document.createElement("label");
+      var cb = document.createElement("input"); cb.type = "checkbox";
+      var key = p + ":" + d.id + ":" + it.name;
+      cb.checked = get(key) === "1";
+      var tn = document.createElement("span"); tn.className = "tn"; tn.textContent = it.name;
+      if (!it.test) tn.style.fontFamily = "var(--font-body)";
+      lab.append(cb, tn); li.append(lab);
+      if (it.test && ISSUE[it.name]) {
+        var a = document.createElement("a");
+        a.href = "https://github.com/benjohnbill/pintos-userprog/issues/" + ISSUE[it.name];
+        a.textContent = "#" + ISSUE[it.name];
+        a.setAttribute("aria-label", it.name + " 이슈");
+        lab.append(a);
+      }
+      cb.addEventListener("change", function () { set(key, cb.checked ? "1" : null); tally(); });
+      ul.append(li);
+    });
+    box.append(ul);
+    root.append(box);
+    function tally() {
+      var all = ul.querySelectorAll("input"), on = ul.querySelectorAll("input:checked");
+      ul.querySelectorAll(".task").forEach(function (li) { li.classList.toggle("chk", li.querySelector("input").checked); });
+      hd.querySelector(".count").textContent = on.length + " / " + all.length;
+      bar.firstChild.style.transform = "scaleX(" + (on.length / all.length) + ")";
+      box.classList.toggle("done", on.length === all.length);
+    }
+    tally();
+  });
+});
+
+/* person filter: own blocks + shared ones; overview row highlighted */
+var btns = document.querySelectorAll(".who button");
+function pick(w) {
+  btns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.who === w)); });
+  document.querySelectorAll(".day").forEach(function (s) {
+    s.hidden = !(w === "all" || s.dataset.who === w || s.dataset.who === "*");
+  });
+  document.querySelectorAll("#overview tbody tr").forEach(function (r) {
+    r.classList.toggle("on", r.dataset.who === w);
+  });
+  set("who", w);
+}
+btns.forEach(function (b) { b.addEventListener("click", function () { pick(b.dataset.who); }); });
+pick(get("who") || "all");
+</script>
+</body>
+</html>
