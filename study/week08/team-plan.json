@@ -1,0 +1,269 @@
+{
+ "issue": {
+  "halt": 13,
+  "exit": 14,
+  "create-normal": 15,
+  "create-empty": 16,
+  "create-null": 17,
+  "create-bad-ptr": 18,
+  "create-long": 19,
+  "create-exists": 20,
+  "create-bound": 21,
+  "open-normal": 22,
+  "open-missing": 23,
+  "open-boundary": 24,
+  "open-empty": 25,
+  "open-null": 26,
+  "open-bad-ptr": 27,
+  "open-twice": 28,
+  "close-normal": 29,
+  "close-twice": 30,
+  "close-bad-fd": 31,
+  "read-normal": 32,
+  "read-bad-ptr": 33,
+  "read-boundary": 34,
+  "read-zero": 35,
+  "read-stdout": 36,
+  "read-bad-fd": 37,
+  "write-normal": 38,
+  "write-bad-ptr": 39,
+  "write-boundary": 40,
+  "write-zero": 41,
+  "write-stdin": 42,
+  "write-bad-fd": 43,
+  "fork-once": 44,
+  "fork-multiple": 45,
+  "fork-recursive": 46,
+  "fork-read": 47,
+  "fork-close": 48,
+  "fork-boundary": 49,
+  "exec-once": 50,
+  "exec-arg": 51,
+  "exec-boundary": 52,
+  "exec-missing": 53,
+  "exec-bad-ptr": 54,
+  "exec-read": 55,
+  "wait-simple": 56,
+  "wait-twice": 57,
+  "wait-killed": 58,
+  "wait-bad-pid": 59,
+  "multi-recurse": 60,
+  "multi-child-fd": 61,
+  "rox-simple": 62,
+  "rox-child": 63,
+  "rox-multichild": 64,
+  "bad-read": 65,
+  "bad-write": 66,
+  "bad-read2": 67,
+  "bad-write2": 68,
+  "bad-jump": 69,
+  "bad-jump2": 70,
+  "lg-create": 71,
+  "lg-full": 72,
+  "lg-random": 73,
+  "lg-seq-block": 74,
+  "lg-seq-random": 75,
+  "sm-create": 76,
+  "sm-full": 77,
+  "sm-random": 78,
+  "sm-seq-block": 79,
+  "sm-seq-random": 80,
+  "syn-remove": 81,
+  "syn-write": 82,
+  "multi-oom": 83
+ },
+ "days": [
+  {
+   "id": "sat-proc",
+   "day": "주말",
+   "who": [
+    "benjohnbill"
+   ],
+   "h": "fork·wait·exec + 포인터 검증",
+   "lead": "월 저녁 회의 전까지 push 없음 · 커밋은 로컬에 자주",
+   "t": [
+    "fork-once",
+    "fork-multiple",
+    "fork-recursive",
+    "fork-boundary",
+    "exec-once",
+    "exec-arg",
+    "exec-boundary",
+    "exec-missing",
+    "exec-bad-ptr",
+    "wait-simple",
+    "wait-twice",
+    "wait-killed",
+    "wait-bad-pid",
+    "multi-recurse",
+    "halt",
+    "bad-read",
+    "bad-write",
+    "bad-read2",
+    "bad-write2",
+    "bad-jump",
+    "bad-jump2"
+   ]
+  },
+  {
+   "id": "mon-proc",
+   "day": "월",
+   "who": [
+    "Hannuri-Song",
+    "JSZeroDev"
+   ],
+   "h": "fork·wait·exec 각자 구현",
+   "lead": "각자 브랜치에서 처음부터 · fd를 쓰는 4개(fork-read, fork-close, multi-child-fd, exec-read)는 화요일",
+   "t": [
+    "fork-once",
+    "fork-multiple",
+    "fork-recursive",
+    "fork-boundary",
+    "exec-once",
+    "exec-arg",
+    "exec-boundary",
+    "exec-missing",
+    "exec-bad-ptr",
+    "wait-simple",
+    "wait-twice",
+    "wait-killed",
+    "wait-bad-pid",
+    "multi-recurse"
+   ]
+  },
+  {
+   "id": "mon-file",
+   "day": "월",
+   "who": [
+    "benjohnbill"
+   ],
+   "h": "fd 테이블 초안 + 파일 syscall",
+   "lead": "filesize · seek · tell · remove까지 → 전용 테스트 없음, 화요일 filesys/base에서 검증",
+   "t": [
+    "create-normal",
+    "create-empty",
+    "create-null",
+    "create-bad-ptr",
+    "create-long",
+    "create-exists",
+    "create-bound",
+    "open-normal",
+    "open-missing",
+    "open-boundary",
+    "open-empty",
+    "open-null",
+    "open-bad-ptr",
+    "open-twice",
+    "close-normal",
+    "close-twice",
+    "close-bad-fd",
+    "read-normal",
+    "read-bad-ptr",
+    "read-boundary",
+    "read-zero",
+    "read-stdout",
+    "read-bad-fd",
+    "write-normal",
+    "write-bad-ptr",
+    "write-boundary",
+    "write-zero",
+    "write-stdin",
+    "write-bad-fd"
+   ]
+  },
+  {
+   "id": "mon-meet",
+   "day": "월 저녁",
+   "who": [
+    "*"
+   ],
+   "h": "회의: 프로세스 3버전 비교 → develop",
+   "k": [
+    "브랜치별 측정: lint · 프로세스 테스트 14개 · threads 회귀 18개",
+    "베이스 선택 → 좋은 부분 합치기 → develop PR",
+    "포인터 검증 = benjohnbill 버전",
+    "fd 테이블 초안 설명 10분: 크기 · fd 0/1 · 위치 · fork/exit 때 할 일"
+   ]
+  },
+  {
+   "id": "tue-fd",
+   "day": "화",
+   "who": [
+    "Hannuri-Song"
+   ],
+   "h": "fork의 fd 복제",
+   "lead": "자식이 부모의 열린 파일을 같은 fd 번호로 이어받기",
+   "t": [
+    "fork-read",
+    "fork-close",
+    "multi-child-fd",
+    "exec-read"
+   ]
+  },
+  {
+   "id": "tue-rox",
+   "day": "화",
+   "who": [
+    "JSZeroDev"
+   ],
+   "h": "rox: 실행 중인 파일에 쓰기 금지",
+   "lead": "실행 파일이 열려 있는 동안 write 거부 → 프로세스 끝날 때 해제",
+   "t": [
+    "rox-simple",
+    "rox-child",
+    "rox-multichild"
+   ]
+  },
+  {
+   "id": "tue-base",
+   "day": "화",
+   "who": [
+    "benjohnbill"
+   ],
+   "h": "파일 쪽 실패 정리 + filesys/base",
+   "t": [
+    "lg-create",
+    "lg-full",
+    "lg-random",
+    "lg-seq-block",
+    "lg-seq-random",
+    "sm-create",
+    "sm-full",
+    "sm-random",
+    "sm-seq-block",
+    "sm-seq-random",
+    "syn-read",
+    "syn-remove",
+    "syn-write"
+   ]
+  },
+  {
+   "id": "wed",
+   "day": "수",
+   "who": [
+    "*"
+   ],
+   "h": "여유 하루 · 최종 확인",
+   "t": [
+    "multi-oom"
+   ],
+   "k": [
+    {
+     "name": "threads 회귀 18개",
+     "auto": {
+      "dir": "threads",
+      "count": 18
+     }
+    },
+    "icount shift 3–8 반복 → 경쟁 상태 점검",
+    {
+     "name": "dfast 95개 전체 통과 (icount)",
+     "auto": {
+      "dir": "",
+      "count": 95
+     }
+    }
+   ]
+  }
+ ]
+}
