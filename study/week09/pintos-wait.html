@@ -1,0 +1,3060 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pintos의 wait(): 부모는 어떻게 자식의 종료를 기다리는가?</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ffffff'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%23ff3300'%3EJ%3C/text%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="부모는 세마포어에서 기다리고 자식은 공유 기록에 종료 상태를 남긴 뒤 종료를 알린다."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="Pintos의 wait(): 부모는 어떻게 자식의 종료를 기다리는가?"
+    />
+    <meta
+      property="og:description"
+      content="부모는 세마포어에서 기다리고 자식은 공유 기록에 종료 상태를 남긴 뒤 종료를 알린다."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+  Stage runtime (jungle-deck templates/stage.html)
+
+  Keys
+    → / Space / PageDown : next step on this slide; after the last step, next slide
+    ← / PageUp           : hide the last step; with none shown, previous slide
+    N                    : toggle the speaker-notes panel
+    ?                    : shortcut overlay (Esc or ? closes it)
+    E (or top-left corner): edit mode; click slide text or notes to change it
+    Tab (editing)        : size toolbar for the selected text (← → choose, Esc back)
+    Ctrl+S               : save. Served by scripts/serve.py: write the changed slides
+                           into the source file. Opened as a file: download the deck
+    R                    : reload after an agent edit (only while its notice shows)
+    Home / End           : first / last slide
+    #3 at the end of the URL : open slide 3
+
+  Authoring
+    Steps : put data-step="1", "2", ... on elements; they appear in that order
+    Notes : edit <aside class="notes" data-sec="15"> inside each <section>
+            (hidden on the slide). Start a paragraph with <span class="st">▸2</span>
+            to tie it to step 2.
+    Ids   : keep <section id="sN">; saves, autosaves, and the merge-back script
+            match edits by it, never by position.
+    Edit  : the outermost element with text of its own is editable (a <b> inside
+            such a <p> is edited with it). Put data-evidence on real run output to
+            lock it. A box the student may resize has one of the classes panel,
+            card, box, content-box, container, or the attribute data-box. SVG text
+            is locked: draw a diagram the student may edit with HTML boxes.
+-->
+
+    <style>
+      /* ===========================================
+   1. Theme tokens. Every color lives here.
+   PLACEHOLDER values: the real style comes from the Design section of
+   BRIEF.md. A style source sets only the base tokens (--paper, --ink,
+   --acc, --mut, --panel, --grid) and the fonts; the rest derive from them.
+   =========================================== */
+      :root {
+        /* Base tokens */
+        --paper: #ffffff;
+        --ink: #0a0a0a;
+        --acc: #ff3300;
+        --grid: #ebebeb;
+        --mut: #6b6b6b;
+        --panel: #f7f7f5;
+        --terminal: #14171c;
+        --terminal-text: #d5d1c9;
+        --terminal-dim: #7e858f;
+
+        /* Derived tokens: do not set these in a style source */
+        --hl: color-mix(
+          in srgb,
+          var(--acc) 13%,
+          transparent
+        ); /* code-line highlight fill; the only filled accent */
+        --edit-bg: color-mix(
+          in srgb,
+          var(--acc) 5%,
+          transparent
+        ); /* focused field in edit mode */
+        --dim: color-mix(
+          in srgb,
+          var(--ink) 50%,
+          var(--paper)
+        ); /* code comments, elided lines */
+        --panel-b: var(--ink);
+        --cap-b: color-mix(
+          in srgb,
+          var(--ink) 25%,
+          transparent
+        ); /* panel caption rule */
+        --shadow: color-mix(in srgb, var(--ink) 8%, transparent);
+        --scrim: color-mix(
+          in srgb,
+          var(--ink) 45%,
+          transparent
+        ); /* behind the help overlay */
+
+        --font-body:
+          "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        --font-mono:
+          "IBM Plex Mono", "IBM Plex Sans KR", Consolas, "Malgun Gothic",
+          monospace;
+
+        /* Type and spacing scale with the viewport (frontend-slides viewport contract) */
+        --title-size: clamp(2.4rem, 4.8vw, 7.5rem);
+        --h2-size: clamp(1.4rem, 2.3vw, 3.2rem);
+        --h3-size: clamp(1.1rem, 1.6vw, 2.2rem);
+        --body-size: clamp(0.95rem, 1.15vw, 1.65rem);
+        --small-size: clamp(0.72rem, 0.78vw, 1.15rem);
+        --code-size: clamp(0.95rem, min(1.4vw, 2.4vh), 2.1rem);
+
+        --slide-padding: clamp(1rem, 4vw, 4rem);
+        --content-gap: clamp(0.5rem, 2vw, 2rem);
+        --element-gap: clamp(0.25rem, 1vw, 1rem);
+
+        /* Size steps the student sets in edit mode, ±2 around the template size (one place) */
+        --jd-t-s2: 0.75;
+        --jd-t-s1: 0.875;
+        --jd-t-l1: 1.25;
+        --jd-t-l2: 1.5; /* text size */
+        --jd-w-s2: 0.75;
+        --jd-w-s1: 0.875;
+        --jd-w-l1: 1.125;
+        --jd-w-l2: 1.25; /* box width */
+
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        --dur: 0.5s;
+      }
+
+      /* ===========================================
+   2. Viewport contract, from vendor/frontend-slides/viewport-base.css.
+   The scroll-snap rules are left out: the stage shows one fixed slide at a time.
+   =========================================== */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        font-family: var(--font-body);
+      }
+
+      .slide {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        height: 100dvh; /* dynamic viewport height for mobile browsers */
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* never let a slide scroll */
+      }
+      .slide-content {
+        flex: 1;
+        min-height: 0;
+        max-height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
+        gap: var(--content-gap);
+        padding: clamp(0.5rem, 1.4vh, 1.1rem) var(--slide-padding);
+        position: relative;
+        z-index: 2;
+      }
+      .card,
+      .container,
+      .content-box {
+        max-width: min(90vw, 1000px);
+        max-height: min(80vh, 700px);
+      }
+      .feature-list,
+      .bullet-list {
+        gap: clamp(0.4rem, 1vh, 1rem);
+      }
+      .feature-list li,
+      .bullet-list li {
+        font-size: var(--body-size);
+        line-height: 1.4;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 1.5vw, 1rem);
+      }
+      img,
+      .image-container {
+        max-width: 100%;
+        max-height: min(50vh, 400px);
+        object-fit: contain;
+      }
+
+      /* Short viewports (< 700px height) */
+      @media (max-height: 700px) {
+        :root {
+          --slide-padding: clamp(0.75rem, 3vw, 2rem);
+          --content-gap: clamp(0.35rem, 1.2vh, 0.8rem);
+          --title-size: clamp(1.4rem, 4.2vw, 2.6rem);
+          --h2-size: clamp(1.05rem, 2.6vw, 1.8rem);
+        }
+      }
+      /* Very short viewports (< 600px height) */
+      @media (max-height: 600px) {
+        :root {
+          --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem);
+          --content-gap: clamp(0.3rem, 1vw, 0.75rem);
+          --title-size: clamp(1.1rem, 4vw, 2rem);
+          --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+        }
+        /* Hide non-essential elements */
+        .nav-dots,
+        .keyboard-hint,
+        .decorative {
+          display: none;
+        }
+      }
+      /* Extremely short (landscape phones, < 500px height) */
+      @media (max-height: 500px) {
+        :root {
+          --slide-padding: clamp(0.4rem, 2vw, 1rem);
+          --title-size: clamp(1rem, 3.5vw, 1.5rem);
+          --h2-size: clamp(0.9rem, 2.5vw, 1.25rem);
+          --body-size: clamp(0.65rem, 1vw, 0.85rem);
+        }
+      }
+      /* Narrow viewports (< 600px width) */
+      @media (max-width: 600px) {
+        :root {
+          --title-size: clamp(1.3rem, 7vw, 2.4rem);
+        }
+        .grid,
+        .panels {
+          grid-template-columns: 1fr !important;
+        }
+      }
+
+      /* ===========================================
+   3. Stage: one slide visible at a time
+   =========================================== */
+      .slide {
+        background: var(--paper);
+        opacity: 0;
+        visibility: hidden;
+        transition:
+          opacity 0.35s ease,
+          visibility 0s linear 0.35s;
+      }
+      .slide.active {
+        opacity: 1;
+        visibility: visible;
+        z-index: 2;
+        transition:
+          opacity 0.35s ease,
+          visibility 0s;
+      }
+      /* The leaving slide does not fade; it stays underneath. If both slides were
+   half-transparent at once, lines in the same place (head rule, grid) would
+   dim and come back. */
+      .slide.leaving {
+        opacity: 1;
+        visibility: visible;
+        z-index: 1;
+        transition: none;
+      }
+      /* Background 12-column grid */
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: repeating-linear-gradient(
+          90deg,
+          var(--grid) 0 1px,
+          transparent 1px 8.3333%
+        );
+        opacity: 0.6;
+        z-index: 0;
+      }
+
+      /* Head and foot bands */
+      .head {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        border-bottom: 2px solid var(--ink);
+        padding: clamp(1rem, 3.2vh, 2.4rem) var(--slide-padding)
+          clamp(0.4rem, 1vh, 0.7rem);
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        color: var(--mut);
+      }
+      .head .num {
+        letter-spacing: 0.1em;
+      }
+      .foot {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-top: 1px solid var(--ink);
+        margin: 0 var(--slide-padding) clamp(1rem, 3vh, 2.2rem);
+        padding-top: clamp(0.35rem, 1vh, 0.6rem);
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        color: var(--mut);
+      }
+
+      h1,
+      h2,
+      p,
+      li,
+      td,
+      .foot span,
+      .head span {
+        word-break: keep-all;
+        text-wrap: pretty;
+      }
+      h1,
+      h2 {
+        text-wrap: balance;
+      }
+
+      /* ===========================================
+   4. Text elements
+   =========================================== */
+      h1 {
+        font-weight: 700;
+        line-height: 1.22;
+        letter-spacing: -0.02em;
+        font-size: var(--title-size);
+        max-width: 20ch;
+      }
+      h1 em,
+      h2 em {
+        font-style: normal;
+        color: var(--acc);
+      }
+      h2 {
+        font-weight: 700;
+        line-height: 1.3;
+        letter-spacing: -0.015em;
+        font-size: var(--h2-size);
+        max-width: 34ch;
+      }
+      .kicker {
+        align-self: flex-start;
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--acc);
+        border: 1.5px solid var(--acc);
+        padding: 0.3em 0.7em;
+      }
+      .rule {
+        width: clamp(70px, 9vw, 180px);
+        height: clamp(6px, 0.55vw, 12px);
+        background: var(--ink);
+      }
+
+      /* One-line conclusion */
+      .punch {
+        font-size: clamp(1rem, 1.3vw, 1.9rem);
+        font-weight: 500;
+        line-height: 1.5;
+        max-width: 62ch;
+      }
+      .punch::before {
+        content: "";
+        display: inline-block;
+        width: 0.6em;
+        height: 0.6em;
+        background: var(--acc);
+        margin-right: 0.55em;
+        vertical-align: 0.02em;
+      }
+      .punch b {
+        color: var(--acc);
+        font-weight: 700;
+      }
+      .punch code,
+      .rows code,
+      .hint code {
+        font-family: var(--font-mono);
+        font-weight: 600;
+      }
+      .hint {
+        font-size: var(--small-size);
+        color: var(--mut);
+        line-height: 1.55;
+        margin-top: 0.25em;
+        padding-left: 1.15em;
+      }
+      .ask {
+        font-size: clamp(1.2rem, 1.7vw, 2.4rem);
+        font-weight: 700;
+      }
+
+      /* ===========================================
+   5. Code panels: code, debugger, and compiler output share one light panel
+   =========================================== */
+      .panels {
+        display: grid;
+        gap: clamp(0.6rem, 1.6vw, 1.4rem);
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+      .panel {
+        border: 2px solid var(--panel-b);
+        background: var(--panel);
+        min-width: 0;
+        overflow: hidden;
+      }
+      .panel.accent {
+        border-color: var(--acc);
+      }
+      /* Panel caption: light, no dark band */
+      .cap {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8em;
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        font-weight: 500;
+        letter-spacing: 0.04em;
+        color: var(--mut);
+        padding: 0.4em 0.8em;
+        border-bottom: 1.5px solid var(--cap-b);
+      }
+      .cap .side {
+        color: var(--acc);
+      }
+      pre {
+        font-family: var(--font-mono);
+        font-size: var(--code-size);
+        line-height: 1.55;
+        white-space: pre;
+        tab-size: 4;
+        padding: clamp(0.5rem, 1.4vh, 1rem) clamp(0.7rem, 1.3vw, 1.2rem);
+        overflow: hidden;
+      }
+      pre.wrap {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .c-hit {
+        color: var(--acc);
+        font-weight: 600;
+      }
+      .c-com,
+      .c-dim {
+        color: var(--dim);
+      }
+      .hl {
+        background: var(--hl);
+        color: var(--acc);
+        font-weight: 600;
+        display: block;
+      }
+      .hl .c-com {
+        color: var(--acc);
+        opacity: 0.75;
+      }
+
+      /* Comparison table */
+      .rows {
+        border-collapse: collapse;
+        background: var(--paper);
+        font-size: clamp(0.9rem, 1.15vw, 1.7rem);
+      }
+      .rows th,
+      .rows td {
+        border: 2px solid var(--ink);
+        padding: 0.45em 0.9em;
+        text-align: left;
+        vertical-align: top;
+      }
+      .rows th {
+        font-family: var(--font-mono);
+        font-weight: 500;
+        font-size: var(--small-size);
+        letter-spacing: 0.06em;
+        color: var(--mut);
+      }
+      .rows tr.hit td {
+        color: var(--acc);
+        font-weight: 600;
+      }
+
+      .closing h1 {
+        max-width: none;
+        text-wrap: wrap;
+        font-size: clamp(1.8rem, 3.3vw, 5.2rem);
+      }
+      .closing h1 + h1 {
+        color: var(--acc);
+      }
+      .thanks {
+        font-family: var(--font-mono);
+        font-size: var(--body-size);
+        color: var(--mut);
+      }
+
+      /* ===========================================
+   6. Step reveal: space is reserved, only visibility changes (no layout jump)
+   =========================================== */
+      [data-step] {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(14px);
+        transition:
+          opacity var(--dur) var(--ease),
+          transform var(--dur) var(--ease),
+          visibility 0s linear var(--dur);
+      }
+      [data-step].on {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition:
+          opacity var(--dur) var(--ease),
+          transform var(--dur) var(--ease),
+          visibility 0s;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+          transition-delay: 0s !important;
+          animation-duration: 0.01ms !important;
+        }
+        [data-step] {
+          transform: none;
+        }
+      }
+
+      /* ===========================================
+   7. Speaker notes: N key, hidden by default
+   =========================================== */
+      aside.notes {
+        display: none;
+      }
+      #notesPanel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9997;
+        max-height: 42vh;
+        overflow: auto;
+        background: var(--paper);
+        border-top: 2px solid var(--ink);
+        box-shadow: 0 -8px 24px var(--shadow);
+        padding: clamp(0.7rem, 1.6vh, 1.2rem) var(--slide-padding);
+      }
+      #notesPanel[hidden] {
+        display: none;
+      }
+      #notesPanel .meta {
+        display: flex;
+        gap: 1.4em;
+        flex-wrap: wrap;
+        font-family: var(--font-mono);
+        font-size: var(--small-size);
+        color: var(--mut);
+        margin-bottom: 0.5em;
+      }
+      #notesPanel .meta b {
+        color: var(--acc);
+        font-weight: 600;
+      }
+      #notesPanel .body {
+        font-size: clamp(1rem, 1.25vw, 1.6rem);
+        line-height: 1.65;
+      }
+      #notesPanel .body p + p {
+        margin-top: 0.35em;
+      }
+      #notesPanel .body .st {
+        font-family: var(--font-mono);
+        color: var(--acc);
+        font-weight: 600;
+        margin-right: 0.4em;
+      }
+
+      /* Progress bar, nav dots, key hint */
+      .progress-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 4px;
+        width: 100%;
+        background: var(--acc);
+        z-index: 9999;
+        transform: scaleX(0);
+        transform-origin: left center;
+        transition: transform 0.2s linear;
+      }
+      .nav-dots {
+        position: fixed;
+        right: clamp(0.6rem, 1.4vw, 1.4rem);
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        z-index: 9998;
+      }
+      .nav-dots button {
+        width: 9px;
+        height: 9px;
+        padding: 0;
+        border: 1.5px solid var(--ink);
+        background: transparent;
+        border-radius: 50%;
+        cursor: pointer;
+      }
+      .nav-dots button.active {
+        background: var(--acc);
+        border-color: var(--acc);
+        transform: scale(1.35);
+      }
+      .keyboard-hint {
+        position: fixed;
+        left: clamp(0.6rem, 1.4vw, 1.4rem);
+        bottom: clamp(0.4rem, 1vh, 0.8rem);
+        font-family: var(--font-mono);
+        font-size: clamp(0.55rem, 1vh, 0.72rem);
+        color: var(--mut);
+        z-index: 9998;
+        opacity: 0.75;
+        animation: hint-out 0.5s 5s forwards;
+      }
+      @keyframes hint-out {
+        to {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+
+      /* ===========================================
+   8. In-browser edit mode: E key or the top-left corner
+   =========================================== */
+      .edit-hotzone {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 80px;
+        height: 80px;
+        z-index: 10000;
+      }
+      .edit-toggle {
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        width: 42px;
+        height: 42px;
+        border: 2px solid var(--ink);
+        background: var(--paper);
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 17px;
+        line-height: 1;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 10001;
+      }
+      .edit-toggle.show,
+      .edit-toggle.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .edit-toggle.active {
+        background: var(--acc);
+        border-color: var(--acc);
+      }
+      .edit-banner {
+        position: fixed;
+        top: 4px;
+        left: 0;
+        right: 0;
+        background: var(--ink);
+        color: var(--paper);
+        font-family: var(--font-mono);
+        font-size: clamp(0.6rem, 1.1vh, 0.78rem);
+        padding: 0.45em 1em;
+        text-align: center;
+        transform: translateY(-120%);
+        transition: transform 0.3s var(--ease);
+        z-index: 10000;
+      }
+      body.edit-active .edit-banner {
+        transform: none;
+      }
+      /* While editing, show every step so hidden text can be edited too */
+      body.edit-active [data-step] {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+      }
+      body.edit-active [contenteditable] {
+        outline: 1px dashed var(--acc);
+        outline-offset: 3px;
+      }
+      body.edit-active [contenteditable]:focus {
+        outline: 2px solid var(--acc);
+        background: var(--edit-bg);
+      }
+      /* Way back to the study index. publish.py rewrites the href to one ../ per folder below pages_dir, or drops the link when pages_dir has no index.html. Bottom-right is the only corner the deck chrome leaves free */
+      .home-link {
+        position: fixed;
+        right: clamp(0.6rem, 1.4vw, 1.4rem);
+        bottom: clamp(0.4rem, 1vh, 0.8rem);
+        z-index: 9998;
+        font-family: var(--font-mono, monospace);
+        font-size: clamp(0.55rem, 1vh, 0.72rem);
+        color: var(--mut);
+        text-decoration: none;
+        opacity: 0.75;
+      }
+      .home-link:hover {
+        opacity: 1;
+        text-decoration: underline;
+      }
+
+      /* ===========================================
+   9. Usage guidance: ? overlay and a one-time hint on first open
+   =========================================== */
+      #helpOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10002;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--scrim);
+      }
+      #helpOverlay[hidden],
+      #firstHint[hidden] {
+        display: none;
+      }
+      #helpOverlay .help-box {
+        background: var(--paper);
+        color: var(--ink);
+        border: 2px solid var(--ink);
+        box-shadow: 0 12px 32px var(--shadow);
+        padding: clamp(1rem, 2.4vh, 1.8rem) clamp(1.2rem, 2.4vw, 2.2rem);
+        max-width: min(90vw, 560px);
+        max-height: 90vh;
+        overflow: auto;
+      }
+      #helpOverlay h2 {
+        font-size: var(--h3-size);
+        margin-bottom: 0.6em;
+      }
+      #helpOverlay dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 0.35em 1.2em;
+        font-size: var(--small-size);
+        line-height: 1.5;
+      }
+      #helpOverlay dt {
+        font-family: var(--font-mono);
+        font-weight: 600;
+        color: var(--acc);
+      }
+      .help-save {
+        margin-top: 0.9em;
+        font-size: var(--small-size);
+        font-weight: 600;
+        word-break: keep-all;
+      }
+      #firstHint {
+        position: fixed;
+        left: 50%;
+        bottom: clamp(3.6rem, 11vh, 6.5rem);
+        transform: translateX(-50%);
+        z-index: 10000;
+        max-width: min(92vw, 640px);
+        background: var(--ink);
+        color: var(--paper);
+        font-size: var(--small-size);
+        line-height: 1.5;
+        word-break: keep-all;
+        padding: 0.6em 1em;
+        cursor: pointer;
+      }
+
+      /* ===========================================
+   10. Save and change notices (served mode, autosave)
+   =========================================== */
+      #notices {
+        position: fixed;
+        left: 50%;
+        top: clamp(2.4rem, 6vh, 3.4rem);
+        transform: translateX(-50%);
+        z-index: 10001;
+        width: max-content;
+        max-width: min(92vw, 720px);
+        display: flex;
+        flex-direction: column;
+        gap: 0.4em;
+        pointer-events: none;
+      }
+      .notice {
+        pointer-events: auto;
+        background: var(--ink);
+        color: var(--paper);
+        box-shadow: 0 8px 24px var(--shadow);
+        border-left: 0.35em solid var(--acc);
+        font-size: var(--small-size);
+        line-height: 1.5;
+        word-break: keep-all;
+        padding: 0.55em 1em;
+      }
+      .notice button,
+      #sizeBar button {
+        margin-left: 0.7em;
+        padding: 0.1em 0.7em;
+        border: 0;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 600;
+        background: var(--paper);
+        color: var(--ink);
+      }
+
+      /* ===========================================
+   11. Size steps the student sets in edit mode (saved with the slide)
+   Text steps scale the element's own size with zoom: a font-size in em would
+   scale the parent's size, and each element sets its own size token.
+   Width steps scale the box's own width; the script measures it and writes
+   --box-w (never saved), clamped so the box stays on the slide and off
+   its neighbours.
+   =========================================== */
+      .jd-t-s2 {
+        zoom: var(--jd-t-s2);
+      }
+      .jd-t-s1 {
+        zoom: var(--jd-t-s1);
+      }
+      .jd-t-l1 {
+        zoom: var(--jd-t-l1);
+      }
+      .jd-t-l2 {
+        zoom: var(--jd-t-l2);
+      }
+      .slide [style*="--box-w"] {
+        width: var(--box-w);
+        max-width: none;
+      }
+      #sizeBar {
+        position: fixed;
+        z-index: 10001;
+        display: flex;
+        gap: 0.3em;
+        background: var(--ink);
+        color: var(--paper);
+        box-shadow: 0 8px 24px var(--shadow);
+        font-size: var(--small-size);
+        padding: 0.3em;
+      }
+      #sizeBar[hidden],
+      #sizeBar button[hidden] {
+        display: none;
+      }
+      #sizeBar button {
+        margin-left: 0;
+        padding: 0.15em 0.6em;
+      }
+      #sizeBar button:focus-visible {
+        outline: 2px solid var(--acc);
+        outline-offset: 2px;
+      }
+
+      /* ===========================================
+   12. Overflow marks: text that does not fit its box or its slide.
+   Shown in edit mode, where the student can act on them. The page never
+   fixes the layout itself. jd-measure holds steps in place while measuring
+   =========================================== */
+      body.edit-active [data-jd-over],
+      body.edit-active [data-jd-over]:focus {
+        outline: 3px solid var(--ink);
+        outline-offset: 2px;
+        background-image: repeating-linear-gradient(
+          45deg,
+          var(--hl) 0 6px,
+          transparent 6px 12px
+        );
+      }
+      body.jd-measure [data-step] {
+        transform: none;
+        transition: none;
+      }
+      /* Presentation-specific layouts; stage runtime/edit styles remain intact. */
+      .wait-slide::before {
+        display: block;
+      }
+      .wait-slide .head {
+        border-color: var(--ink);
+        border-bottom-width: 2px;
+        padding-bottom: 1.5vh;
+      }
+      .wait-slide .head > span:first-child {
+        color: var(--mut);
+        font-family: var(--font-mono);
+        font-weight: 400;
+      }
+      .wait-slide .foot {
+        border-color: var(--ink);
+        margin-bottom: 3vh;
+      }
+      .wait-slide .slide-content {
+        justify-content: center;
+        gap: 3vh;
+      }
+      .wait-slide .thesis {
+        max-width: none;
+        line-height: 1.3;
+        font-size: var(--h2-size);
+        letter-spacing: -0.015em;
+        padding-bottom: 0.18em;
+      }
+      .wait-slide .eyebrow {
+        font-size: var(--small-size);
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-weight: 500;
+        letter-spacing: 0.2em;
+      }
+      .eyebrow span {
+        margin-left: 2em;
+        color: var(--mut);
+        font-weight: 400;
+      }
+      .wait-slide h1 {
+        max-width: 23em;
+        font-size: var(--title-size);
+        line-height: 1.2;
+        padding-bottom: 0.2em;
+      }
+      .intro-content::after {
+        content: "";
+        position: absolute;
+        right: 1vw;
+        top: 34%;
+        width: clamp(0.6rem, 1vw, 1.3rem);
+        height: clamp(0.6rem, 1vw, 1.3rem);
+        border-radius: 50%;
+        background: var(--acc);
+      }
+      .intro-content {
+        gap: 3.5vh !important;
+      }
+      .intro-thesis {
+        color: var(--mut);
+        font-size: var(--h3-size);
+        line-height: 1.5;
+      }
+      .intro-code {
+        border-top: 2px solid var(--ink);
+        padding-top: 2.5vh;
+        width: max-content;
+        max-width: 100%;
+      }
+      .intro-code pre {
+        padding: 1vh 0;
+        font-size: var(--h3-size);
+      }
+      .intro-code .c-hit {
+        color: var(--ink);
+      }
+      .diagram-label {
+        font-size: var(--body-size);
+        color: var(--mut);
+      }
+      .intro-labels {
+        display: flex;
+        gap: 2.5em;
+        color: var(--mut);
+        font-size: var(--body-size);
+      }
+      .history {
+        display: grid;
+        grid-template-columns: 0.8fr 1fr 1.3fr;
+        gap: 2vw;
+        align-items: stretch;
+      }
+      .history-stage {
+        border: 2px solid var(--ink);
+        padding: 2.5vh 1.4vw;
+        background: var(--panel);
+        min-width: 0;
+      }
+      .current-stage {
+        border-color: var(--acc);
+      }
+      .stage-no {
+        color: var(--mut);
+        font-family: var(--font-mono);
+        font-size: var(--body-size);
+        background: var(--paper);
+        border-bottom: 1px solid var(--ink);
+        padding: 0.65em 0.8em;
+        margin: -2.5vh -1.4vw 1.5vh;
+      }
+      .stage-no span {
+        margin-left: 1em;
+        color: var(--ink);
+        font-family: var(--font-body);
+        font-weight: 700;
+      }
+      .function-caption {
+        color: var(--mut);
+        font-family: var(--font-mono);
+        font-size: var(--body-size);
+        padding-bottom: 1vh;
+      }
+      .history-stage pre {
+        min-height: 16vh;
+        padding: 1vh 0;
+        font-size: var(--h3-size);
+        line-height: 1.7;
+      }
+      .stage-detail {
+        font-size: var(--body-size);
+        line-height: 1.5;
+        margin-top: 1vh;
+      }
+      .history-stage pre .wait-comment {
+        display: block;
+        margin: 0.8vh 0 0.3vh;
+        color: var(--mut);
+        font-family: var(--font-body);
+        font-size: var(--body-size);
+        line-height: 1.65;
+      }
+      #s2 .slide-content {
+        gap: 2vh;
+        padding-top: 2vh;
+      }
+      #s2 .history-stage {
+        padding-bottom: 1.25vh;
+      }
+      #s2 .source-label:has(> br:only-child),
+      #s2 .source-note:has(> br:only-child) {
+        display: none;
+      }
+      .source-label,
+      .source-note {
+        font-size: var(--small-size);
+        color: var(--mut);
+        line-height: 1.55;
+      }
+      .source-label {
+        margin-top: 1.8vh;
+      }
+      .term {
+        display: flex;
+        gap: 1.2em;
+        align-items: baseline;
+        font-size: var(--body-size);
+        line-height: 1.5;
+      }
+      .term code {
+        color: var(--ink);
+        font-family: var(--font-mono);
+        font-weight: 600;
+      }
+      .term span {
+        color: var(--mut);
+      }
+      .shared-record {
+        display: grid;
+        grid-template-columns: 1fr 0.6fr 1.7fr 0.6fr 1fr;
+        align-items: center;
+        gap: 0.6vw;
+        padding: 2vh 0;
+      }
+      .actor {
+        padding: 3vh 1vw;
+        border-block: 1px solid var(--ink);
+        text-align: center;
+        min-width: 0;
+      }
+      .actor-name {
+        font-size: var(--h2-size);
+        font-weight: 700;
+        margin-bottom: 2vh;
+      }
+      .actor code {
+        color: var(--ink);
+        font-size: var(--h3-size);
+        font-family: var(--font-mono);
+      }
+      .actor-detail {
+        font-size: var(--body-size);
+        color: var(--mut);
+        margin-top: 1.5vh;
+      }
+      .pointer {
+        text-align: center;
+        color: var(--ink);
+      }
+      .pointer span {
+        font-size: var(--small-size);
+        color: var(--mut);
+        white-space: nowrap;
+      }
+      .pointer b {
+        display: block;
+        font-size: var(--h2-size);
+        font-weight: 400;
+      }
+      .record {
+        padding: 2.5vh 1.5vw;
+        background: var(--panel);
+        border: 2px solid var(--acc);
+        min-width: 0;
+      }
+      .record-name {
+        color: var(--acc);
+        font-family: var(--font-mono);
+        font-size: var(--h3-size);
+        font-weight: 600;
+        border-bottom: 1px solid var(--ink);
+        padding-bottom: 1.7vh;
+        margin-bottom: 1vh;
+      }
+      .record dl > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 1vw;
+        padding: 0.8vh 0;
+        font-size: var(--body-size);
+      }
+      .record dt {
+        font-family: var(--font-mono);
+      }
+      .record dd {
+        color: var(--mut);
+      }
+      .record-link {
+        display: flex;
+        align-items: baseline;
+        gap: 1vw;
+        font-size: var(--small-size);
+        color: var(--mut);
+      }
+      .record-link code {
+        font-family: var(--font-mono);
+        color: var(--ink);
+      }
+      .swimlane {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 0.55fr 1fr;
+        grid-template-rows: auto auto auto auto;
+        column-gap: 2vw;
+        row-gap: 1.6vh;
+        padding-left: 4vw;
+      }
+      .time-label {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        border-left: 1px solid var(--grid);
+        padding-left: 0.7vw;
+        color: var(--mut);
+        font-size: var(--small-size);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1vh;
+      }
+      .time-label b {
+        font-size: var(--h3-size);
+        font-weight: 400;
+      }
+      .lane-title {
+        display: flex;
+        gap: 1em;
+        align-items: baseline;
+        padding-bottom: 1vh;
+        border-bottom: 1px solid var(--grid);
+      }
+      .lane-title b {
+        font-size: var(--h3-size);
+      }
+      .lane-title code {
+        font-family: var(--font-mono);
+        font-size: var(--body-size);
+        color: var(--mut);
+      }
+      .event {
+        border: 2px solid var(--ink);
+        padding: 1.3vh 1.3vw;
+        background: var(--panel);
+        min-width: 0;
+      }
+      .event code {
+        font-family: var(--font-mono);
+        font-size: var(--code-size);
+        line-height: 1.55;
+      }
+      .event p {
+        font-size: var(--body-size);
+        color: var(--mut);
+        margin-top: 0.5vh;
+        line-height: 1.4;
+      }
+      .down-event {
+        grid-column: 1;
+        grid-row: 2;
+        align-self: start;
+      }
+      .middle-quiet {
+        grid-column: 1;
+        grid-row: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--mut);
+        font-size: var(--body-size);
+        border-left: 1px dashed var(--grid);
+      }
+      .child-exit {
+        grid-column: 3;
+        grid-row: 2;
+      }
+      .cleanup {
+        display: block;
+        margin-top: 1.2vh;
+        color: var(--mut);
+      }
+      .up-event {
+        grid-column: 3;
+        grid-row: 3;
+        align-self: center;
+        border-color: var(--acc);
+      }
+      .signal {
+        grid-column: 2;
+        grid-row: 3;
+        text-align: center;
+        align-self: center;
+        color: var(--acc);
+      }
+      .signal span {
+        font-size: var(--small-size);
+        color: var(--ink);
+      }
+      .signal b {
+        display: block;
+        font-size: var(--h2-size);
+        font-weight: 400;
+      }
+      .resume-event {
+        grid-column: 1;
+        grid-row: 4;
+      }
+      .early-finish {
+        display: grid;
+        grid-template-columns: 1fr 0.6fr 1fr 0.75fr 1fr;
+        gap: 1.2vw;
+        align-items: center;
+      }
+      .early-event {
+        padding: 2vh 1.3vw;
+        background: var(--panel);
+        border: 2px solid var(--ink);
+        min-height: 17vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1vh;
+        min-width: 0;
+      }
+      .early-event p {
+        font-size: var(--body-size);
+        color: var(--mut);
+      }
+      .early-event code {
+        font-family: var(--font-mono);
+        font-size: var(--h3-size);
+      }
+      .early-event b {
+        color: var(--acc);
+        font-family: var(--font-mono);
+        font-size: var(--h2-size);
+        font-weight: 500;
+      }
+      .early-event > span {
+        color: var(--mut);
+        font-size: var(--body-size);
+      }
+      .early-bridge {
+        text-align: center;
+      }
+      .early-bridge span {
+        font-size: var(--small-size);
+        color: var(--mut);
+      }
+      .early-bridge b {
+        display: block;
+        font-weight: 400;
+        font-size: var(--h2-size);
+        color: var(--ink);
+      }
+      .run-evidence {
+        border-top: 1px solid var(--grid);
+        padding-top: 1.7vh;
+      }
+      .evidence-heading {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1.6vh;
+      }
+      .evidence-heading p {
+        font-size: var(--body-size);
+        font-weight: 700;
+      }
+      .evidence-heading span {
+        color: var(--mut);
+        font-size: var(--small-size);
+      }
+      .evidence-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2vw;
+      }
+      .log-block {
+        background: var(--terminal);
+        border: 2px solid var(--ink);
+        min-width: 0;
+      }
+      .log-block pre {
+        padding: 1vh 1vw;
+        font-size: var(--h3-size);
+        line-height: 1.6;
+        color: var(--terminal-text);
+      }
+      .log-block .diagram-label {
+        font-size: var(--small-size);
+        color: var(--mut);
+        background: var(--paper);
+        padding: 0.6em 0.8em;
+        border-bottom: 1px solid var(--ink);
+        font-family: var(--font-mono);
+      }
+      .log-block .c-dim {
+        color: var(--terminal-dim);
+      }
+      .note-ref {
+        display: none;
+      }
+      @media (max-width: 900px) {
+        .wait-slide .slide-content {
+          gap: 2vh;
+        }
+        .history {
+          gap: 1vw;
+        }
+        .record dl > div {
+          gap: 0.5vw;
+        }
+        .shared-record {
+          grid-template-columns: 1fr 0.35fr 1.6fr 0.35fr 1fr;
+        }
+        .actor-detail {
+          font-size: var(--small-size);
+        }
+        .term {
+          gap: 0.7em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="home-link" href="../../">← 학습 기록</a>
+
+    <div class="progress-bar" id="progressBar"></div>
+    <nav class="nav-dots" id="navDots" aria-label="슬라이드 이동"></nav>
+    <div class="keyboard-hint">
+      → 다음 단계 · ← 이전 · N 발표자 노트 · E 편집 · Ctrl+S 저장 · ? 도움말
+    </div>
+
+    <div class="edit-hotzone" aria-hidden="true"></div>
+    <button
+      class="edit-toggle"
+      id="editToggle"
+      title="편집 모드 (E)"
+      aria-label="편집 모드 켜기"
+    >
+      ✏️
+    </button>
+    <div class="edit-banner" id="editBanner">
+      편집 모드 · 글자를 눌러 고치세요 · Tab 크기 조절 · N 노트도 고칠 수 있어요
+      · Esc 커서 빼기 · Ctrl+S 저장 · E 끄기
+    </div>
+
+    <section class="slide wait-slide" id="s1">
+      <div class="head">
+        <span>PINTOS / USER PROGRAMS</span><span class="num"></span>
+      </div>
+      <div class="slide-content intro-content">
+        <p class="eyebrow">WEEK 08 <span>정승영</span></p>
+        <h1>
+          Pintos의 <em>wait()</em>:<br />부모는 어떻게 자식의 종료를 기다리는가?
+        </h1>
+        <p class="intro-thesis">
+          자식 스레드를 만들었다고, 자식의 실행이 끝난 것은 아니다.
+        </p>
+        <div class="intro-code" data-step="1">
+          <p class="diagram-label">시작 코드 · run_task()</p>
+          <pre><span class="c-hit">process_wait</span>(process_create_initd(task));</pre>
+          <div class="intro-labels">
+            <span>안쪽 호출: 자식 생성</span><span>바깥 호출: 종료 대기</span>
+          </div>
+        </div>
+      </div>
+      <div class="foot">
+        <span>threads/init.c · run_task()</span><span>01 / 도입</span>
+      </div>
+      <aside class="notes" data-sec="17">
+        <p>
+          안녕하세요. 이번에는 부모가 자식의 종료를 기다리는 wait를 구현한
+          과정을 이야기하겠습니다. 자식 스레드를 만들었다고 실행까지 끝난 건
+          아니어서, 부모가 종료를 기다리는 처리가 필요했습니다.
+        </p>
+      </aside>
+    </section>
+
+    <section class="slide wait-slide" id="s2">
+      <div class="head">
+        <span>구현 과정 / 기다림의 변화</span><span class="num"></span>
+      </div>
+      <div class="slide-content">
+        <h2 class="thesis">
+          CPU를 계속 양보하는 것만으로는 자식의 종료를 기다릴 수 없다.
+        </h2>
+        <div class="history">
+          <div class="history-stage box">
+            <p class="stage-no">01 <span>처음 코드</span></p>
+            <p class="function-caption">process_wait() 내부</p>
+            <pre>return -1;</pre>
+            <p class="stage-detail">종료를 기다리지 않고 반환</p>
+            <p class="source-label"><br /></p>
+          </div>
+          <div class="history-stage box" data-step="1">
+            <p class="stage-no">02 <span>임시 코드</span></p>
+            <p class="function-caption">process_wait() 내부</p>
+            <pre>
+while (true) {
+    thread_yield();
+}</pre
+            >
+            <p class="stage-detail">테스트 실행 확인 후 수동 종료</p>
+            <p class="source-label"><br /></p>
+          </div>
+          <div class="history-stage current-stage box" data-step="2">
+            <p class="stage-no">03 <span>현재 구현</span></p>
+            <p class="function-caption">process_wait() 내부</p>
+            <pre><span class="c-hit">sema_down</span>(
+  &amp;child_status-&gt;exit_sema);
+<span class="wait-comment">// 부모는 자식의 종료 알림이 없으면 대기
+// 자식이 알리면 다음 줄로 진행
+// 이미 알렸다면 대기 없이 진행</span>status = child_status-&gt;status;</pre>
+            <p class="stage-detail">
+              부모는 자식의 종료 알림이 없으면 대기<br />알림을 확인하면 자식의 종료 값을 읽음
+            </p>
+            <p class="source-label"><br /></p>
+          </div>
+        </div>
+        <p class="term" data-step="1">
+          <code>thread_yield()</code><span>실행 차례를 양보하는 함수</span>
+        </p>
+        <p class="source-note"><br /></p>
+      </div>
+      <div class="foot">
+        <span>process_wait()의 구현 변화</span><span>02 / 전개</span>
+      </div>
+      <aside class="notes" data-sec="27">
+        <p>처음 제공된 코드는 마이너스 일만 반환했습니다.</p>
+        <p>
+          <span class="st">▸1</span>그래서 우선 테스트가 실행되는지 보려고
+          thread_yield를 무한 반복하도록 바꿨습니다. CPU 차례를 양보하는 함수라
+          자식은 실행될 수 있었지만, 자식이 끝나도 부모의 반복은 끝나지
+          않았습니다.
+        </p>
+        <p><span class="st">▸2</span>종료를 알려주는 연결이 필요했습니다.</p>
+      </aside>
+    </section>
+
+    <section class="slide wait-slide" id="s3">
+      <div class="head">
+        <span>공유 기록 / 두 곳에서 가리키는 하나의 객체</span
+        ><span class="num"></span>
+      </div>
+      <div class="slide-content">
+        <h2 class="thesis">
+          부모와 자식은 같은 child_status를 통해 종료 상태를 주고받는다.
+        </h2>
+        <div class="shared-record">
+          <div class="actor parent-actor box">
+            <p class="actor-name">부모</p>
+            <code>children</code>
+            <p class="actor-detail">자식 기록을 담는 목록</p>
+          </div>
+          <div class="pointer first-pointer">
+            <span class="jd-t-l2">목록으로 연결</span><b class="jd-t-l1" aria-hidden="true">→</b>
+          </div>
+          <div class="record box">
+            <p class="record-name">child_status(구조체)</p>
+            <dl>
+              <div>
+                <dt>tid</dt>
+                <dd>자식 식별 번호</dd>
+              </div>
+              <div>
+                <dt>status</dt>
+                <dd>종료 결과</dd>
+              </div>
+              <div>
+                <dt>exit_sema</dt>
+                <dd>종료 신호</dd>
+              </div>
+              <div>
+                <dt>is_waited</dt>
+                <dd>중복 대기 확인</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="pointer last-pointer">
+            <span class="jd-t-l2">포인터로 연결</span><b class="jd-t-l1" aria-hidden="true">←</b>
+          </div>
+          <div class="actor child-actor box">
+            <p class="actor-name">자식</p>
+            <code>child_status</code>
+            <p class="actor-detail">같은 기록을 가리킴</p>
+          </div>
+        </div>
+        <p class="term">
+          <code>child_status</code><span>부모와 자식이 공유하는 종료 기록</span>
+        </p>
+        <div class="record-link">
+          <code class="jd-t-l1">process_create_initd()</code
+          ><span class="jd-t-l1">기록 생성·부모 목록에 연결</span
+          ><code class="jd-t-l1">initd()</code
+          ><span class="jd-t-l1">자식 포인터 연결</span>
+        </div>
+      </div>
+      <div class="foot">
+        <span
+          >구조체: include/userprog/process.h · 스레드 필드:
+          include/threads/thread.h</span
+        ><span>03 / 전개</span>
+      </div>
+      <aside class="notes" data-sec="22">
+        <p>
+          그래서 부모와 자식이 함께 보는 종료 기록인 child_status를 두었습니다.
+          부모는 children 목록에서 자식의 기록을 찾고, 자식도 같은 기록을
+          가리킵니다. 여기에 종료 값과 종료 알림을 주고받는 도구인 세마포어를
+          담았습니다.
+        </p>
+        <p class="note-ref">
+          근거: process_create_initd()의 malloc, exit_sema 0 초기화, children
+          등록과 initd()의 child_status 포인터 대입. 구조체는 process.h에
+          정의되어 있습니다.
+        </p>
+      </aside>
+    </section>
+
+    <section class="slide wait-slide" id="s4">
+      <div class="head">
+        <span>종료 동기화 / 부모가 먼저 기다리는 경우</span
+        ><span class="num"></span>
+      </div>
+      <div class="slide-content">
+        <h2 class="thesis">
+          부모는 종료 신호가 없으면 잠들고, 자식은 종료 상태를 저장한 뒤 신호를
+          보낸다.
+        </h2>
+        <div class="swimlane">
+          <p class="time-label"><span class="jd-t-l2">시간</span><b class="jd-t-l1" aria-hidden="true">↓</b></p>
+          <div class="lane-title"><b>부모</b><code>process_wait()</code></div>
+          <div class="lane-gap"></div>
+          <div class="lane-title"><b>자식</b><code>process_exit()</code></div>
+          <div class="event down-event box">
+            <code>sema_down(&amp;…exit_sema)</code>
+            <p>신호 0 · BLOCKED로 대기</p>
+          </div>
+          <div class="middle-quiet"><span>종료 신호 대기</span></div>
+          <div class="event child-exit box" data-step="1">
+            <code>child_status-&gt;status<br />= curr-&gt;exit_status;</code>
+            <p>종료 결과 저장</p>
+            <code class="cleanup">process_cleanup();</code>
+            <p>자원 정리</p>
+          </div>
+          <div class="signal" data-step="2">
+            <span class="jd-t-l2">종료 알림</span><b class="jd-t-l1" aria-hidden="true">←</b>
+          </div>
+          <div class="event up-event box" data-step="2">
+            <code>sema_up(&amp;…exit_sema)</code>
+            <p>대기 중인 부모를 READY로 전환</p>
+          </div>
+          <div class="event resume-event box" data-step="3">
+            <code>status 읽기 · 기록 해제</code>
+            <p>실행 차례를 받으면 이어서 진행</p>
+          </div>
+        </div>
+        <p class="term">
+          <code>세마포어</code
+          ><span>이 코드에서 종료 신호를 기다리거나 저장하는 동기화 도구</span>
+        </p>
+        <p class="source-note">
+          현재 코드를 풀어 그린 흐름 · &amp;…exit_sema는 구조체 접근 부분을 줄여
+          표시
+        </p>
+      </div>
+      <div class="foot">
+        <span>userprog/process.c · threads/synch.c</span><span>04 / 전환</span>
+      </div>
+      <aside class="notes" data-sec="25">
+        <p>
+          부모는 sema_down으로 종료 알림을 기다립니다. 알림이 없으면 실행을
+          멈추고 잠듭니다.
+        </p>
+        <p>
+          <span class="st">▸1</span>자식은 종료 값을 기록하고 자원을 정리한 뒤,
+        </p>
+        <p><span class="st">▸2</span>sema_up으로 부모에게 알립니다.</p>
+        <p>
+          <span class="st">▸3</span>부모는 다시 실행될 때 값을 읽고 기록을
+          정리해서, 무한 반복 없이 기다릴 수 있게 됐습니다.
+        </p>
+        <p class="note-ref">
+          그림은 실제 트레이스가 아닌 코드 기반 시나리오입니다. READY는 실행할
+          준비가 된 상태이며 즉시 RUNNING을 뜻하지 않습니다. 실제 정리는
+          list_remove()와 free() 후 status 반환입니다.
+        </p>
+      </aside>
+    </section>
+
+    <section class="slide wait-slide" id="s5">
+      <div class="head">
+        <span>자식이 먼저 끝난 경우 / 실제 반환 결과</span
+        ><span class="num"></span>
+      </div>
+      <div class="slide-content">
+        <h2 class="thesis">
+          자식이 먼저 종료해도, 세마포어에 남은 신호 덕분에 부모는 기다리지 않고
+          종료 결과를 받는다.
+        </h2>
+        <div class="early-finish">
+          <div class="early-event box">
+            <p>자식이 먼저 종료</p>
+            <code>sema_up()</code><b>0 → 1</b>
+          </div>
+          <div class="early-bridge">
+            <span class="jd-t-l2">신호가 남음</span><b class="jd-t-l1" aria-hidden="true">→</b>
+          </div>
+          <div class="early-event box">
+            <p>부모가 나중에 대기</p>
+            <code>sema_down()</code><b>1 → 0</b>
+          </div>
+          <div class="early-bridge">
+            <span class="jd-t-l2">잠들지 않고 진행</span><b class="jd-t-l1" aria-hidden="true">→</b>
+          </div>
+          <div class="early-event final-event box">
+            <p>결과 회수</p>
+            <code>status 읽기</code><span>목록에서 제거 · free()</span>
+          </div>
+        </div>
+        <div class="run-evidence" data-step="1">
+          <div class="evidence-heading">
+            <p>실제 실행 기록</p>
+            <span>실행한 wait 테스트 4개 PASS</span>
+          </div>
+          <div class="evidence-pair">
+            <div class="log-block">
+              <p class="diagram-label">wait-simple · 자식 종료 결과 전달</p>
+              <pre data-evidence=""><span class="c-dim">⋮ 생략</span>
+child-simple: exit(81)
+(wait-simple) wait(exec()) = 81
+<span class="c-dim">⋮ 생략</span></pre>
+            </div>
+            <div class="log-block">
+              <p class="diagram-label">wait-twice · 중복 대기 거부</p>
+              <pre data-evidence=""><span class="c-dim">⋮ 생략</span>
+(wait-twice) wait(exec()) = 81
+(wait-twice) wait(exec()) = -1
+<span class="c-dim">⋮ 생략</span></pre>
+            </div>
+          </div>
+        </div>
+        <p class="source-note"><br /></p>
+      </div>
+      <div class="foot">
+        <span>자식의 종료 결과를 전달받는 wait()</span><span>05 / 마무리</span>
+      </div>
+      <aside class="notes" data-sec="27">
+        <p>
+          자식이 먼저 끝나도 세마포어에 알림이 남아 있어서, 부모는 잠들지 않고
+          값을 읽습니다.
+        </p>
+        <p>
+          <span class="st">▸1</span>실제 테스트에서도 자식의 종료 값 팔십일을
+          받았고, 같은 자식을 두 번 기다리면 두 번째는 마이너스 일이 나왔습니다.
+          이렇게 단순히 CPU를 양보하던 코드를, 자식의 종료를 확인하고 결과를
+          받는 코드로 바꿨습니다.
+        </p>
+        <p class="note-ref">
+          기상 순서 그림은 코드 기반 설명이며 실제 실행 순서를 계측한 자료는
+          아닙니다. 로그는 앞뒤 부팅·종료 출력 중 필요한 연속 구간만
+          발췌했습니다. PASS 범위는 이번 실행의 wait-simple, wait-twice,
+          wait-killed, wait-bad-pid 네 개입니다. wait-killed는 이 실행에서 load
+          실패 후 -1로 종료했으므로 예외 종료의 증거로 설명하지 않습니다. 로그의
+          wait(exec()) 표기는 테스트 원문이며, 실제 테스트는 fork 후 exec하는
+          흐름입니다.
+        </p>
+      </aside>
+    </section>
+
+    <div id="notesPanel" hidden aria-live="polite">
+      <div class="meta">
+        <span id="nSlide"></span><span>참고 시간 <b id="nSec"></b>초</span
+        ><span id="nStep"></span><span id="nTotal"></span>
+      </div>
+      <div class="body" id="nBody"></div>
+    </div>
+
+    <div
+      id="helpOverlay"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="helpTitle"
+    >
+      <div class="help-box">
+        <h2 id="helpTitle">단축키</h2>
+        <dl>
+          <dt>→ · Space</dt>
+          <dd>다음 단계, 마지막 단계 뒤에는 다음 슬라이드</dd>
+          <dt>←</dt>
+          <dd>이전 단계, 단계가 없으면 이전 슬라이드</dd>
+          <dt>Home · End</dt>
+          <dd>처음 · 마지막 슬라이드</dd>
+          <dt>N</dt>
+          <dd>발표자 노트 열고 닫기</dd>
+          <dt>E</dt>
+          <dd>편집 모드: 글자나 노트를 눌러 고치기</dd>
+          <dt>Tab</dt>
+          <dd>
+            편집 중: 고르던 글자의 크기 버튼으로 (글자 크기, 상자 너비) · ← →
+            고르기 · Esc 돌아가기
+          </dd>
+          <dt>Ctrl+S</dt>
+          <dd>
+            저장: 에이전트가 연 주소면 원본 파일에, 파일로 열었으면 다운로드
+            폴더에
+          </dd>
+          <dt>R</dt>
+          <dd>에이전트가 고친 뒤 새로고침 (알림이 떴을 때)</dd>
+          <dt>?</dt>
+          <dd>이 도움말 열고 닫기 (Esc로도 닫힘)</dd>
+        </dl>
+        <p class="help-save">고친 뒤 저장하고 에이전트에게 말해 주세요.</p>
+      </div>
+    </div>
+    <div id="notices" role="status" aria-live="polite"></div>
+    <div id="sizeBar" role="toolbar" aria-label="크기 조절" hidden>
+      <button data-kind="t" data-dir="-1" aria-label="글자 작게">글자 −</button>
+      <button data-kind="t" data-dir="1" aria-label="글자 크게">글자 +</button>
+      <button data-kind="w" data-dir="-1" aria-label="상자 좁게">상자 −</button>
+      <button data-kind="w" data-dir="1" aria-label="상자 넓게">상자 +</button>
+      <button data-kind="reset" aria-label="기본 크기">기본</button>
+    </div>
+    <div id="firstHint" hidden role="status">
+      ? 키로 단축키를 볼 수 있어요 · 고친 뒤 저장하고 에이전트에게 말해 주세요.
+    </div>
+
+    <script>
+      /* ===========================================
+   Deck controller: steps, hash, notes
+   =========================================== */
+      const slides = Array.from(document.querySelectorAll(".slide"));
+      const total = slides.length;
+
+      /* ===========================================
+   In-browser editor. Every slide is kept by its section id.
+   Served by scripts/serve.py: Ctrl+S writes the changed sections into the
+   source file (a three-way save against the jd-base hash). Opened as a
+   file: Ctrl+S downloads the deck. Edits autosave to localStorage.
+   =========================================== */
+      /* One key per deck file, so two decks on the same origin do not collide */
+      const STORE = "jungle-deck:" + location.pathname;
+      const STASH =
+        STORE + ":stash:"; /* + base hash: autosaves the file changed under */
+
+      /* Strip edit traces (contenteditable, step state) */
+      function scrub(root) {
+        root
+          .querySelectorAll("[contenteditable]")
+          .forEach((e) => e.removeAttribute("contenteditable"));
+        root.querySelectorAll(".on").forEach((e) => e.classList.remove("on"));
+        root
+          .querySelectorAll("[data-jd-over]")
+          .forEach((e) => e.removeAttribute("data-jd-over"));
+        root
+          .querySelectorAll('[class=""]')
+          .forEach((e) => e.removeAttribute("class"));
+        root.querySelectorAll('[style*="--box-w"]').forEach((e) => {
+          /* runtime width, set by fitBoxes */
+          e.style.removeProperty("--box-w");
+          if (!e.getAttribute("style")) e.removeAttribute("style");
+        });
+        return root;
+      }
+      /* One slide as it is saved: no edit traces, no runtime slide number */
+      function sectionHTML(s) {
+        const c = scrub(s.cloneNode(true));
+        const num = c.querySelector(".head .num");
+        if (num) num.textContent = "";
+        return c.innerHTML;
+      }
+      const sectionsNow = () =>
+        Object.fromEntries(slides.map((s) => [s.id, sectionHTML(s)]));
+
+      /* pure: begin */
+      /* Save rules on {id: html} maps, no DOM. tests/test_stage_save.py runs this block in Node */
+      /* Write sections into slide elements by id, never by position: the page, or a copy */
+      function applySections(map, els) {
+        els.forEach((s) => {
+          if (s.id in map) s.innerHTML = map[s.id];
+        });
+      }
+      function changed(base, current) {
+        const out = {};
+        for (const id in current)
+          if (id in base && current[id] !== base[id]) out[id] = current[id];
+        return out;
+      }
+      /* Autosave record: changed sections only, each with the base it was edited from */
+      function autosaveRecord(baseHash, base, current) {
+        const ids = Object.keys(changed(base, current));
+        if (!ids.length) return null;
+        const sections = {};
+        ids.forEach((id) => {
+          sections[id] = { base: base[id], current: current[id] };
+        });
+        return { base_hash: baseHash, sections };
+      }
+      /* At load: the same base puts the edits back by id; anything else is a stash */
+      function restorePlan(saved, baseHash, now) {
+        const ids = Object.keys(saved.sections);
+        if (saved.base_hash !== baseHash || ids.some((id) => !(id in now)))
+          return { stash: true, apply: {} };
+        const apply = {};
+        ids.forEach((id) => {
+          apply[id] = saved.sections[id].current;
+        });
+        return { stash: false, apply };
+      }
+      /* Restore (복원) without the server: a three-way merge in the page. A section takes the
+   stashed edit only while it still holds the base the edit was made from */
+      function mergeStash(stash, now) {
+        const apply = {},
+          conflicts = [];
+        for (const id in stash.sections) {
+          const s = stash.sections[id];
+          if (now[id] === s.base) apply[id] = s.current;
+          else conflicts.push(id);
+        }
+        return { apply, conflicts: conflicts.sort() };
+      }
+      /* Restore with the server: a normal three-way save of the stash */
+      function stashPayload(stash) {
+        const sections = {};
+        for (const id in stash.sections)
+          sections[id] = stash.sections[id].current;
+        return { base_hash: stash.base_hash, sections };
+      }
+      /* The words of a section: tags dropped, entities decoded, whitespace removed. Removed,
+   not collapsed: a layout change moves the breaks between blocks (</h2><p> vs </h2>\n<p>) */
+      const ENTITIES = {
+        amp: "&",
+        lt: "<",
+        gt: ">",
+        quot: '"',
+        apos: "'",
+        nbsp: " ",
+      };
+      function plainText(html) {
+        return html
+          .replace(/<!--[\s\S]*?-->/g, "")
+          .replace(/<[^>]*>/g, "")
+          .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) =>
+            e[0] !== "#"
+              ? (ENTITIES[e.toLowerCase()] ?? m)
+              : /^#x/i.test(e)
+                ? String.fromCodePoint(parseInt(e.slice(2), 16))
+                : String.fromCodePoint(parseInt(e.slice(1), 10)),
+          )
+          .replace(/\s+/g, "");
+      }
+      /* The student's size steps in a section (jd-t-*, jd-w-*), in document order */
+      const sizeSteps = (html) =>
+        (html.match(/\bjd-[tw]-[sl]\d\b/g) || []).join(" ");
+      /* Student saves whose words or size steps the file no longer holds (an agent edit
+   overwrote them). Not the rest of the markup: the agent may change the layout around
+   them. An id gone from the file is not flagged: there is nothing to restore into */
+      function overwritten(saved, file) {
+        return Object.keys(saved)
+          .filter(
+            (id) =>
+              id in file &&
+              (plainText(saved[id]) !== plainText(file[id]) ||
+                sizeSteps(saved[id]) !== sizeSteps(file[id])),
+          )
+          .sort();
+      }
+
+      /* Saved slides whose id the file no longer holds: the agent deleted them */
+      function deletedSlides(saved, file) {
+        return Object.keys(saved)
+          .filter((id) => !(id in file))
+          .sort();
+      }
+      /* Overflow on one measured box: {sw, cw, sh, ch} its scroll and client sizes, r its
+   rect [left, top, right, bottom], clip the rect of the nearest ancestor that clips
+   it (null: none), cuts: the box cuts long lines on purpose (code in a <pre>), so only
+   its height counts. Over: the content is larger than the box, or the box reaches past
+   the clip on any side (centered content overflows at the top too). 1 px is rounding */
+      const OVER_PX = 1;
+      function overflows(m) {
+        if ((!m.cuts && m.sw > m.cw + OVER_PX) || m.sh > m.ch + OVER_PX)
+          return true;
+        const c = m.clip,
+          [l, t, r, b] = m.r;
+        return (
+          !!c &&
+          (l < c[0] - OVER_PX ||
+            t < c[1] - OVER_PX ||
+            r > c[2] + OVER_PX ||
+            b > c[3] + OVER_PX)
+        );
+      }
+
+      /* The boxes under el that clip their content (clips(el) says so), for the overflow check.
+   Not real run output, not SVG: the student cannot fix them, and a log line cut at the
+   panel edge is on purpose. Not the notes: they are not on the slide */
+      function clippingBoxes(el, clips, out = []) {
+        Array.from(el.children).forEach((c) => {
+          if (
+            c.hasAttribute("data-evidence") ||
+            /^svg$/i.test(c.tagName) ||
+            (c.tagName === "ASIDE" && c.classList.contains("notes"))
+          )
+            return;
+          if (clips(c)) out.push(c);
+          clippingBoxes(c, clips, out);
+        });
+        return out;
+      }
+
+      /* Edit rules on element-like nodes (tagName, childNodes, children, hasAttribute, classList).
+   Editable: the outermost elements in a slide that hold text of their own. Locked: real
+   run output under [data-evidence], the notes (edited in the notes panel), the slide
+   number, and SVG (its text is not editable in place) */
+      function editableIn(el, out = []) {
+        if (
+          el.hasAttribute("data-evidence") ||
+          el.classList.contains("num") ||
+          /^svg$/i.test(el.tagName) ||
+          (el.tagName === "ASIDE" && el.classList.contains("notes"))
+        )
+          return out;
+        if (
+          Array.from(el.childNodes).some(
+            (n) => n.nodeType === 3 && n.nodeValue.trim(),
+          )
+        )
+          out.push(el);
+        else Array.from(el.children).forEach((c) => editableIn(c, out));
+        return out;
+      }
+      /* Size steps the student sets: classes from a fixed scale of ±2, saved with the section.
+   null is the template size; the factors are the :root variables of the same names */
+      const TEXT_STEPS = ["jd-t-s2", "jd-t-s1", null, "jd-t-l1", "jd-t-l2"];
+      const BOX_STEPS = ["jd-w-s2", "jd-w-s1", null, "jd-w-l1", "jd-w-l2"];
+      /* One step along `steps` (dir ±1, or 0 for the template size); stops at ±2 */
+      function step(classes, steps, dir) {
+        const cur = steps.indexOf(
+          classes.find((c) => steps.includes(c)) ?? null,
+        );
+        const next = dir
+          ? steps[Math.max(0, Math.min(steps.length - 1, cur + dir))]
+          : null;
+        return classes
+          .filter((c) => !steps.includes(c))
+          .concat(next ? [next] : []);
+      }
+      /* pure: end */
+
+      /* Served: serve.py puts the hash of the served version in a jd-base meta */
+      const baseMeta = document.querySelector('meta[name="jd-base"]');
+      const served = !!baseMeta && location.protocol.startsWith("http");
+      /* base: every section as loaded, captured before any autosave restore */
+      const base = sectionsNow();
+      /* Opened as a file: a hash of the sections stands in for the server's hash */
+      const signature = (() => {
+        const src = Object.values(base).join("\u0000");
+        let h = 5381;
+        for (let i = 0; i < src.length; i++)
+          h = ((h * 33) ^ src.charCodeAt(i)) >>> 0;
+        return src.length + "-" + h.toString(36);
+      })();
+      let baseHash = served ? baseMeta.content : signature;
+      const unsaved = () =>
+        Object.keys(changed(base, sectionsNow())).length > 0;
+
+      /* Notices: one line each, by key; a later notice with the same key replaces it */
+      const notices = document.getElementById("notices");
+      function notice(key, text, actions) {
+        let n = notices.querySelector('[data-key="' + key + '"]');
+        if (!n) {
+          n = document.createElement("div");
+          n.className = "notice";
+          n.dataset.key = key;
+          notices.appendChild(n);
+        } else if (!actions && n.textContent === text)
+          return; /* the poll repeats itself */
+        n.replaceChildren(text);
+        (actions || []).forEach(([label, fn]) => {
+          const b = document.createElement("button");
+          b.textContent = label;
+          b.addEventListener("click", fn);
+          n.appendChild(b);
+        });
+      }
+      function clearNotice(key) {
+        const n = notices.querySelector('[data-key="' + key + '"]');
+        if (n) n.remove();
+      }
+      const STORAGE_FAILED = "자동 저장이 안 돼요 — 지금 Ctrl+S로 저장하세요";
+      const SERVER_OFF =
+        "서버가 꺼져 있어요. 에이전트에게 '서버 다시 켜줘'라고 말해 주세요";
+
+      /* ===========================================
+   Overflow notice: after load, after each edit or size step, and on resize,
+   mark every box whose text does not fit and name its slides. No auto-fix:
+   the agent adjusts the layout
+   =========================================== */
+      const rectOf = (el) => {
+        const r = el.getBoundingClientRect();
+        return [r.left, r.top, r.right, r.bottom];
+      };
+      const clipsContent = (el) => {
+        const cs = getComputedStyle(el);
+        return cs.overflowX !== "visible" || cs.overflowY !== "visible";
+      };
+      /* The boxes to check in a slide: its text and every box that clips (see clippingBoxes) */
+      const boxesIn = (s) =>
+        [
+          ...new Set([...editableIn(s), ...clippingBoxes(s, clipsContent)]),
+        ].filter((e) => e.getClientRects().length);
+      function measure(el) {
+        let a = el.parentElement;
+        while (a && !clipsContent(a) && !a.classList.contains("slide"))
+          a = a.parentElement;
+        return {
+          sw: el.scrollWidth,
+          cw: el.clientWidth,
+          sh: el.scrollHeight,
+          ch: el.clientHeight,
+          r: rectOf(el),
+          clip: a ? rectOf(a) : null,
+          cuts:
+            el.tagName === "PRE" && getComputedStyle(el).whiteSpace === "pre",
+        };
+      }
+      /* Checked once the typing settles, and never while a step slides in: measuring holds
+   every step in place, which would cut that reveal short */
+      const OVER_WAIT_MS = 300;
+      let overTimer = 0,
+        stepAt = 0,
+        overShown = "",
+        overDismissed = "";
+      function scheduleOverflow() {
+        clearTimeout(overTimer);
+        overTimer = setTimeout(checkOverflow, OVER_WAIT_MS);
+      }
+      function checkOverflow() {
+        if (performance.now() - stepAt < 600)
+          return scheduleOverflow(); /* the reveal takes --dur (.5s) */
+        document.body.classList.add(
+          "jd-measure",
+        ); /* hidden steps sit 14px low until shown */
+        const found = slides.map((s) =>
+          boxesIn(s).map((el) => [el, overflows(measure(el))]),
+        ); /* read all, then mark */
+        document.body.classList.remove("jd-measure");
+        found
+          .flat()
+          .forEach(([el, over]) => el.toggleAttribute("data-jd-over", over));
+        const ids = slides
+          .filter((s, i) => found[i].some(([, over]) => over))
+          .map((s) => s.id);
+        const key = ids.join(", ");
+        if (!key) {
+          overShown = overDismissed = "";
+          return clearNotice("overflow");
+        }
+        if (key === overDismissed || key === overShown)
+          return; /* 닫기 holds until the set changes */
+        overShown = key;
+        notice(
+          "overflow",
+          "글이 상자를 넘쳐요 (" +
+            key +
+            ") — 에이전트에게 레이아웃 조정을 부탁하세요",
+          [
+            [
+              "닫기",
+              () => {
+                overDismissed = key;
+                overShown = "";
+                clearNotice("overflow");
+              },
+            ],
+          ],
+        );
+      }
+      window.addEventListener("resize", scheduleOverflow);
+      window.addEventListener("load", scheduleOverflow);
+      document.fonts.ready.then(scheduleOverflow);
+
+      function saveLocal() {
+        try {
+          const rec = autosaveRecord(baseHash, base, sectionsNow());
+          if (rec) localStorage.setItem(STORE, JSON.stringify(rec));
+          else localStorage.removeItem(STORE);
+          clearNotice("storage");
+        } catch (e) {
+          notice("storage", STORAGE_FAILED);
+        }
+        scheduleOverflow(); /* every change autosaves, so every change is checked */
+      }
+      function dropStash(key) {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          notice("storage", STORAGE_FAILED);
+        }
+        clearNotice(key);
+      }
+
+      /* The file changed under an autosave: keep it aside and offer it back */
+      function showStash(key, stash) {
+        notice(
+          key,
+          "저장 안 된 편집이 있어요 (" +
+            Object.keys(stash.sections).join(", ") +
+            ") — 그 뒤에 파일이 바뀌었어요",
+          [
+            ["복원", () => restoreStash(key, stash)],
+            ["파일로 내보내기", () => exportFile(stashPayload(stash).sections)],
+            [
+              "닫기",
+              () => clearNotice(key),
+            ] /* hides it until the next load; the stash stays */,
+          ],
+        );
+      }
+      async function restoreStash(key, stash) {
+        if (served) {
+          const payload = stashPayload(stash);
+          const r = await send(payload, false);
+          if (r && r.status < 300) {
+            applySections(payload.sections, slides);
+            renderNotes();
+            fitBoxes();
+            saveLocal();
+          }
+          if (r && (r.status < 300 || (r.status === 409 && r.body.payload)))
+            dropStash(key);
+          return;
+        }
+        const plan = mergeStash(stash, sectionsNow());
+        applySections(plan.apply, slides);
+        renderNotes();
+        fitBoxes();
+        saveLocal();
+        if (!plan.conflicts.length) return dropStash(key);
+        const rest = { base_hash: stash.base_hash, sections: {} };
+        plan.conflicts.forEach((id) => {
+          rest.sections[id] = stash.sections[id];
+        });
+        try {
+          localStorage.setItem(key, JSON.stringify(rest));
+        } catch (e) {
+          notice("storage", STORAGE_FAILED);
+        }
+        notice(
+          key,
+          "파일에서도 바뀐 슬라이드라 복원하지 못했어요 (" +
+            plan.conflicts.join(", ") +
+            "). 파일로 내보내고 에이전트에게 말해 주세요",
+          [
+            ["파일로 내보내기", () => exportFile(stashPayload(rest).sections)],
+            ["닫기", () => clearNotice(key)],
+          ],
+        );
+      }
+
+      (function restoreLocal() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORE) || "null");
+          if (saved && !saved.sections) {
+            /* An autosave from the older page (by position): keep it, never apply it */
+            localStorage.setItem(STORE + ":stale", JSON.stringify(saved));
+            localStorage.removeItem(STORE);
+            notice(
+              "legacy",
+              "예전 페이지의 자동 저장은 적용하지 않고 따로 보관했어요",
+              [["닫기", () => clearNotice("legacy")]],
+            );
+          } else if (saved) {
+            const plan = restorePlan(saved, baseHash, base);
+            if (plan.stash) {
+              const key = STASH + saved.base_hash;
+              const old = JSON.parse(localStorage.getItem(key) || "null");
+              if (old)
+                saved.sections = Object.assign(old.sections, saved.sections);
+              localStorage.setItem(key, JSON.stringify(saved));
+              localStorage.removeItem(STORE);
+            } else applySections(plan.apply, slides);
+          }
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith(STASH))
+              showStash(key, JSON.parse(localStorage.getItem(key)));
+          }
+        } catch (e) {
+          notice("storage", STORAGE_FAILED);
+        }
+      })();
+
+      /* ===========================================
+   Save: served -> POST /save; as a file -> download
+   =========================================== */
+      const POLL_MS = 3000,
+        POLL_SLOW_MS = 30000;
+      let saving = false,
+        conflicted = false,
+        savedTimer = null;
+
+      /* POST a JSON body with the page's save headers. Returns {status, body}, or
+   null when the server did not answer */
+      async function post(path, body) {
+        try {
+          const res = await fetch(path, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Jungle-Deck": "save",
+            },
+            body: JSON.stringify(body),
+          });
+          return {
+            status: res.status,
+            body: await res.json().catch(() => ({})),
+          };
+        } catch (e) {
+          return null;
+        }
+      }
+
+      /* GET /version -> {slug, source, hash}, or null when the server did not answer */
+      async function version() {
+        try {
+          const res = await fetch("/version", { cache: "no-store" });
+          return res.ok ? await res.json() : null;
+        } catch (e) {
+          return null;
+        }
+      }
+      function flash(text) {
+        notice("saved", text);
+        clearTimeout(savedTimer);
+        savedTimer = setTimeout(() => clearNotice("saved"), 3000);
+      }
+
+      /* POST {base_hash, sections} to /save. `own`: the sections come from this
+   page's autosave, not from a stash. Returns {status, body}; null when the
+   server did not answer; undefined while another save runs */
+      async function send(payload, own) {
+        if (saving) return undefined;
+        saving = true;
+        const r = await post("/save", payload);
+        saving = false;
+        if (!r) {
+          notice("off", SERVER_OFF);
+          exportFile(payload.sections);
+        } else if (r.status < 300) {
+          Object.assign(base, payload.sections);
+          rememberSaved(payload.sections);
+          /* Adopt the new hash only when the file held this page's base just
+           before the write (serve.py checks it under its save lock).
+           Otherwise the file also holds agent edits the page does not show:
+           keep the old hash, so a later save of such a section gets a 409
+           instead of overwriting it, and the poll offers R. A stash or a
+           restore is sent with another base, so it never moves this one */
+          if (r.body.base_current && payload.base_hash === baseHash)
+            baseHash = r.body.hash;
+          conflicted = false;
+          saveLocal();
+          clearNotice("conflict");
+          clearNotice("error");
+          clearNotice("off");
+          const ids = r.body.written || [];
+          flash(
+            ids.length
+              ? "저장했어요 (" + ids.join(", ") + ")"
+              : "바뀐 곳이 없어요",
+          );
+        } else if (r.status === 409) {
+          conflicted = true;
+          if (editing) toggleEdit();
+          notice(
+            "conflict",
+            "에이전트 수정과 겹쳐요 (" +
+              (r.body.conflicts || []).join(", ") +
+              "). 에이전트에게 '겹친 거 합쳐줘'라고 말해 주세요",
+          );
+          if (r.body.payload) {
+            /* The agent merges these words into the file: they are the newest
+               student text to guard, not the older save */
+            rememberSaved(payload.sections);
+            /* the server kept the edits in _backup/, so the autosave may go */
+            if (own)
+              try {
+                localStorage.removeItem(STORE);
+              } catch (e) {
+                notice("storage", STORAGE_FAILED);
+              }
+          }
+        } else {
+          notice(
+            "error",
+            "저장이 안 됐어요 (HTTP " + r.status + ") — 대신 파일로 내보냈어요",
+          );
+          exportFile(payload.sections);
+        }
+        return r;
+      }
+
+      function save() {
+        if (!served) return exportFile();
+        const sections = changed(base, sectionsNow());
+        if (!Object.keys(sections).length) return flash("바뀐 곳이 없어요");
+        send({ base_hash: baseHash, sections }, true);
+      }
+
+      /* ===========================================
+   Restore signal: an agent edit overwrote words the student saved.
+   After each 2xx save the page keeps the saved sections (survives R). On load
+   and on every file change it compares their words with the file's. 복원
+   saves them again with "restore": true; 그대로 두기 POSTs /keep. serve.py
+   logs `restore` or `keep`, and the agent reads that line
+   =========================================== */
+      const SAVED =
+        STORE + ":saved"; /* {id: html} of the last save of each section */
+      function savedMap() {
+        try {
+          return JSON.parse(localStorage.getItem(SAVED) || "{}");
+        } catch (e) {
+          notice("storage", STORAGE_FAILED);
+          return {};
+        }
+      }
+      function rememberSaved(sections) {
+        try {
+          localStorage.setItem(
+            SAVED,
+            JSON.stringify(Object.assign(savedMap(), sections)),
+          );
+        } catch (e) {
+          notice("storage", STORAGE_FAILED);
+        }
+      }
+      /* file: {id: html} of the source with the hash `fileHash` */
+      function checkOverwrites(file, fileHash) {
+        const saved = savedMap();
+        const gone = deletedSlides(
+          saved,
+          file,
+        ); /* no 복원: the agent puts it back if it was a mistake */
+        if (gone.length) {
+          notice(
+            "deleted",
+            "에이전트가 슬라이드를 지웠어요 (" + gone.join(", ") + ")",
+            [["닫기", () => clearNotice("deleted")]],
+          );
+          gone.forEach((id) => {
+            delete saved[id];
+          }); /* told once */
+          try {
+            localStorage.setItem(SAVED, JSON.stringify(saved));
+          } catch (e) {
+            notice("storage", STORAGE_FAILED);
+          }
+        }
+        const ids = overwritten(saved, file);
+        if (!ids.length) return clearNotice("overwrite");
+        notice(
+          "overwrite",
+          "에이전트 수정 뒤 내 저장 문구가 바뀌었어요 (" +
+            ids.join(", ") +
+            "). 복원하면 에이전트에게 '복원했어'라고 말해 주세요",
+          [
+            ["복원", () => restoreSaved(ids, saved, fileHash)],
+            ["그대로 두기", () => keepAgent(ids)],
+            [
+              "닫기",
+              () => clearNotice("overwrite"),
+            ] /* back on the next load or file change */,
+          ],
+        );
+      }
+      async function restoreSaved(ids, saved, fileHash) {
+        /* A flagged slide with unsaved edits: saving first settles it. The restore
+       would either drop those edits or leave them on a base the file no longer holds */
+        const dirty = ids.filter(
+          (id) => sectionHTML(document.getElementById(id)) !== base[id],
+        );
+        if (dirty.length) {
+          return notice(
+            "restore-first",
+            "복원하기 전에 먼저 저장(Ctrl+S)하세요 (" + dirty.join(", ") + ")",
+            [["닫기", () => clearNotice("restore-first")]],
+          );
+        }
+        const sections = {};
+        ids.forEach((id) => {
+          sections[id] = saved[id];
+        });
+        const r = await send(
+          { base_hash: fileHash, sections, restore: true },
+          false,
+        );
+        if (!r || r.status >= 300)
+          return; /* send() showed why; a 409 kept the payload */
+        applySections(sections, slides);
+        renderNotes();
+        fitBoxes();
+        saveLocal();
+        clearNotice("overwrite");
+        notice(
+          "restored",
+          "복원했어요 (" +
+            ids.join(", ") +
+            "). 에이전트에게 '복원했어'라고 말해 주세요",
+          [["닫기", () => clearNotice("restored")]],
+        );
+      }
+      async function keepAgent(ids) {
+        const r = await post("/keep", { keep: ids });
+        if (!r) return notice("off", SERVER_OFF);
+        if (r.status >= 300)
+          return notice(
+            "error",
+            "그대로 두기를 서버에 알리지 못했어요 (HTTP " + r.status + ")",
+          );
+        /* The student took the agent's words: nothing of theirs left to guard there */
+        const saved = savedMap();
+        ids.forEach((id) => {
+          delete saved[id];
+        });
+        try {
+          localStorage.setItem(SAVED, JSON.stringify(saved));
+        } catch (e) {
+          notice("storage", STORAGE_FAILED);
+        }
+        clearNotice("overwrite");
+      }
+      /* Fetch the source as served and check it; the jd-base meta names its hash */
+      let checkedHash = null,
+        checking = false;
+      async function checkFile() {
+        if (checking) return;
+        checking = true;
+        try {
+          const res = await fetch(location.pathname, { cache: "no-store" });
+          const doc = new DOMParser().parseFromString(
+            await res.text(),
+            "text/html",
+          );
+          const meta = doc.querySelector('meta[name="jd-base"]');
+          if (res.ok && meta) {
+            checkedHash = meta.content;
+            checkOverwrites(
+              Object.fromEntries(
+                Array.from(doc.querySelectorAll(".slide"), (s) => [
+                  s.id,
+                  sectionHTML(s),
+                ]),
+              ),
+              meta.content,
+            );
+          }
+        } catch (e) {
+          /* the poll reports a server that is off */
+        }
+        checking = false;
+      }
+      if (served) {
+        checkedHash = baseHash;
+        checkOverwrites({ ...base }, baseHash); /* base: the file as loaded */
+      }
+
+      /* Change notice: poll /version every 3 s; after two misses, every 30 s */
+      let misses = 0,
+        reloadReady = false;
+      async function poll() {
+        const v = await version();
+        if (!v) {
+          misses++;
+          if (misses >= 2) {
+            notice("off", SERVER_OFF);
+            reloadReady = false;
+            clearNotice("agent");
+          }
+          setTimeout(poll, misses >= 2 ? POLL_SLOW_MS : POLL_MS);
+          return;
+        }
+        if (misses >= 2) clearNotice("off");
+        misses = 0;
+        if (!saving && v.hash !== checkedHash) checkFile();
+        if (saving) {
+          /* the hash moves under a save; judge it on the next poll */
+        } else if (v.hash !== baseHash) {
+          /* After a 409 the server holds the edits in _backup/, so R is safe */
+          reloadReady = conflicted || !unsaved();
+          notice(
+            "agent",
+            reloadReady
+              ? "에이전트가 수정했어요 — R로 새로고침"
+              : "에이전트가 수정했어요 — 먼저 저장(Ctrl+S)하세요",
+          );
+        } else {
+          reloadReady = false;
+          clearNotice("agent");
+        }
+        setTimeout(poll, POLL_MS);
+      }
+      if (served) setTimeout(poll, POLL_MS);
+
+      const pad = (n) => String(n).padStart(2, "0");
+      let cur = 0;
+
+      /* Steps on a slide = the largest data-step in it */
+      const maxStep = (s) =>
+        Math.max(
+          0,
+          ...Array.from(s.querySelectorAll("[data-step]"), (e) =>
+            Number(e.dataset.step),
+          ),
+        );
+      const shown = (s) => Number(s.dataset.shown || 0);
+
+      function setShown(s, n) {
+        stepAt = performance.now();
+        s.dataset.shown = n;
+        s.querySelectorAll("[data-step]").forEach((e) =>
+          e.classList.toggle("on", Number(e.dataset.step) <= n),
+        );
+        renderNotes();
+      }
+
+      function show(i, n) {
+        i = Math.max(0, Math.min(total - 1, i));
+        if (i !== cur) {
+          const out = slides[cur];
+          slides.forEach((s) => s.classList.remove("leaving"));
+          out.classList.add("leaving");
+          clearTimeout(show.t);
+          show.t = setTimeout(
+            () => out.classList.remove("leaving"),
+            400,
+          ); /* after the new slide's .35s fade */
+        }
+        cur = i;
+        slides.forEach((s, k) => {
+          s.classList.toggle("active", k === i);
+          s.setAttribute("aria-hidden", k === i ? "false" : "true");
+        });
+        setShown(slides[i], n);
+        if (location.hash !== "#" + (i + 1))
+          history.replaceState(null, "", "#" + (i + 1));
+        document.getElementById("progressBar").style.transform =
+          "scaleX(" + i / Math.max(1, total - 1) + ")";
+        Array.from(document.getElementById("navDots").children).forEach(
+          (b, k) => b.classList.toggle("active", k === i),
+        );
+      }
+
+      function next() {
+        const s = slides[cur];
+        if (shown(s) < maxStep(s)) setShown(s, shown(s) + 1);
+        else if (cur < total - 1) show(cur + 1, 0);
+      }
+      function prev() {
+        const s = slides[cur];
+        if (shown(s) > 0) setShown(s, shown(s) - 1);
+        else if (cur > 0)
+          show(
+            cur - 1,
+            maxStep(slides[cur - 1]),
+          ); /* going back shows that slide fully */
+      }
+
+      /* Speaker notes */
+      const notesPanel = document.getElementById("notesPanel");
+      const totalSec = slides.reduce(
+        (a, s) =>
+          a + Number((s.querySelector("aside.notes") || {}).dataset?.sec || 0),
+        0,
+      );
+      function renderNotes() {
+        const s = slides[cur];
+        const a = s.querySelector("aside.notes");
+        document.getElementById("nSlide").textContent =
+          pad(cur + 1) + " / " + pad(total);
+        document.getElementById("nSec").textContent = a ? a.dataset.sec : "–";
+        document.getElementById("nStep").textContent = maxStep(s)
+          ? "단계 " + shown(s) + " / " + maxStep(s)
+          : "단계 없음";
+        document.getElementById("nTotal").textContent =
+          "참고 합계 " + totalSec + "초";
+        document.getElementById("nBody").innerHTML = a ? a.innerHTML : "";
+      }
+
+      /* Slide numbers and nav dots */
+      slides.forEach((s, i) => {
+        const num = s.querySelector(".head .num");
+        if (num) num.textContent = pad(i + 1) + " / " + pad(total);
+        const b = document.createElement("button");
+        b.setAttribute("aria-label", i + 1 + "번 슬라이드로");
+        b.addEventListener("click", () => show(i, 0));
+        document.getElementById("navDots").appendChild(b);
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.code === "KeyS") {
+          e.preventDefault();
+          save();
+          return;
+        }
+        if (sizeBar.contains(e.target)) {
+          /* ← → move between its buttons; Esc goes back to the text */
+          const bs = Array.from(
+            sizeBar.querySelectorAll("button:not([hidden])"),
+          );
+          const i = bs.indexOf(e.target);
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            e.preventDefault();
+            bs[
+              (i + (e.key === "ArrowRight" ? 1 : bs.length - 1)) % bs.length
+            ].focus();
+          } else if (
+            (e.key === "Escape" || (e.key === "Tab" && e.shiftKey)) &&
+            selected
+          ) {
+            e.preventDefault();
+            selected.focus();
+            if (caret) {
+              getSelection().removeAllRanges();
+              getSelection().addRange(caret);
+            }
+          } else if (e.key === "Tab" && selected) {
+            /* on to the next text, as Tab from the text would */
+            const els = Array.from(
+              document.querySelectorAll(
+                '.slide.active [contenteditable="true"]',
+              ),
+            );
+            const to = els[els.indexOf(selected) + 1];
+            if (to) {
+              e.preventDefault();
+              to.focus();
+            }
+          }
+          return; /* Space and Enter press the button */
+        }
+        if (e.target.isContentEditable) {
+          if (e.key === "Tab" && !e.shiftKey && !sizeBar.hidden) {
+            e.preventDefault();
+            caret = getSelection().rangeCount
+              ? getSelection().getRangeAt(0).cloneRange()
+              : null;
+            sizeBar.querySelector("button:not([hidden])").focus();
+          } else if (e.key === "Escape")
+            e.target.blur(); /* leave the caret so arrows navigate again */
+          return;
+        }
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        /* e.code, not e.key, so E, N, and ? work with a Korean IME on */
+        if (e.code === "Slash") {
+          e.preventDefault();
+          toggleHelp();
+          return;
+        }
+        if (!helpOverlay.hidden) {
+          if (e.key === "Escape") toggleHelp();
+          return; /* the overlay holds the keys until it closes */
+        }
+        if (e.code === "KeyE") {
+          toggleEdit();
+          return;
+        }
+        if (e.code === "KeyR" && reloadReady) {
+          location.reload();
+          return;
+        } /* the URL keeps #N */
+        if (e.code === "KeyN") {
+          notesPanel.hidden = !notesPanel.hidden;
+          return;
+        }
+        switch (e.key) {
+          case "ArrowRight":
+          case "ArrowDown":
+          case "PageDown":
+          case " ":
+            e.preventDefault();
+            next();
+            break;
+          case "ArrowLeft":
+          case "ArrowUp":
+          case "PageUp":
+            e.preventDefault();
+            prev();
+            break;
+          case "Home":
+            e.preventDefault();
+            show(0, 0);
+            break;
+          case "End":
+            e.preventDefault();
+            show(total - 1, 0);
+            break;
+        }
+      });
+
+      let x0 = null;
+      document.addEventListener(
+        "touchstart",
+        (e) => {
+          x0 = e.touches[0].clientX;
+        },
+        { passive: true },
+      );
+      document.addEventListener(
+        "touchend",
+        (e) => {
+          if (x0 === null) return;
+          const dx = x0 - e.changedTouches[0].clientX;
+          if (Math.abs(dx) > 50) dx > 0 ? next() : prev();
+          x0 = null;
+        },
+        { passive: true },
+      );
+
+      /* Edit mode */
+      let editing = false;
+      const editToggle = document.getElementById("editToggle");
+      const nBody = document.getElementById("nBody");
+
+      function toggleEdit() {
+        editing = !editing;
+        document.body.classList.toggle("edit-active", editing);
+        editToggle.classList.toggle("active", editing);
+        editToggle.setAttribute(
+          "aria-label",
+          editing ? "편집 모드 끄기" : "편집 모드 켜기",
+        );
+        if (editing) {
+          [...slides.flatMap((s) => editableIn(s)), nBody].forEach((el) =>
+            el.setAttribute("contenteditable", "true"),
+          );
+          /* evidence inside an editable parent stays locked */
+          document
+            .querySelectorAll(".slide [data-evidence]")
+            .forEach((el) => el.setAttribute("contenteditable", "false"));
+        } else
+          document
+            .querySelectorAll("[contenteditable]")
+            .forEach((el) => el.removeAttribute("contenteditable"));
+        if (!editing && document.activeElement) document.activeElement.blur();
+        selected = null;
+        placeBar();
+      }
+
+      /* Size toolbar: the selected slide text gets text steps; its box gets width steps */
+      const BOX = ".panel, .card, .box, .content-box, .container, [data-box]";
+      const sizeBar = document.getElementById("sizeBar");
+      let selected = null;
+      const boxOf = (el) => {
+        const b = el.closest(BOX),
+          s = el.closest(".slide");
+        return b && s && b !== s && s.contains(b) ? b : null;
+      };
+      let caret =
+        null; /* where the caret was in the selected text when Tab left it */
+      function placeBar() {
+        if (!editing || !selected) {
+          sizeBar.hidden = true;
+          return;
+        }
+        sizeBar.querySelectorAll('[data-kind="w"]').forEach((b) => {
+          b.hidden = !boxOf(selected);
+        });
+        sizeBar.hidden = false;
+        const r = selected.getBoundingClientRect();
+        sizeBar.style.top =
+          Math.max(4, r.top - sizeBar.offsetHeight - 8) + "px";
+        sizeBar.style.left =
+          Math.max(4, Math.min(innerWidth - sizeBar.offsetWidth - 4, r.left)) +
+          "px";
+      }
+      function applySize(kind, dir) {
+        const box = boxOf(selected);
+        const set = (el, steps, d) => {
+          el.className = step([...el.classList], steps, d).join(" ");
+        };
+        if (kind === "t") set(selected, TEXT_STEPS, dir);
+        else if (kind === "w" && box) set(box, BOX_STEPS, dir);
+        else if (kind === "reset") {
+          /* 기본: back to the template size */
+          set(selected, TEXT_STEPS, 0);
+          if (box) set(box, BOX_STEPS, 0);
+        }
+        fitBoxes();
+        saveLocal();
+        placeBar();
+      }
+      /* Width steps: the box's own width (measured without the step) times the step's
+   factor, at most up to the slide's content edge or the next box in its row */
+      function fitBoxes() {
+        const factors = getComputedStyle(document.documentElement);
+        document.querySelectorAll('.slide [style*="--box-w"]').forEach((b) => {
+          b.style.removeProperty("--box-w");
+          if (!b.getAttribute("style")) b.removeAttribute("style");
+        });
+        document.querySelectorAll('.slide [class*="jd-w-"]').forEach((b) => {
+          const s = BOX_STEPS.find((c) => c && b.classList.contains(c));
+          const area = b.closest(".slide-content");
+          if (!s || !area) return;
+          const r = b.getBoundingClientRect(),
+            a = area.getBoundingClientRect();
+          let right = a.right - parseFloat(getComputedStyle(area).paddingRight);
+          const gap =
+            parseFloat(getComputedStyle(b.parentElement).columnGap) || 0;
+          for (const n of b.parentElement.children) {
+            const q = n.getBoundingClientRect();
+            if (
+              n !== b &&
+              q.left >= r.right - 1 &&
+              q.top < r.bottom &&
+              q.bottom > r.top
+            )
+              right = Math.min(right, q.left - gap);
+          }
+          const zoom = b.offsetWidth
+            ? r.width / b.offsetWidth
+            : 1; /* a box with a text step is zoomed too */
+          const w = Math.max(
+            0,
+            Math.min(
+              r.width * parseFloat(factors.getPropertyValue("--" + s)),
+              right - r.left,
+            ),
+          );
+          b.style.setProperty("--box-w", w / zoom + "px");
+        });
+      }
+      document.addEventListener("focusin", (e) => {
+        if (sizeBar.contains(e.target)) return;
+        selected =
+          editing && e.target.isContentEditable && e.target.closest(".slide")
+            ? e.target
+            : null;
+        placeBar();
+      });
+      document.addEventListener("focusout", (e) => {
+        const to = e.relatedTarget;
+        if (!to || !(sizeBar.contains(to) || to.isContentEditable)) {
+          selected = null;
+          placeBar();
+        }
+      });
+      sizeBar.addEventListener("mousedown", (e) =>
+        e.preventDefault(),
+      ); /* the text keeps its caret */
+      sizeBar.addEventListener("click", (e) => {
+        const b = e.target.closest("button");
+        if (b && selected) applySize(b.dataset.kind, Number(b.dataset.dir));
+      });
+
+      /* Any edit is saved at once */
+      document.addEventListener("input", (e) => {
+        if (e.target === nBody) {
+          const a =
+            slides[cur].querySelector(
+              "aside.notes",
+            ); /* notes panel writes back to its aside */
+          if (a) a.innerHTML = nBody.innerHTML;
+        }
+        fitBoxes(); /* new words change a box's own width */
+        saveLocal();
+      });
+      /* Paste plain text only, so outside formatting does not come in */
+      document.addEventListener("paste", (e) => {
+        if (!e.target.closest || !e.target.closest("[contenteditable]")) return;
+        e.preventDefault();
+        document.execCommand(
+          "insertText",
+          false,
+          e.clipboardData.getData("text/plain"),
+        );
+      });
+
+      /* overrides: {id: html} put into the copy by id (a stash export) */
+      function exportFile(overrides) {
+        const doc = document.documentElement.cloneNode(true);
+        if (overrides) applySections(overrides, doc.querySelectorAll(".slide"));
+        scrub(doc);
+        doc.querySelector("body").removeAttribute("class");
+        doc.querySelectorAll(".slide").forEach((s) => {
+          s.classList.remove("active", "leaving");
+          s.removeAttribute("aria-hidden");
+          s.removeAttribute("data-shown");
+        });
+        doc.querySelector("#navDots").innerHTML =
+          ""; /* the script rebuilds them */
+        doc.querySelector("#progressBar").removeAttribute("style");
+        doc.querySelector("#notesPanel").setAttribute("hidden", "");
+        doc
+          .querySelectorAll("#notesPanel span[id], #notesPanel b[id], #nBody")
+          .forEach((e) => (e.textContent = ""));
+        doc.querySelector("#editToggle").className = "edit-toggle";
+        doc
+          .querySelector("#editToggle")
+          .setAttribute("aria-label", "편집 모드 켜기");
+        doc.querySelector("#helpOverlay").setAttribute("hidden", "");
+        doc.querySelector("#firstHint").setAttribute("hidden", "");
+        doc.querySelector("#sizeBar").setAttribute("hidden", "");
+        doc.querySelector("#sizeBar").removeAttribute("style");
+        doc.querySelector("#notices").innerHTML = "";
+        const meta = doc.querySelector(
+          'meta[name="jd-base"]',
+        ); /* served copy only: the export is a file */
+        if (meta) meta.remove();
+        scrub(doc);
+        const blob = new Blob(["<!DOCTYPE html>\n" + doc.outerHTML], {
+          type: "text/html",
+        });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        /* Same file name as the open deck, so the export can replace it */
+        a.download =
+          decodeURIComponent(location.pathname.split("/").pop()) || "deck.html";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      }
+
+      /* Edit button: appears when the mouse reaches the top-left corner */
+      let hideTimer = null;
+      const hotzone = document.querySelector(".edit-hotzone");
+      hotzone.addEventListener("mouseenter", () => {
+        clearTimeout(hideTimer);
+        editToggle.classList.add("show");
+      });
+      hotzone.addEventListener("mouseleave", () => {
+        hideTimer = setTimeout(() => {
+          if (!editing) editToggle.classList.remove("show");
+        }, 400);
+      });
+      editToggle.addEventListener("mouseenter", () => clearTimeout(hideTimer));
+      editToggle.addEventListener("click", toggleEdit);
+
+      /* ? overlay */
+      const helpOverlay = document.getElementById("helpOverlay");
+      function toggleHelp() {
+        helpOverlay.hidden = !helpOverlay.hidden;
+        if (!helpOverlay.hidden) firstHint.hidden = true;
+      }
+      helpOverlay.addEventListener("click", (e) => {
+        if (e.target === helpOverlay) toggleHelp();
+      });
+
+      /* One-time hint: the first time this deck opens in this browser */
+      const firstHint = document.getElementById("firstHint");
+      (function hintOnce() {
+        try {
+          if (localStorage.getItem(STORE + ":hinted")) return;
+          localStorage.setItem(STORE + ":hinted", "1");
+        } catch (e) {} /* no storage: show it on every open rather than never */
+        firstHint.hidden = false;
+        firstHint.addEventListener("click", () => {
+          firstHint.hidden = true;
+        });
+        setTimeout(() => {
+          firstHint.hidden = true;
+        }, 10000);
+      })();
+
+      /* #3 opens slide 3 */
+      const fromHash = () => {
+        const n = parseInt(location.hash.slice(1), 10);
+        return Number.isFinite(n) ? n - 1 : 0;
+      };
+      window.addEventListener("hashchange", () => {
+        if (fromHash() !== cur) show(fromHash(), 0);
+      });
+      show(fromHash(), 0);
+      fitBoxes();
+      window.addEventListener("resize", fitBoxes);
+      if (document.fonts) document.fonts.ready.then(fitBoxes);
+    </script>
+  </body>
+</html>
