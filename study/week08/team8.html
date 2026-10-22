@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PintOS 2주차 [User Programs] · 8팀</title>
+<!--
+  Team 8 talk: three decks shown one after another in the same tab.
+  1. p2-team-workflow.html (benjohnbill) 2. pintos-wait.html (정승영) 3. pintos-userprogs.html (누리)
+  Each deck keeps its own runtime. A key press that does not move the deck
+  (past its last step, or before its first) moves to the next or previous deck.
+  The decks must have the same origin as this page (GitHub Pages, or a local
+  server); file:// blocks the key hook.
+-->
+<style>
+html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; }
+iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; visibility: hidden; }
+iframe.on { visibility: visible; }
+</style>
+</head>
+<body>
+<iframe src="p2-team-workflow.html" title="1. benjohnbill · 1주일간의 8팀"></iframe>
+<iframe src="pintos-wait.html" title="2. 정승영 · Pintos의 wait(): 부모는 어떻게 자식의 종료를 기다리는가?"></iframe>
+<iframe src="pintos-userprogs.html" title="3. 누리 · 출력은 다른데 테스트는 PASS였다"></iframe>
+<script>
+const frames = [...document.querySelectorAll('iframe')];
+let cur = 0;
+const FWD = ['ArrowRight', 'ArrowDown', 'PageDown', ' '];
+const BACK = ['ArrowLeft', 'ArrowUp', 'PageUp'];
+
+/* What the deck shows now: where each slide sits on screen, and its classes and data attributes.
+   The position comes from the slide's box, not window.scrollY: in some decks the body,
+   not the window, is the scroller, so window.scrollY stays 0 while the slides move. */
+function state(w) {
+    const secs = [...w.document.querySelectorAll('section')];
+    return secs.map(s =>
+        Math.round(s.getBoundingClientRect().top) + ':' + s.className + ':' +
+        [...s.attributes].filter(a => a.name.startsWith('data-')).map(a => a.name + '=' + a.value).join(';')
+    ).join('|');
+}
+
+function go(i) {
+    if (i < 0 || i >= frames.length || i === cur) return;
+    frames[cur].classList.remove('on');
+    cur = i;
+    frames[cur].classList.add('on');
+    frames[cur].contentWindow.focus();
+}
+
+frames.forEach((f, i) => f.addEventListener('load', () => {
+    const w = f.contentWindow;
+    w.addEventListener('keydown', e => {
+        if (i !== cur || e.ctrlKey || e.metaKey || e.altKey || e.target.isContentEditable) return;
+        const dir = FWD.includes(e.key) ? 1 : BACK.includes(e.key) ? -1 : 0;
+        if (!dir) return;
+        const before = state(w);
+        setTimeout(() => { if (i === cur && state(w) === before) go(cur + dir); }, 250);
+    }, true);
+    if (i === cur) w.focus();
+}));
+frames[0].classList.add('on');
+</script>
+</body>
+</html>
