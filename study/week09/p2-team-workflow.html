@@ -560,6 +560,14 @@ h1 { line-height: 1.34; padding-bottom: .1em; } h2 { line-height: 1.42; padding-
 .pblock .cells span { width: clamp(11px, 1.3vw, 26px); aspect-ratio: 1; border: 1.5px solid color-mix(in srgb, var(--ink) 35%, transparent); background: var(--paper); transition: background-color .2s, border-color .2s, transform .2s var(--ease); }
 .pblock .cells span.on { background: var(--c); border-color: var(--c); transform: scale(1.08); }
 .pblock .cells span.on.settled { transform: none; }
+.pstage { display: grid; min-width: 0; }
+.pstage > * { grid-area: 1 / 1; min-width: 0; transition: opacity .6s var(--ease); }
+.preal { display: flex; flex-direction: column; gap: .4em; align-items: center; justify-content: center; border: 2px solid var(--ink); background: var(--paper); padding: clamp(.4rem, 1.1vh, .9rem); opacity: 0; pointer-events: none; min-height: 0; overflow: hidden; }
+.preal img { display: block; max-width: 100%; min-height: 0; object-fit: contain; }
+.preal img:last-child { flex: 1; max-height: 44vh; }
+.pstage.real .preal { opacity: 1; }
+.pstage.real .pboard { opacity: 0; }
+.pstage.real + .ptotal > span:last-child { visibility: hidden; }
 .ptotal { display: flex; justify-content: space-between; align-items: baseline; font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut); padding-top: .35em; }
 .ptotal b { font-size: var(--h3-size); color: var(--ink); }
 .pflow { display: grid; grid-template-columns: max-content max-content 1fr; gap: .45em .7em; align-items: center; font-size: var(--body-size); }
@@ -715,8 +723,14 @@ h1 { line-height: 1.34; padding-bottom: .1em; } h2 { line-height: 1.42; padding-
         <h2>테스트를 돌려야 해서 <em>도구를 만들었다</em>: 각자 브랜치에서 <code>make ptest</code>, 결과는 분업표로.</h2>
         <div class="replay">
             <figure class="board" data-step="1">
-                <div class="pboard" id="pboard" title="눌러서 다시 재생" data-evidence></div>
-                <div class="ptotal"><span>수요일 코드로 <code>make ptest</code> 한 번 · 칸 색 = 그 테스트를 통과시킨 코드를 짠 사람</span><span><b id="pdone">0</b> / <span id="pall">0</span></span></div>
+                <div class="pstage real" id="pstage">
+                    <div class="pboard" id="pboard" title="눌러서 다시 재생" data-evidence></div>
+                    <div class="preal" data-evidence>
+                        <img src="p2-team-workflow.assets/plan-page-criteria.png" alt="분업표 페이지 3. 나눈 기준: 각자 = fork·wait·exec, 분업 = 파일 syscall">
+                        <img src="p2-team-workflow.assets/plan-page-board.png" alt="실제 분업표: fork·wait·exec 21/21, fd 테이블과 파일 syscall 29/29">
+                    </div>
+                </div>
+                <div class="ptotal"><span id="pcap"></span><span><b id="pdone">0</b> / <span id="pall">0</span></span></div>
             </figure>
             <div class="pflow" data-step="2">
                 <div class="head2">각자 자기 브랜치에서</div>
@@ -736,7 +750,7 @@ h1 { line-height: 1.34; padding-bottom: .1em; } h2 { line-height: 1.42; padding-
     </div>
     <div class="foot"><span>Makefile · scripts/plan-check.py · team-plan.html</span><span>토 – 월</span></div>
     <aside class="notes" data-sec="30">
-        <p><span class="st">▸1</span>테스트를 계속 돌려야 하니 도구를 만들었습니다. 이건 수요일 코드로 make ptest를 한 번 돌렸을 때 분업표가 채워지는 모습입니다. 칸 색은 그 테스트를 통과시킨 코드를 누가 짰는지입니다.</p>
+        <p><span class="st">▸1</span>테스트를 계속 돌려야 하니 도구를 만들었습니다. 이게 실제로 쓰던 분업표 페이지입니다. 이제 수요일 코드로 make ptest를 한 번 돌렸을 때 이 페이지가 채워지는 모습을 재현해 보겠습니다. 칸 색은 그 테스트를 통과시킨 코드를 누가 짰는지입니다.</p>
         <p><span class="st">▸2</span>평소에는 각자 자기 브랜치에서 make ptest를 돌리고, 결과가 자기 블록에 체크됩니다. 그래서 회의 없이도 누가 어디까지 됐는지 셋이 같은 화면으로 봤습니다.</p>
         <p><span class="st">▸3</span>속도는 QEMU의 icount 모드와 코어 수만큼의 병렬 실행에서 나옵니다. SHIFT를 바꿔 돌리면 타이밍이 달라져서 경쟁 상태도 점검할 수 있습니다.</p>
     </aside>
@@ -1788,10 +1802,26 @@ if (document.fonts) document.fonts.ready.then(fitBoxes);
             done.textContent = ++n;
         }, at[x.t])));
     }
+    /* Step 1: the real page for 3 s, then the replay. → during those 3 s skips straight to the replay. */
     const fig = board.closest('[data-step]');
-    new MutationObserver(() => fig.classList.contains('on') ? (timers.length || play()) : reset())
-        .observe(fig, { attributes: true, attributeFilter: ['class'] });
-    board.addEventListener('click', play);
+    const stage = document.getElementById('pstage');
+    const cap = document.getElementById('pcap');
+    const REAL = '실제 분업표 · team-plan.html';
+    const REPLAY = '재현: 수요일 코드로 <code>make ptest</code> 한 번 · 칸 색 = 그 테스트를 통과시킨 코드를 짠 사람';
+    let realT = 0;
+    function toReplay() { clearTimeout(realT); realT = 0; stage.classList.remove('real'); cap.innerHTML = REPLAY; play(); }
+    function toReal() { reset(); stage.classList.add('real'); cap.textContent = REAL; clearTimeout(realT); realT = setTimeout(toReplay, 3000); }
+    new MutationObserver(() => {
+        if (!fig.classList.contains('on')) { clearTimeout(realT); realT = 0; reset(); stage.classList.add('real'); cap.textContent = REAL; }
+        else if (!realT && !timers.length) toReal();
+    }).observe(fig, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('keydown', e => {
+        if (realT && fig.classList.contains('on') && ['ArrowRight', ' ', 'PageDown'].includes(e.key)) {
+            e.preventDefault(); e.stopImmediatePropagation(); toReplay();
+        }
+    }, true);
+    board.addEventListener('click', toReplay);
+    cap.textContent = REAL;
 })();
 
 </script>
