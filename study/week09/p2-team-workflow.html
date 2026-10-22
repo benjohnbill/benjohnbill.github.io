@@ -1845,7 +1845,7 @@ if (document.fonts) document.fonts.ready.then(fitBoxes);
     const REPLAY = '재현: 수요일 코드로 <code>make ptest</code> 한 번 · 칸 색 = 그 테스트를 통과시킨 코드를 짠 사람';
     let realT = 0;
     function toReplay() { clearTimeout(realT); realT = 0; stage.classList.remove('real'); cap.innerHTML = REPLAY; play(); }
-    function toReal() { reset(); stage.classList.add('real'); cap.textContent = REAL; clearTimeout(realT); realT = setTimeout(toReplay, 3000); }
+    function toReal() { reset(); stage.classList.add('real'); cap.textContent = REAL; clearTimeout(realT); realT = setTimeout(toReplay, 6000); }
     new MutationObserver(() => {
         if (!fig.classList.contains('on')) { clearTimeout(realT); realT = 0; reset(); stage.classList.add('real'); cap.textContent = REAL; }
         else if (!realT && !timers.length) toReal();
