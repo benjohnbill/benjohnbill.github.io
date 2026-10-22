@@ -579,6 +579,20 @@ h1 { line-height: 1.34; padding-bottom: .1em; } h2 { line-height: 1.42; padding-
 .pknobs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(.5rem, 1.4vw, 1.4rem); font-size: var(--small-size); border-top: 1.5px solid var(--cap-b); padding-top: .5em; }
 .pknobs dt { font-family: var(--font-mono); font-weight: 600; }
 .pknobs dd { color: var(--mut); line-height: 1.4; }
+
+/* s8: rewrite/fwe blank-fill drill */
+.drill { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(.8rem, 2vw, 2rem); align-items: center; }
+.drill img { display: block; width: 100%; max-height: 34vh; object-fit: contain; object-position: left center; }
+.drill figcaption { font-family: var(--font-mono); font-size: var(--small-size); color: var(--mut); margin-top: .3em; }
+.track { list-style: none; margin: 0; padding: 0; display: grid; gap: clamp(.25rem, .8vh, .6rem); }
+.track li { display: grid; grid-template-columns: 1.4em 5em 1fr; align-items: baseline; gap: .6em; font-size: var(--body-size); }
+.track .n { font-family: var(--font-mono); color: var(--mut); }
+.track .s { font-family: var(--font-mono); font-size: var(--small-size); font-weight: 600; }
+.track .done .s { color: var(--ink); }
+.track .half .s { color: var(--acc); }
+.track .none { color: var(--mut); }
+.track .none .s { color: var(--mut); font-weight: 500; }
+.track code { font-family: var(--font-mono); font-size: .92em; }
 </style>
 </head>
 <body>
@@ -849,21 +863,30 @@ process_get_file       → <span class="c-hit">process_find_file</span> (C2)</pr
     <div class="head"><span>마무리</span><span class="num"></span></div>
     <div class="slide-content">
         <h2>팀은 합쳐졌지만 <em>내 이해는 따라가지 못했다</em></h2>
-        <div class="panel" data-step="1">
-            <div class="cap"><span>rewrite/fwe · 혼자, 로컬 브랜치</span><span class="side">화 22:30 – 수 10:20</span></div>
-<pre data-evidence>c1b135f 10-20 Tue 22:30 fork/wait/exec를 upstream skeleton으로 되돌린다
-5e6a6a8 10-21 Wed 00:51 1단계 — record와 최소 wait/exit
-f0c3f04 10-21 Wed 02:51 SYS EXEC commit.
-<span class="c-hit">54f21db 10-21 Wed 10:20 blank set</span>   <span class="c-dim">← fork는 빈칸으로 멈춤</span></pre>
+        <div class="drill" data-step="1">
+            <figure>
+                <img src="p2-team-workflow.assets/rewrite-exec-blanks.png" alt="SYS_EXEC 코드에 빈칸을 뚫어 둔 화면: cmd_line 검사, palloc_get_page 인자, 실패 시 exit_status, strlcpy 길이, process_exec 실패 처리가 빈칸">
+                <figcaption>rewrite/fwe · <code>SYS_EXEC</code>를 빈칸으로 뚫고 다시 채우기</figcaption>
+            </figure>
+            <div>
+                <div class="cap"><span>화요일 밤 · 6시간 타임어택 · args-passing 다음부터</span></div>
+                <ol class="track" data-evidence>
+                    <li class="done"><span class="n">1</span><span class="s">완료</span><span>record와 최소 <code>wait</code>/<code>exit</code></span></li>
+                    <li class="done"><span class="n">2</span><span class="s">완료</span><span><code>exec</code></span></li>
+                    <li class="half"><span class="n">3</span><span class="s">중간까지</span><span><code>fork</code></span></li>
+                    <li class="none"><span class="n">4</span><span class="s">미구현</span><span><code>wait</code></span></li>
+                    <li class="none"><span class="n">5</span><span class="s">못 함</span><span>그 뒤의 syscall</span></li>
+                </ol>
+            </div>
         </div>
         <h1 data-step="2">누가 짠 코드든 합칠 수 있었습니다. 하지만 팀적인 통일과 개인의 이해도는 완전히 다른 영역이었습니다.</h1>
         <h1 data-step="3">스스로가 부족했습니다. 다음주에는 원리와 실패 원인을 모두 명료하게 설명할 수 있도록 공부하려고 합니다.</h1>
         <p class="thanks" data-step="3">감사합니다</p>
     </div>
     <div class="foot"><span>2026-10 · WEEK 08</span><span>8팀 · 조진근</span></div>
-    <aside class="notes" data-sec="25">
+    <aside class="notes" data-sec="30">
         <p>그런데 화요일 밤, 팀 결과는 잘 나오는데 제 이해는 따라가지 못한다는 느낌이 들었습니다.</p>
-        <p><span class="st">▸1</span>그래서 혼자 브랜치를 새로 파서 다시 짜 봤고, exec까지 하고 fork에서 멈췄습니다.</p>
+        <p><span class="st">▸1</span>그래서 앞의 그래프에 있던 빨간 브랜치를 혼자 파서, args-passing 다음부터 코드에 빈칸을 뚫고 다시 채워 봤습니다. 6시간 타임어택이었는데, exec까지 채우고 fork는 중간에서 멈췄습니다. wait와 그 뒤는 하지 못했습니다.</p>
         <p><span class="st">▸2</span>누가 짠 코드든 합칠 수 있었습니다. 하지만 팀적인 통일과 개인의 이해도는 완전히 다른 영역이었습니다.</p>
         <p><span class="st">▸3</span>스스로가 부족했습니다. 다음주에는 원리와 실패 원인을 모두 명료하게 설명할 수 있도록 공부하려고 합니다.</p>
     </aside>
