@@ -1337,6 +1337,41 @@
         border-top: 1px solid var(--grid);
         padding-top: 1.7vh;
       }
+      .wait-takeaway {
+        border-top: 2px solid var(--ink);
+        padding-top: 2vh;
+      }
+      .takeaway-title {
+        font-size: var(--body-size);
+        font-weight: 700;
+        margin-bottom: 1.6vh;
+      }
+      .takeaway-pair {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2vw;
+      }
+      .takeaway-item {
+        border: 1px solid var(--ink);
+        background: var(--panel);
+        padding: 1.8vh 1.5vw;
+      }
+      .takeaway-item code {
+        font-family: var(--font-mono);
+        font-size: var(--body-size);
+      }
+      .takeaway-item h3 {
+        color: var(--acc);
+        font-size: var(--h3-size);
+        line-height: 1.4;
+        padding-bottom: 0.2em;
+        margin: 0.8vh 0;
+      }
+      .takeaway-item p {
+        color: var(--mut);
+        font-size: var(--body-size);
+        line-height: 1.5;
+      }
       .evidence-heading {
         display: flex;
         justify-content: space-between;
@@ -1671,7 +1706,7 @@ while (true) {
 
     <section class="slide wait-slide" id="s5">
       <div class="head">
-        <span>자식이 먼저 끝난 경우 / 실제 반환 결과</span
+        <span>자식이 먼저 끝난 경우 / wait의 핵심</span
         ><span class="num"></span>
       </div>
       <div class="slide-content">
@@ -1699,25 +1734,18 @@ while (true) {
             <code>status 읽기</code><span>목록에서 제거 · free()</span>
           </div>
         </div>
-        <div class="run-evidence" data-step="1">
-          <div class="evidence-heading">
-            <p>실제 실행 기록</p>
-            <span>실행한 wait 테스트 4개 PASS</span>
-          </div>
-          <div class="evidence-pair">
-            <div class="log-block">
-              <p class="diagram-label">wait-simple · 자식 종료 결과 전달</p>
-              <pre data-evidence=""><span class="c-dim">⋮ 생략</span>
-child-simple: exit(81)
-(wait-simple) wait(exec()) = 81
-<span class="c-dim">⋮ 생략</span></pre>
+        <div class="wait-takeaway" data-step="1">
+          <p class="takeaway-title">결국 wait의 핵심은</p>
+          <div class="takeaway-pair">
+            <div class="takeaway-item">
+              <code>child_status · 공유 구조체</code>
+              <h3>종료 값 전달</h3>
+              <p>자식이 남긴 종료 값을 부모가 읽음</p>
             </div>
-            <div class="log-block">
-              <p class="diagram-label">wait-twice · 중복 대기 거부</p>
-              <pre data-evidence=""><span class="c-dim">⋮ 생략</span>
-(wait-twice) wait(exec()) = 81
-(wait-twice) wait(exec()) = -1
-<span class="c-dim">⋮ 생략</span></pre>
+            <div class="takeaway-item">
+              <code>sema_down / sema_up · 세마포어</code>
+              <h3>부모의 기다림과 자식의 종료 연결</h3>
+              <p>부모는 대기 · 자식은 종료 알림</p>
             </div>
           </div>
         </div>
@@ -1726,25 +1754,22 @@ child-simple: exit(81)
       <div class="foot">
         <span>자식의 종료 결과를 전달받는 wait()</span><span>05 / 마무리</span>
       </div>
-      <aside class="notes" data-sec="27">
+      <aside class="notes" data-sec="24">
         <p>
-          자식이 먼저 끝나도 세마포어에 알림이 남아 있어서, 부모는 잠들지 않고
-          값을 읽습니다.
+          반대로 자식이 먼저 끝난 경우라면 자식이 먼저 세마업을 하고 부모가
+          세마다운을 하게 될 텐데요.
         </p>
         <p>
-          <span class="st">▸1</span>실제 테스트에서도 자식의 종료 값 팔십일을
-          받았고, 같은 자식을 두 번 기다리면 두 번째는 마이너스 일이 나왔습니다.
-          이렇게 단순히 CPU를 양보하던 코드를, 자식의 종료를 확인하고 결과를
-          받는 코드로 바꿨습니다.
+          이 경우에도 세마포어를 이용했기 때문에 신호가 남아서 부모는 잠들지
+          않고 이어서 진행을 하게 됩니다.
+        </p>
+        <p>
+          <span class="st">▸1</span>결국 wait의 핵심은 구조체로 종료 값을 전달하고,
+          세마포어로 부모의 기다림과 자식의 종료를 연결하는 것이라고 할 수 있습니다.
         </p>
         <p class="note-ref">
-          기상 순서 그림은 코드 기반 설명이며 실제 실행 순서를 계측한 자료는
-          아닙니다. 로그는 앞뒤 부팅·종료 출력 중 필요한 연속 구간만
-          발췌했습니다. PASS 범위는 이번 실행의 wait-simple, wait-twice,
-          wait-killed, wait-bad-pid 네 개입니다. wait-killed는 이 실행에서 load
-          실패 후 -1로 종료했으므로 예외 종료의 증거로 설명하지 않습니다. 로그의
-          wait(exec()) 표기는 테스트 원문이며, 실제 테스트는 fork 후 exec하는
-          흐름입니다.
+          자식 선종료 그림은 현재 코드에 근거한 설명이며 실제 실행 순서를 계측한
+          자료는 아닙니다. 기존 테스트 원본은 evidence/에 보존했습니다.
         </p>
       </aside>
     </section>
