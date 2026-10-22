@@ -1791,6 +1791,7 @@ if (document.fonts) document.fonts.ready.then(fitBoxes);
     for (const [k, v] of Object.entries(WHO)) v.split(' ').forEach(t => who[t] = k);
     const board = document.getElementById('pboard');
     if (!board) return;
+    board.replaceChildren();   /* a restored draft of s5 can carry the blocks of an earlier run */
     const cells = [];
     const blocks = BLOCKS.map(([day, title, owners, tests, cls]) => {
         const el = document.createElement('div');
