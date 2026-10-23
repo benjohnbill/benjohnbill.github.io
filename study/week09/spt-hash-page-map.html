@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPT · hash · page 연결도</title>
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+/* type scale follows DESIGN.md §1 (root 19px, major third headings) */
+html { font-size: 19px; }
+body { font-size: 1rem; }
+.lead { font-size: 1.1rem; line-height: 1.75; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; display: flex; flex-direction: column; }
+h1 { font-family: var(--font-head); font-size: 1.95rem; line-height: 1.25; margin: 12px 0 4px; }
+h2 { font-family: var(--font-head); font-size: 1.56rem; line-height: 1.35; margin: 56px 0 10px; }
+.sub { color: var(--ink-2); margin: 0 0 16px; }
+p { margin: 8px 0 0; }
+
+/* diagram frame: outer box = line only (box rule 1); a diagram may scroll sideways on a phone */
+.fig { margin: 16px 0 0; border: 1px solid var(--line); border-radius: 4px; padding: 12px; overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 820px; height: auto; color: var(--ink); font-family: var(--font-code); font-size: 13px; }
+
+/* color marks meaning only: --s2 = the SPT's own links (spt_elem), --s1 = gone before Hunk 1 */
+.box { fill: none; stroke: var(--line); stroke-width: 1.2; }
+.box-strong { fill: none; stroke: var(--ink-2); stroke-width: 1.4; }
+.elem { fill: var(--s2-soft); stroke: var(--s2); stroke-width: 1.4; }
+.gone { fill: none; stroke: var(--s1); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.ptr { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+.link { stroke: var(--s2); stroke-width: 1.8; fill: none; }
+.t-title { font-weight: 600; fill: currentColor; }
+.t { fill: currentColor; }
+.t-muted { fill: var(--muted); font-size: 12px; }
+.t-acc { fill: var(--s2); font-weight: 600; }
+.t-gone { fill: var(--s1); }
+.dot { fill: var(--muted); }
+.head-muted { fill: var(--muted); }
+.head-acc { fill: var(--s2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>
+
+<h1>fault 난 주소에서 struct page까지</h1>
+<p class="sub">SPT · hash · page 세 구조체의 연결. 갈림길은 page 안의 <code>spt_elem</code> 한 줄</p>
+<p>필드 순서 = week09 <code>include/vm/vm.h</code> · hash 값 = <code>lab/spt-probe</code> 실행 결과 · 청록 = SPT가 엮는 고리 · 빨강 점선 = Hunk 1 이전에 없던 것</p>
+
+<h2>1. 누가 무엇을 가리키나</h2>
+<p class="lead">thread → spt(struct hash) → buckets[] → 서랍 list → 힙의 page 안 <code>spt_elem</code></p>
+<div class="fig">
+<svg viewBox="0 0 1000 560" role="img" aria-label="thread 안의 spt가 buckets 배열을 가리키고, 각 서랍의 list가 힙에 흩어진 struct page 안의 spt_elem을 엮는다. page.frame은 struct frame을, PML4는 MMU가 읽는 별도 표다.">
+  <defs>
+    <marker id="aGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+    <marker id="aAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-acc"/></marker>
+  </defs>
+  <rect x="20" y="30" width="240" height="290" rx="4" class="box-strong"/>
+  <text x="32" y="52" class="t-title">struct thread</text>
+  <text x="32" y="68" class="t-muted">프로세스 하나 = thread 하나</text>
+  <text x="32" y="94" class="t">pml4</text><circle cx="244" cy="90" r="4" class="dot"/>
+  <rect x="32" y="110" width="216" height="196" rx="3" class="box"/>
+  <text x="42" y="130" class="t-title">spt</text>
+  <text x="42" y="146" class="t-muted">supplemental_page_table</text>
+  <text x="42" y="170" class="t">pages: struct hash</text>
+  <text x="54" y="194" class="t">elem_cnt   = 6</text>
+  <text x="54" y="216" class="t">bucket_cnt = 4</text>
+  <text x="54" y="238" class="t">buckets</text><circle cx="236" cy="234" r="4" class="dot"/>
+  <text x="54" y="260" class="t">hash = page_hash</text>
+  <text x="54" y="282" class="t">less = page_less</text>
+  <text x="320" y="132" class="t-title">buckets[]</text>
+  <text x="320" y="148" class="t-muted">hash_init이 malloc</text>
+  <rect x="320" y="160" width="110" height="40" class="box"/><text x="332" y="185" class="t">[0] 비어 있음</text>
+  <rect x="320" y="200" width="110" height="40" class="box"/><text x="332" y="225" class="t">[1] list</text>
+  <rect x="320" y="240" width="110" height="40" class="box"/><text x="332" y="265" class="t">[2] 비어 있음</text>
+  <rect x="320" y="280" width="110" height="40" class="box"/><text x="332" y="305" class="t">[3] list</text>
+  <path d="M240 234 C 280 234, 280 180, 318 180" class="ptr" marker-end="url(#aGrey)"/>
+  <text x="500" y="22" class="t-muted">힙 (malloc): page마다 따로 놓임</text>
+  <rect x="500" y="30" width="220" height="200" rx="4" class="box-strong"/>
+  <text x="512" y="52" class="t-title">struct page</text>
+  <text x="512" y="80" class="t-muted">+0</text><text x="546" y="80" class="t">operations</text>
+  <text x="512" y="106" class="t-muted">+8</text><text x="546" y="106" class="t-acc">va = 0x401000</text>
+  <text x="512" y="132" class="t-muted">+16</text><text x="546" y="132" class="t">frame</text><circle cx="706" cy="128" r="4" class="dot"/>
+  <rect x="540" y="144" width="170" height="30" rx="3" class="elem"/>
+  <text x="548" y="164" class="t-acc">+24 spt_elem</text>
+  <text x="512" y="200" class="t-muted">+40</text><text x="546" y="200" class="t">union 타입별 정보</text>
+  <rect x="770" y="30" width="210" height="200" rx="4" class="box-strong"/>
+  <text x="782" y="52" class="t-title">struct page</text>
+  <text x="790" y="80" class="t">operations</text>
+  <text x="790" y="106" class="t-acc">va = 0x400000</text>
+  <text x="790" y="132" class="t">frame = NULL</text>
+  <rect x="784" y="144" width="170" height="30" rx="3" class="elem"/>
+  <text x="792" y="164" class="t-acc">spt_elem {prev,next}</text>
+  <text x="790" y="200" class="t">union …</text>
+  <path d="M432 220 C 480 220, 500 160, 538 160" class="link" marker-end="url(#aAcc)"/>
+  <text x="440" y="208" class="t-acc">head→next</text>
+  <line x1="712" y1="159" x2="782" y2="159" class="link" marker-start="url(#aAcc)" marker-end="url(#aAcc)"/>
+  <text x="745" y="248" text-anchor="middle" class="t-acc">prev/next ↑</text>
+  <rect x="500" y="280" width="220" height="100" rx="4" class="box-strong"/>
+  <text x="512" y="302" class="t-title">struct page (스택)</text>
+  <text x="546" y="326" class="t-acc">va = 0x4747f000</text>
+  <rect x="540" y="338" width="170" height="30" rx="3" class="elem"/>
+  <text x="548" y="358" class="t-acc">spt_elem {prev,next}</text>
+  <path d="M432 300 C 480 300, 500 352, 538 352" class="link" marker-end="url(#aAcc)"/>
+  <rect x="770" y="280" width="210" height="100" rx="4" class="box-strong"/>
+  <text x="782" y="302" class="t-title">struct frame</text>
+  <text x="790" y="328" class="t">kva</text><circle cx="964" cy="324" r="4" class="dot"/>
+  <text x="790" y="356" class="t">page</text><circle cx="964" cy="352" r="4" class="dot"/>
+  <path d="M708 128 C 745 128, 745 300, 768 300" class="ptr" marker-end="url(#aGrey)"/>
+  <text x="752" y="272" class="t-muted">frame</text>
+  <path d="M968 352 C 995 352, 995 20, 740 20 C 722 20, 722 40, 722 40" class="ptr" marker-end="url(#aGrey)"/>
+  <text x="890" y="16" class="t-muted">page (역참조)</text>
+  <rect x="770" y="440" width="210" height="70" rx="4" class="box"/>
+  <text x="782" y="466" class="t-title">물리 메모리 4KB</text>
+  <text x="782" y="488" class="t-muted">실제 내용 (코드 바이트)</text>
+  <path d="M966 326 C 1000 326, 1000 420, 900 438" class="ptr" marker-end="url(#aGrey)"/>
+  <text x="940" y="410" class="t-muted">kva</text>
+  <rect x="20" y="420" width="240" height="110" rx="4" class="box-strong"/>
+  <text x="32" y="442" class="t-title">PML4</text>
+  <text x="32" y="458" class="t-muted">MMU(하드웨어)가 읽는 표</text>
+  <text x="32" y="484" class="t">0x401000 → 그 frame</text>
+  <text x="32" y="506" class="t">0x400000 → (없음: fault)</text>
+  <path d="M248 90 C 290 90, 290 400, 140 418" class="ptr" marker-end="url(#aGrey)"/>
+  <path d="M260 480 L 768 480" class="ptr" marker-end="url(#aGrey)"/>
+  <text x="430" y="472" class="t-muted">claim 뒤에만 생기는 매핑</text>
+</svg>
+</div>
+<p>SPT는 page를 담지 않음 → page는 힙에 따로 · 서랍 list가 page 안 <code>spt_elem</code>만 엮음. <code>0x401000</code> = claim 끝(frame·PML4 있음) · <code>0x400000</code> = <code>frame = NULL</code>, PML4에도 없음</p>
+
+<h2>2. spt_elem · pages가 없으면</h2>
+<p class="lead">청록 고리 전부 사라짐 → page는 힙에 그대로, thread에서 page로 가는 길 없음</p>
+<div class="fig">
+<svg viewBox="0 0 1000 560" role="img" aria-label="spt가 빈 구조체이고 struct page에 spt_elem이 없으면, buckets 배열도 청록색 고리도 없다. page들은 힙에 있지만 thread에서 그 page로 가는 길이 없다. frame과 PML4 쪽은 위 그림과 같다.">
+  <defs>
+    <marker id="cGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+  </defs>
+  <rect x="20" y="30" width="240" height="290" rx="4" class="box-strong"/>
+  <text x="32" y="52" class="t-title">struct thread</text>
+  <text x="32" y="68" class="t-muted">프로세스 하나 = thread 하나</text>
+  <text x="32" y="94" class="t">pml4</text><circle cx="244" cy="90" r="4" class="dot"/>
+  <rect x="32" y="110" width="216" height="196" rx="3" class="gone"/>
+  <text x="42" y="130" class="t-title">spt</text>
+  <text x="42" y="146" class="t-muted">supplemental_page_table</text>
+  <text x="42" y="182" class="t-gone">{ }  필드 없음</text>
+  <text x="42" y="210" class="t-muted">pages 없음 → 서랍도,</text>
+  <text x="42" y="228" class="t-muted">page_hash/page_less도 없음</text>
+  <rect x="320" y="160" width="110" height="160" class="gone"/>
+  <text x="375" y="236" text-anchor="middle" class="t-gone">buckets[]</text>
+  <text x="375" y="254" text-anchor="middle" class="t-gone">없음</text>
+  <text x="500" y="22" class="t-muted">힙 (malloc): page마다 따로 놓임</text>
+  <rect x="500" y="30" width="220" height="200" rx="4" class="box-strong"/>
+  <text x="512" y="52" class="t-title">struct page</text>
+  <text x="512" y="80" class="t-muted">+0</text><text x="546" y="80" class="t">operations</text>
+  <text x="512" y="106" class="t-muted">+8</text><text x="546" y="106" class="t">va = 0x401000</text>
+  <text x="512" y="132" class="t-muted">+16</text><text x="546" y="132" class="t">frame</text><circle cx="706" cy="128" r="4" class="dot"/>
+  <rect x="540" y="144" width="170" height="30" rx="3" class="gone"/>
+  <text x="548" y="164" class="t-gone">spt_elem 없음</text>
+  <text x="512" y="200" class="t-muted">+24</text><text x="546" y="200" class="t">union 타입별 정보</text>
+  <rect x="770" y="30" width="210" height="200" rx="4" class="box-strong"/>
+  <text x="782" y="52" class="t-title">struct page</text>
+  <text x="790" y="80" class="t">operations</text>
+  <text x="790" y="106" class="t">va = 0x400000</text>
+  <text x="790" y="132" class="t">frame = NULL</text>
+  <rect x="784" y="144" width="170" height="30" rx="3" class="gone"/>
+  <text x="792" y="164" class="t-gone">spt_elem 없음</text>
+  <text x="790" y="200" class="t">union …</text>
+  <rect x="500" y="280" width="220" height="100" rx="4" class="box-strong"/>
+  <text x="512" y="302" class="t-title">struct page (스택)</text>
+  <text x="546" y="326" class="t">va = 0x4747f000</text>
+  <rect x="540" y="338" width="170" height="30" rx="3" class="gone"/>
+  <text x="548" y="358" class="t-gone">spt_elem 없음</text>
+  <text x="610" y="252" text-anchor="middle" class="t-gone">thread에서 이 page들로 가는 길 없음</text>
+  <rect x="770" y="280" width="210" height="100" rx="4" class="box-strong"/>
+  <text x="782" y="302" class="t-title">struct frame</text>
+  <text x="790" y="328" class="t">kva</text><circle cx="964" cy="324" r="4" class="dot"/>
+  <text x="790" y="356" class="t">page</text><circle cx="964" cy="352" r="4" class="dot"/>
+  <path d="M708 128 C 745 128, 745 300, 768 300" class="ptr" marker-end="url(#cGrey)"/>
+  <text x="752" y="272" class="t-muted">frame</text>
+  <path d="M968 352 C 995 352, 995 20, 740 20 C 722 20, 722 40, 722 40" class="ptr" marker-end="url(#cGrey)"/>
+  <text x="890" y="16" class="t-muted">page (역참조)</text>
+  <rect x="770" y="440" width="210" height="70" rx="4" class="box"/>
+  <text x="782" y="466" class="t-title">물리 메모리 4KB</text>
+  <text x="782" y="488" class="t-muted">실제 내용 (코드 바이트)</text>
+  <path d="M966 326 C 1000 326, 1000 420, 900 438" class="ptr" marker-end="url(#cGrey)"/>
+  <text x="940" y="410" class="t-muted">kva</text>
+  <rect x="20" y="420" width="240" height="110" rx="4" class="box-strong"/>
+  <text x="32" y="442" class="t-title">PML4</text>
+  <text x="32" y="458" class="t-muted">MMU(하드웨어)가 읽는 표</text>
+  <text x="32" y="484" class="t">0x401000 → 그 frame</text>
+  <text x="32" y="506" class="t">0x400000 → (없음: fault)</text>
+  <path d="M248 90 C 290 90, 290 400, 140 418" class="ptr" marker-end="url(#cGrey)"/>
+  <path d="M260 480 L 768 480" class="ptr" marker-end="url(#cGrey)"/>
+  <text x="430" y="472" class="t-muted">claim 뒤에만 생기는 매핑</text>
+</svg>
+</div>
+<p><code>0x400000</code> fault → 커널이 page를 못 찾음 · 종료 때 free할 목록도 없음. frame·PML4 쪽은 1번과 같음 → 두 줄의 일 = page로 가는 길</p>
+
+<h2>3. fault 주소에서 page 찾기</h2>
+<p class="lead">내리기 → 해시 → 서랍 고르기 → 비교 → <code>hash_entry</code>. PML4는 보지 않음</p>
+<div class="fig">
+<svg viewBox="0 0 1000 240" role="img" aria-label="0x401234를 page 경계 0x401000으로 내리고, 해시 값의 아래 비트로 1번 서랍을 고르고, 그 list를 page_less로 비교해 찾은 elem에서 24바이트를 빼 struct page 포인터를 얻는다.">
+  <defs>
+    <marker id="bGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+  </defs>
+  <rect x="20" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="125" y="58" text-anchor="middle" class="t-title">fault 주소</text>
+  <text x="125" y="80" text-anchor="middle" class="t-acc">0x401234</text>
+  <rect x="270" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="375" y="58" text-anchor="middle" class="t-title">pg_round_down</text>
+  <text x="375" y="80" text-anchor="middle" class="t-acc">0x401000</text>
+  <rect x="520" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="625" y="58" text-anchor="middle" class="t-title">page_hash(key)</text>
+  <text x="625" y="80" text-anchor="middle" class="t">…c1b35c0495</text>
+  <rect x="770" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="875" y="58" text-anchor="middle" class="t-title">&amp; (bucket_cnt−1)</text>
+  <text x="875" y="80" text-anchor="middle" class="t">…0101 &amp; 11 = 1</text>
+  <line x1="230" y1="65" x2="268" y2="65" class="ptr" marker-end="url(#bGrey)"/>
+  <line x1="480" y1="65" x2="518" y2="65" class="ptr" marker-end="url(#bGrey)"/>
+  <line x1="730" y1="65" x2="768" y2="65" class="ptr" marker-end="url(#bGrey)"/>
+  <text x="625" y="118" text-anchor="middle" class="t-muted">key = 스택의 가짜 page, va만 채움</text>
+  <path d="M875 100 L 875 135 L 125 135 L 125 148" class="ptr" marker-end="url(#bGrey)"/>
+  <rect x="20" y="150" width="300" height="70" rx="4" class="box"/>
+  <text x="170" y="178" text-anchor="middle" class="t-title">buckets[1] 훑기</text>
+  <text x="170" y="200" text-anchor="middle" class="t">page_less로 va 비교 (probe: 8번)</text>
+  <rect x="360" y="150" width="290" height="70" rx="4" class="elem"/>
+  <text x="505" y="178" text-anchor="middle" class="t-title">찾은 spt_elem</text>
+  <text x="505" y="200" text-anchor="middle" class="t-acc">hash_entry: 주소 − 24바이트</text>
+  <rect x="690" y="150" width="290" height="70" rx="4" class="box-strong"/>
+  <text x="835" y="178" text-anchor="middle" class="t-title">struct page *</text>
+  <text x="835" y="200" text-anchor="middle" class="t">va = 0x401000 → 내용은 어디?</text>
+  <line x1="320" y1="185" x2="358" y2="185" class="ptr" marker-end="url(#bGrey)"/>
+  <line x1="650" y1="185" x2="688" y2="185" class="ptr" marker-end="url(#bGrey)"/>
+</svg>
+</div>
+<p>내리기 생략 → 키 <code>0x401234</code>는 어느 서랍에도 없음 → <code>NULL</code> (<code>make run EXTRA=-DNO_ROUND</code>). probe의 page에는 <code>operations</code>가 없어서 24 대신 16</p>
+</div>
+</body>
+</html>
