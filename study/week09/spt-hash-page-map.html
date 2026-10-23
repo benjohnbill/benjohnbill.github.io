@@ -37,6 +37,10 @@ svg { display: block; width: 100%; min-width: 820px; height: auto; color: var(--
 .head-acc { fill: var(--s2); }
 .cell { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
 .dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; }
+.head-gone { fill: var(--s1); }
+.wrong { stroke: var(--s1); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.dim { opacity: .4; }
+.fig figcaption { margin: 10px 0 0; color: var(--ink-2); font-size: .85rem; }
 
 /* section 4: macro listing and step table; fill one level in only (box rule 2) */
 pre.code { margin: 16px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -315,6 +319,82 @@ table.eval tr.moves td { background: var(--s2-soft); }
 </table>
 <p>숫자가 바뀌는 곳 = ⑥ 하나 · 나머지 = 같은 숫자를 보는 타입만 바뀜 · ②③ = <code>&amp;</code> 안의 <code>-&gt;</code>라 메모리 안 읽음. <code>(uint8_t *)</code> 없이 빼면 24 × 16바이트 뒤로</p>
 <p><code>lab/hash-probe</code> = <code>hash_elem {next}</code> 하나에 <code>operations·frame</code> 없음 → 거리 8. <code>&amp;(E)-&gt;next − offsetof(STRUCT, MEMBER.next)</code> 꼴도 같은 주소: 안쪽 거리 0이 양쪽에서 상쇄 · <code>E</code>에 <code>next</code> 없으면 컴파일 에러</p>
+
+<h2>5. buckets 칸과 next 사슬</h2>
+<p class="lead"><code>lab/hash-probe</code> 모양: <code>hash_elem {next}</code> · <code>page {va, spt_elem}</code> · <code>BUCKET_CNT 4</code>. <code>0x405000</code> 찾기 = <code>find_bucket</code> → 1, 그 서랍만 훑기</p>
+<figure class="fig">
+<svg viewBox="0 0 1000 400" role="img" aria-label="struct hash 안의 buckets 배열은 포인터 4칸뿐이고, 각 칸은 배열 밖 힙에 있는 page 사슬의 첫 원소를 가리킨다. 1번 서랍: 0x401000, 0x405000, 0x407000, NULL. 0x405000을 찾을 때 i는 1번 칸에서 시작해 0x401000을 비교하고 next로 0x405000에 가서 찾는다. 0번, 2번, 3번 서랍은 보지 않는다. i->next가 0번 칸에서 1번 칸으로 가는 것이 아니다. 배열 칸은 사슬의 입구일 뿐, next는 같은 서랍의 다음 page로 간다.">
+  <defs>
+    <marker id="eGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+    <marker id="eAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-acc"/></marker>
+    <marker id="eRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-gone"/></marker>
+  </defs>
+  <text x="350" y="44" class="t-muted">page: 힙, 배열 밖 · 칸 = va │ spt_elem.next</text>
+  <!-- struct hash: 포인터 4칸만 -->
+  <rect x="110" y="30" width="170" height="356" rx="4" class="box-strong"/>
+  <text x="122" y="52" class="t-title">struct hash</text>
+  <text x="122" y="70" class="t-muted">buckets[4] = 포인터만</text>
+  <rect x="130" y="90" width="130" height="70" class="box"/><text x="142" y="130" class="t-muted">[0] 안 봄</text><circle cx="248" cy="125" r="4" class="dot"/>
+  <rect x="130" y="160" width="130" height="70" class="box"/><text x="142" y="200" class="t-acc">[1] idx=1</text><circle cx="248" cy="195" r="4" class="head-acc"/>
+  <rect x="130" y="230" width="130" height="70" class="box"/><text x="142" y="270" class="t-muted">[2] 안 봄</text><circle cx="248" cy="265" r="4" class="dot"/>
+  <rect x="130" y="300" width="130" height="70" class="box"/><text x="142" y="340" class="t-muted">[3] 안 봄</text><circle cx="248" cy="335" r="4" class="dot"/>
+  <!-- 틀린 모델: [0] → [1] -->
+  <path d="M128 125 C 70 125, 70 195, 126 195" class="wrong" marker-end="url(#eRed)"/>
+  <text x="78" y="154" text-anchor="end" class="t-gone">✗ i-&gt;next</text>
+  <text x="78" y="172" text-anchor="end" class="t-gone">아님</text>
+  <!-- 서랍 0 -->
+  <g class="dim">
+    <line x1="252" y1="125" x2="348" y2="125" class="ptr" marker-end="url(#eGrey)"/><text x="314" y="117" text-anchor="middle" class="t-muted">첫 원소</text>
+    <rect x="350" y="103" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="130" class="t">0x403000</text>
+    <rect x="432" y="111" width="50" height="28" rx="3" class="elem"/><text x="438" y="130" class="t-acc">next</text>
+    <line x1="482" y1="125" x2="548" y2="125" class="ptr" marker-end="url(#eGrey)"/><text x="515" y="117" text-anchor="middle" class="t-muted">next</text>
+    <rect x="550" y="103" width="140" height="44" rx="3" class="box-strong"/><text x="560" y="130" class="t">0x406000</text>
+    <rect x="632" y="111" width="50" height="28" rx="3" class="elem"/><text x="638" y="130" class="t-acc">next</text>
+    <line x1="682" y1="125" x2="718" y2="125" class="ptr" marker-end="url(#eGrey)"/><text x="722" y="130" class="t-muted">NULL</text>
+  </g>
+  <!-- 서랍 1: find가 걷는 길 -->
+  <line x1="252" y1="195" x2="348" y2="195" class="link" marker-end="url(#eAcc)"/><text x="314" y="187" text-anchor="middle" class="t-acc">첫 원소</text>
+  <rect x="350" y="173" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="200" class="t">0x401000</text>
+  <rect x="432" y="181" width="50" height="28" rx="3" class="elem"/><text x="438" y="200" class="t-acc">next</text>
+  <line x1="482" y1="195" x2="548" y2="195" class="link" marker-end="url(#eAcc)"/><text x="515" y="187" text-anchor="middle" class="t-acc">next</text>
+  <rect x="550" y="173" width="140" height="44" rx="3" class="box-strong"/><text x="560" y="200" class="t">0x405000</text>
+  <rect x="632" y="181" width="50" height="28" rx="3" class="elem"/><text x="638" y="200" class="t-acc">next</text>
+  <line x1="682" y1="195" x2="748" y2="195" class="ptr" marker-end="url(#eGrey)"/><text x="715" y="187" text-anchor="middle" class="t-muted">next</text>
+  <rect x="750" y="173" width="140" height="44" rx="3" class="box"/><text x="760" y="200" class="t-muted">0x407000</text>
+  <rect x="832" y="181" width="50" height="28" rx="3" class="elem"/><text x="838" y="200" class="t-acc">next</text>
+  <line x1="882" y1="195" x2="918" y2="195" class="ptr" marker-end="url(#eGrey)"/><text x="922" y="200" class="t-muted">NULL</text>
+  <text x="420" y="237" text-anchor="middle" class="t-muted">① va 다름 → next</text>
+  <text x="620" y="237" text-anchor="middle" class="t-acc">② va 같음 → 반환</text>
+  <text x="820" y="237" text-anchor="middle" class="t-muted">안 봄</text>
+  <!-- 서랍 2 -->
+  <g class="dim">
+    <line x1="252" y1="265" x2="348" y2="265" class="ptr" marker-end="url(#eGrey)"/><text x="314" y="257" text-anchor="middle" class="t-muted">첫 원소</text>
+    <rect x="350" y="243" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="270" class="t">0x400000</text>
+    <rect x="432" y="251" width="50" height="28" rx="3" class="elem"/><text x="438" y="270" class="t-acc">next</text>
+    <line x1="482" y1="265" x2="518" y2="265" class="ptr" marker-end="url(#eGrey)"/><text x="522" y="270" class="t-muted">NULL</text>
+  </g>
+  <!-- 서랍 3 -->
+  <g class="dim">
+    <line x1="252" y1="335" x2="348" y2="335" class="ptr" marker-end="url(#eGrey)"/><text x="314" y="327" text-anchor="middle" class="t-muted">첫 원소</text>
+    <rect x="350" y="313" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="340" class="t">0x402000</text>
+    <rect x="432" y="321" width="50" height="28" rx="3" class="elem"/><text x="438" y="340" class="t-acc">next</text>
+    <line x1="482" y1="335" x2="548" y2="335" class="ptr" marker-end="url(#eGrey)"/><text x="515" y="327" text-anchor="middle" class="t-muted">next</text>
+    <rect x="550" y="313" width="140" height="44" rx="3" class="box-strong"/><text x="560" y="340" class="t">0x404000</text>
+    <rect x="632" y="321" width="50" height="28" rx="3" class="elem"/><text x="638" y="340" class="t-acc">next</text>
+    <line x1="682" y1="335" x2="718" y2="335" class="ptr" marker-end="url(#eGrey)"/><text x="722" y="340" class="t-muted">NULL</text>
+  </g>
+</svg>
+<figcaption>배열 칸은 사슬의 입구일 뿐, next는 같은 서랍의 다음 page로 간다</figcaption>
+</figure>
+<table class="eval">
+<thead><tr><th>이름</th><th>가리키는 것</th><th>움직이면</th></tr></thead>
+<tbody>
+<tr><td><code>idx</code></td><td>몇 번 서랍 (buckets 칸 번호)</td><td>find_elem 동안 고정</td></tr>
+<tr class="moves"><td><code>i</code></td><td>지금 보는 page의 고리 (<code>spt_elem</code>)</td><td><code>i = i-&gt;next</code></td></tr>
+<tr><td><code>i-&gt;next</code></td><td>같은 서랍 다음 page의 고리</td><td><code>NULL</code> = 서랍 끝 → <code>return NULL</code></td></tr>
+</tbody>
+</table>
+<p>배열 칸 → page 길만 있음 · page → 배열 칸 길 없음 → <code>i</code>는 한 번 사슬에 들어가면 옆 서랍으로 못 감. 같은 서랍 = 해시 아래 2비트가 같은 page들 (충돌)</p>
 </div>
 </body>
 </html>
