@@ -35,6 +35,27 @@ svg { display: block; width: 100%; min-width: 820px; height: auto; color: var(--
 .dot { fill: var(--muted); }
 .head-muted { fill: var(--muted); }
 .head-acc { fill: var(--s2); }
+.cell { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
+.dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; }
+
+/* section 4: macro listing and step table; fill one level in only (box rule 2) */
+pre.code { margin: 16px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.code code { background: none; padding: 0; font-size: 1em; }
+table.eval { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.eval th, table.eval td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.eval th { font-family: var(--font-code); font-weight: 600; }
+table.eval td code { overflow-wrap: anywhere; }
+table.eval tr.moves td { background: var(--s2-soft); }
+/* phone: one row = one block (step, expression, then value · type side by side) */
+@media (max-width: 600px) {
+  table.eval thead { display: none; }
+  table.eval tr { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; border-bottom: 1px solid var(--line); }
+  table.eval tr.moves { background: var(--s2-soft); }
+  table.eval td { border-bottom: none; padding: 4px 10px; }
+  table.eval td:nth-child(1), table.eval td:nth-child(2) { grid-column: 1 / -1; }
+  table.eval td:nth-child(1) { padding-top: 8px; font-weight: 600; }
+  table.eval td:nth-child(4) { padding-bottom: 8px; }
+}
 </style>
 </head>
 <body>
@@ -231,6 +252,69 @@ svg { display: block; width: 100%; min-width: 820px; height: auto; color: var(--
 </svg>
 </div>
 <p>내리기 생략 → 키 <code>0x401234</code>는 어느 서랍에도 없음 → <code>NULL</code> (<code>make run EXTRA=-DNO_ROUND</code>). probe의 page에는 <code>operations</code>가 없어서 24 대신 16</p>
+
+<h2>4. hash_entry: 고리에서 page로 거슬러 오르기</h2>
+<p class="lead">고리 주소 <code>e</code> − 24 → page 시작. 숫자가 바뀌는 곳은 빼기 한 번</p>
+<div class="fig">
+<svg viewBox="0 0 1000 230" role="img" aria-label="struct page 메모리 띠: +0 operations, +8 va, +16 frame, +24 spt_elem의 prev, +32 next, +40 union. 고리 주소 e는 0x8004201018, 즉 +24를 가리킨다. 거기서 offsetof 24바이트를 빼면 page 시작 0x8004201000이 나온다.">
+  <defs>
+    <marker id="dGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+    <marker id="dAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-acc"/></marker>
+  </defs>
+  <text x="60" y="22" class="t-title">결과: (struct page *) 0x8004201000</text>
+  <line x1="60" y1="30" x2="60" y2="58" class="ptr" marker-end="url(#dGrey)"/>
+  <text x="450" y="22" class="t-acc">입력: e = 0x8004201018 (hash_elem *)</text>
+  <line x1="450" y1="30" x2="450" y2="58" class="link" marker-end="url(#dAcc)"/>
+  <rect x="60" y="60" width="130" height="60" class="cell"/>
+  <text x="125" y="86" text-anchor="middle" class="t">operations</text>
+  <text x="125" y="106" text-anchor="middle" class="t-muted">+0</text>
+  <rect x="190" y="60" width="130" height="60" class="cell"/>
+  <text x="255" y="86" text-anchor="middle" class="t">va</text>
+  <text x="255" y="106" text-anchor="middle" class="t-muted">+8</text>
+  <rect x="320" y="60" width="130" height="60" class="cell"/>
+  <text x="385" y="86" text-anchor="middle" class="t">frame</text>
+  <text x="385" y="106" text-anchor="middle" class="t-muted">+16</text>
+  <rect x="450" y="60" width="130" height="60" class="elem"/>
+  <text x="515" y="86" text-anchor="middle" class="t-acc">prev</text>
+  <text x="515" y="106" text-anchor="middle" class="t-muted">+24</text>
+  <rect x="580" y="60" width="130" height="60" class="elem"/>
+  <text x="645" y="86" text-anchor="middle" class="t-acc">next</text>
+  <text x="645" y="106" text-anchor="middle" class="t-muted">+32</text>
+  <rect x="710" y="60" width="230" height="60" class="cell"/>
+  <text x="825" y="86" text-anchor="middle" class="t">union 타입별 정보</text>
+  <text x="825" y="106" text-anchor="middle" class="t-muted">+40</text>
+  <line x1="450" y1="134" x2="710" y2="134" class="link"/>
+  <line x1="450" y1="128" x2="450" y2="140" class="link"/>
+  <line x1="710" y1="128" x2="710" y2="140" class="link"/>
+  <text x="580" y="158" text-anchor="middle" class="t-acc">spt_elem = hash_elem { list_elem {prev, next} }</text>
+  <line x1="60" y1="120" x2="60" y2="200" class="dash"/>
+  <line x1="450" y1="140" x2="450" y2="200" class="dash"/>
+  <line x1="448" y1="200" x2="64" y2="200" class="ptr" marker-end="url(#dGrey)"/>
+  <text x="255" y="192" text-anchor="middle" class="t">− 24 (0x18) 바이트</text>
+  <text x="466" y="204" class="t-muted">= offsetof(struct page, spt_elem.list_elem)</text>
+</svg>
+</div>
+<pre class="code"><code>/* include/lib/kernel/hash.h:38-40 */
+#define hash_entry(HASH_ELEM, STRUCT, MEMBER) \
+    ((STRUCT *)((uint8_t *)&amp;(HASH_ELEM)-&gt;list_elem - \
+                offsetof(STRUCT, MEMBER.list_elem)))
+
+/* hash_entry(e, struct page, spt_elem): 전처리기가 글자만 바꿔 끼운 모양 */
+((struct page *)((uint8_t *)&amp;(e)-&gt;list_elem - offsetof(struct page, spt_elem.list_elem)))</code></pre>
+<table class="eval">
+<thead><tr><th>단계</th><th>식</th><th>값</th><th>타입</th></tr></thead>
+<tbody>
+<tr><td>① 고리 주소</td><td><code>(e)</code></td><td><code>0x8004201018</code></td><td><code>struct hash_elem *</code></td></tr>
+<tr><td>② 고리 안 칸, 읽지 않음</td><td><code>(e)-&gt;list_elem</code></td><td>—</td><td><code>struct list_elem</code></td></tr>
+<tr><td>③ 그 칸의 주소 = 첫 멤버라 +0</td><td><code>&amp;(e)-&gt;list_elem</code></td><td><code>0x8004201018</code></td><td><code>struct list_elem *</code></td></tr>
+<tr><td>④ 단위만 1바이트로</td><td><code>(uint8_t *)…</code></td><td><code>0x8004201018</code></td><td><code>uint8_t *</code></td></tr>
+<tr><td>⑤ 컴파일 때 상수 24 + 0</td><td><code>offsetof(struct page, spt_elem.list_elem)</code></td><td><code>24</code></td><td><code>size_t</code></td></tr>
+<tr class="moves"><td>⑥ 빼기: 1바이트 × 24칸 뒤로</td><td>④ − ⑤</td><td><code>0x8004201000</code></td><td><code>uint8_t *</code></td></tr>
+<tr><td>⑦ 같은 숫자를 page로 보기</td><td><code>(struct page *)…</code></td><td><code>0x8004201000</code></td><td><code>struct page *</code></td></tr>
+</tbody>
+</table>
+<p>숫자가 바뀌는 곳 = ⑥ 하나 · 나머지 = 같은 숫자를 보는 타입만 바뀜 · ②③ = <code>&amp;</code> 안의 <code>-&gt;</code>라 메모리 안 읽음. <code>(uint8_t *)</code> 없이 빼면 24 × 16바이트 뒤로</p>
+<p><code>lab/hash-probe</code> = <code>hash_elem {next}</code> 하나에 <code>operations·frame</code> 없음 → 거리 8. <code>&amp;(E)-&gt;next − offsetof(STRUCT, MEMBER.next)</code> 꼴도 같은 주소: 안쪽 거리 0이 양쪽에서 상쇄 · <code>E</code>에 <code>next</code> 없으면 컴파일 에러</p>
 </div>
 </body>
 </html>
