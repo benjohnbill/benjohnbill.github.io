@@ -247,9 +247,14 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
 
 <div class="group">
   <div class="gh">
-    <h2 class="dh">9주차 · PintOS(3) [Virtual Memory]</h2>
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/Pintos-W9-10-T6-VM/Pintos-W9-10-T6-VM">9주차 · PintOS(3) [Virtual Memory]</a></h2>
   </div>
   <div class="cards">
+    <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/spt-hash-page-map.html" href="https://benjohnbill.github.io/study/week09/spt-hash-page-map.html">
+      <div class="t dh">fault 난 주소에서 struct page까지</div>
+      <div class="d">보조 페이지 테이블(SPT)과 Pintos hash, <code>struct page</code>가 메모리에서 어떻게 엮이는지 그린 연결도입니다. <code>spt_elem</code>과 <code>pages</code> 두 줄이 있을 때와 없을 때를 같은 배치로 위아래에 두었고, fault 주소 <code>0x401234</code>에서 page를 찾는 길을 실제 probe 실행 값으로 따라갑니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">9주차</span><span>week9 / pintos-vm · SPT 연결도</span></div>
+    </a>
   </div>
 </div>
 </div>
