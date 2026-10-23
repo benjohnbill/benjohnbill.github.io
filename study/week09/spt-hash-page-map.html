@@ -60,6 +60,15 @@ table.eval tr.moves td { background: var(--s2-soft); }
   table.eval td:nth-child(1) { padding-top: 8px; font-weight: 600; }
   table.eval td:nth-child(4) { padding-bottom: 8px; }
 }
+
+/* section 6: experiment numbers stay a plain grid at every width */
+table.exp { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.exp th, table.exp td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+table.exp th:first-child, table.exp td:first-child { text-align: left; }
+table.exp th { font-family: var(--font-code); font-weight: 600; }
+table.exp td { font-family: var(--font-code); }
+table.exp td.bad { color: var(--s1); font-weight: 600; }
+table.exp tr.moves td { background: var(--s2-soft); }
 </style>
 </head>
 <body>
@@ -395,6 +404,30 @@ table.eval tr.moves td { background: var(--s2-soft); }
 </tbody>
 </table>
 <p>배열 칸 → page 길만 있음 · page → 배열 칸 길 없음 → <code>i</code>는 한 번 사슬에 들어가면 옆 서랍으로 못 감. 같은 서랍 = 해시 아래 2비트가 같은 page들 (충돌)</p>
+
+<h2>6. 직접 짠 프로브와 실험</h2>
+<p class="lead"><code>hash.c</code>의 뼈대만 떼어 호스트 C 한 파일로 따라친 것. 코드: <a href="hash_probe.c">hash_probe.c</a> (<a href="https://github.com/benjohnbill/benjohnbill.github.io/blob/main/study/week09/hash_probe.c">GitHub에서 보기</a>) · 빌드 <code>gcc -Wall -o hash_probe hash_probe.c &amp;&amp; ./hash_probe</code></p>
+<table class="eval">
+<thead><tr><th>hunk</th><th>프로브</th><th>Pintos</th><th>직접 쓰나</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>struct hash</code> · typedef 두 개</td><td><code>include/lib/kernel/hash.h</code></td><td>이미 있음</td></tr>
+<tr class="moves"><td>2</td><td><code>struct page</code> + 고리 · <code>hash_entry</code></td><td><code>spt_elem</code> 한 줄 · <code>hash_entry</code>는 <code>hash.h</code></td><td>고리만 씀</td></tr>
+<tr class="moves"><td>3</td><td><code>page_hashing</code> · <code>page_less</code></td><td><code>vm/vm.c</code>에 거의 그대로 · 차이 = <code>aux</code> 인자, <code>void *va</code></td><td>씀</td></tr>
+<tr><td>4</td><td><code>find_index</code> · <code>find_elem</code></td><td><code>hash.c</code> 안 static</td><td>이미 있음</td></tr>
+<tr><td>5</td><td><code>hash_align</code> · <code>find_same_hash</code></td><td><code>hash_insert</code> · <code>hash_find</code></td><td>부르기만</td></tr>
+<tr class="moves"><td>6</td><td><code>main</code>: 넣기 · 중복 · 찾기</td><td><code>spt_insert_page</code> · <code>spt_find_page</code> 모양</td><td>씀</td></tr>
+</tbody>
+</table>
+<p>실험: 연속 page 8개(<code>0x400000</code>–<code>0x407000</code>)를 넣고 8개를 전부 찾을 때 <code>less</code>가 불린 총 횟수</p>
+<table class="exp">
+<thead><tr><th>page_hash</th><th>서랍 1</th><th>서랍 4</th><th>서랍 8</th></tr></thead>
+<tbody>
+<tr><td><code>hash_bytes(&amp;va, 8)</code></td><td>72</td><td class="bad">72</td><td>—</td></tr>
+<tr class="moves"><td><code>va &gt;&gt; 12</code></td><td>72</td><td>24</td><td>16</td></tr>
+</tbody>
+</table>
+<p>서랍 번호 = 해시의 아래 비트만 (<code>&amp; (BUCKET_CNT − 1)</code>) · FNV(곱하기·XOR)의 아래 k비트 = 입력 바이트들의 아래 k비트로만 정해짐 · page 정렬 주소의 바이트는 아래 비트가 0 → 8개 전부 한 서랍. 앞서 세운 가정 "FNV가 모든 비트를 섞어 고르게 퍼진다"는 틀림</p>
+<p>정확성은 무관: 한 서랍에 몰려도 <code>va</code> 비교로 정확히 찾음 → 테스트는 통과, 속도만 달라짐. <code>page_hash</code> 입력 선택 = INDEX D3</p>
 </div>
 </body>
 </html>
