@@ -69,6 +69,17 @@ table.exp th { font-family: var(--font-code); font-weight: 600; }
 table.exp td { font-family: var(--font-code); }
 table.exp td.bad { color: var(--s1); font-weight: 600; }
 table.exp tr.moves td { background: var(--s2-soft); }
+/* section 7: lifelines; thick bar = alive, dashed = later stage, red dashed = leak (wrong version) */
+.life-fig svg { min-width: 900px; }
+.col { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.life { stroke: var(--ink-2); stroke-width: 6; stroke-linecap: round; }
+.life-future { stroke: var(--muted); stroke-width: 4; stroke-dasharray: 8 6; }
+.life-leak { stroke: var(--s1); stroke-width: 6; stroke-dasharray: 8 6; }
+.born { fill: var(--ink); }
+.tick { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
+.dead { stroke: var(--ink); stroke-width: 2.4; fill: none; }
+table.life-tab td:first-child { white-space: nowrap; }
+@media (max-width: 600px) { table.life-tab td { grid-column: 1 / -1; } }
 </style>
 </head>
 <body>
@@ -428,6 +439,165 @@ table.exp tr.moves td { background: var(--s2-soft); }
 </table>
 <p>서랍 번호 = 해시의 아래 비트만 (<code>&amp; (BUCKET_CNT − 1)</code>) · FNV(곱하기·XOR)의 아래 k비트 = 입력 바이트들의 아래 k비트로만 정해짐 · page 정렬 주소의 바이트는 아래 비트가 0 → 8개 전부 한 서랍. 앞서 세운 가정 "FNV가 모든 비트를 섞어 고르게 퍼진다"는 틀림</p>
 <p>정확성은 무관: 한 서랍에 몰려도 <code>va</code> 비교로 정확히 찾음 → 테스트는 통과, 속도만 달라짐. <code>page_hash</code> 입력 선택 = INDEX D3</p>
+<h2>7. 찾은 page에 frame 붙이기: va와 kva는 언제 살고 언제 죽나</h2>
+<p class="lead">page(<code>va</code>) = SPT 등록부터 프로세스 종료까지 · frame(<code>kva</code>) = claim 때 생기고 실패 · eviction · 종료에 떨어짐 → 둘 사이 화살표 = "이 va의 내용이 지금 어디 있나"의 임시 기록</p>
+<p>세로 = 호출 순서 · 막대 = 살아 있는 구간 · ● 생김 · ✕ 사라짐 · 회색 = 아직 안 짠 단계 · 빨강 점선 = 틀린 버전</p>
+<figure class="fig life-fig">
+<svg viewBox="0 0 1000 675" role="img" aria-label="page의 va는 vm_alloc_page_with_initializer에서 생겨 프로세스 종료까지 살고, frame의 kva는 vm_get_frame에서 생겨 vm_do_claim_page에서 page와 서로 연결되며, PTE는 pml4_set_page에서 생긴다. eviction과 종료는 회색으로 표시한다.">
+  <defs>
+    <marker id="lfGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+  </defs>
+  <text x="470" y="34" text-anchor="middle" class="t-title">page-&gt;va</text>
+  <text x="470" y="52" text-anchor="middle" class="t-muted">SPT 안</text>
+  <text x="630" y="34" text-anchor="middle" class="t-title">frame-&gt;kva</text>
+  <text x="630" y="52" text-anchor="middle" class="t-muted">user pool</text>
+  <text x="790" y="34" text-anchor="middle" class="t-title">PTE</text>
+  <text x="790" y="52" text-anchor="middle" class="t-muted">pml4 표의 칸</text>
+  <line x1="470" y1="70" x2="470" y2="670" class="col"/>
+  <line x1="630" y1="70" x2="630" y2="670" class="col"/>
+  <line x1="790" y1="70" x2="790" y2="670" class="col"/>
+
+  <!-- lifelines: solid = written so far, dashed = later stages -->
+  <line x1="470" y1="110" x2="470" y2="505" class="life"/>
+  <line x1="630" y1="250" x2="630" y2="505" class="life"/>
+  <line x1="790" y1="390" x2="790" y2="505" class="life"/>
+  <line x1="470" y1="505" x2="470" y2="640" class="life-future"/>
+  <line x1="630" y1="505" x2="630" y2="640" class="life-future"/>
+  <line x1="790" y1="505" x2="790" y2="640" class="life-future"/>
+
+  <!-- r1: page born -->
+  <text x="20" y="104" class="t-title">vm_alloc_page_with_initializer()</text>
+  <text x="20" y="122" class="t-muted">spt_insert_page(spt, page)</text>
+  <circle cx="470" cy="110" r="8" class="born"/>
+  <text x="486" y="106" class="t">생김</text>
+  <text x="486" y="122" class="t-muted">frame = NULL</text>
+
+  <!-- r2: found by va -->
+  <text x="20" y="174" class="t-title">vm_try_handle_fault()</text>
+  <text x="20" y="192" class="t-muted">또는 vm_claim_page(va) · spt_find_page(spt, va)</text>
+  <circle cx="470" cy="180" r="6" class="tick"/>
+  <text x="486" y="185" class="t-muted">va로 찾음</text>
+
+  <!-- r3: frame born -->
+  <text x="20" y="244" class="t-title">vm_get_frame()</text>
+  <text x="20" y="262" class="t-muted">palloc_get_page(PAL_USER) · malloc(frame)</text>
+  <circle cx="630" cy="250" r="8" class="born"/>
+  <text x="646" y="246" class="t">생김</text>
+  <text x="646" y="262" class="t-muted">page = NULL</text>
+
+  <!-- r4: links -->
+  <text x="20" y="314" class="t-title">vm_do_claim_page(): 연결</text>
+  <text x="20" y="332" class="t-muted">page-&gt;frame = frame · frame-&gt;page = page</text>
+  <line x1="480" y1="320" x2="620" y2="320" class="ptr" marker-start="url(#lfGrey)" marker-end="url(#lfGrey)"/>
+  <text x="550" y="310" text-anchor="middle" class="t-muted">서로 가리킴</text>
+
+  <!-- r5: PTE born -->
+  <text x="20" y="384" class="t-title">pml4_set_page(pml4, va, kva, rw)</text>
+  <text x="20" y="402" class="t-muted">*pte = vtop(kva) | P | U | W</text>
+  <text x="20" y="420" class="t-muted">W = 임시 PTE_W 고정 · 출처 미정 ?</text>
+  <circle cx="790" cy="390" r="8" class="born"/>
+  <text x="806" y="386" class="t">생김</text>
+  <text x="806" y="402" class="t-muted">칸 위치 = va로 walk</text>
+  <text x="806" y="418" class="t-muted">칸 내용 = pa(kva)</text>
+  <text x="806" y="434" class="t-muted">false → 그림 2</text>
+
+  <!-- r6: contents -->
+  <text x="20" y="454" class="t-title">swap_in(page, kva)</text>
+  <text x="20" y="472" class="t-muted">kva 페이지에 내용 채움 · return true</text>
+  <circle cx="630" cy="460" r="6" class="tick"/>
+  <text x="646" y="465" class="t-muted">내용 채움</text>
+
+  <line x1="20" y1="505" x2="980" y2="505" class="dash"/>
+  <text x="20" y="528" class="t-muted">이후 = 아직 안 짠 단계 · eviction 또는 프로세스 종료</text>
+
+  <g class="dim">
+    <!-- r7: eviction -->
+    <text x="20" y="569" class="t-title">eviction (Swap 단계)</text>
+    <text x="20" y="587" class="t-muted">pml4_clear_page() · 두 연결 끊음</text>
+    <line x1="480" y1="575" x2="620" y2="575" class="dash"/>
+    <text x="550" y="566" text-anchor="middle" class="t-muted">연결 끊김</text>
+    <text x="486" y="596" class="t-muted">내용 → swap · file</text>
+    <text x="646" y="596" class="t-muted">다른 page에 붙음</text>
+    <path d="M782 567 L798 583 M798 567 L782 583" class="dead"/>
+    <text x="806" y="580" class="t-muted">eviction이면 여기서</text>
+
+    <!-- r8: exit -->
+    <text x="20" y="634" class="t-title">process_cleanup()</text>
+    <text x="20" y="652" class="t-muted">spt_kill() → vm_dealloc_page() · pml4_destroy()</text>
+    <path d="M462 632 L478 648 M478 632 L462 648" class="dead"/>
+    <text x="486" y="645" class="t-muted">free(page)</text>
+    <path d="M622 632 L638 648 M638 632 L622 648" class="dead"/>
+    <text x="646" y="645" class="t-muted">palloc_free_page</text>
+    <text x="646" y="661" class="t-muted">struct frame 해제 = ?</text>
+    <path d="M782 632 L798 648 M798 632 L782 648" class="dead"/>
+    <text x="806" y="645" class="t-muted">남은 칸 전부</text>
+  </g>
+</svg>
+<figcaption>그림 1. page는 처음부터 끝까지 SPT에 있음 · frame과 PTE는 claim에서 생겨 page보다 먼저 사라질 수 있음</figcaption>
+</figure>
+
+<p>그림 2 = <code>pml4_set_page()</code>가 false일 때. 여기까지 생긴 것 = frame(<code>kva</code>) · 두 연결 · PTE는 없음</p>
+<figure class="fig life-fig">
+<svg viewBox="0 0 1000 400" role="img" aria-label="pml4_set_page가 실패했을 때 두 버전. 첫째는 page->frame을 NULL로 만들고 palloc_free_page와 free로 frame을 반납해 kva가 사라진다. 둘째는 연결만 NULL로 만들어 kva가 아무 포인터 없이 남아 누수가 된다.">
+  <defs>
+    <marker id="lfGrey2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+  </defs>
+  <text x="385" y="30" text-anchor="middle" class="t-title">① 되돌림 세 줄</text>
+  <text x="385" y="48" text-anchor="middle" class="t-muted">지금 코드</text>
+  <text x="735" y="30" text-anchor="middle" class="t-title">② 연결만 끊음</text>
+  <text x="735" y="48" text-anchor="middle" class="t-muted">오늘 거쳐 간 버전</text>
+  <text x="340" y="78" text-anchor="middle" class="t-muted">va</text>
+  <text x="430" y="78" text-anchor="middle" class="t-muted">kva</text>
+  <text x="690" y="78" text-anchor="middle" class="t-muted">va</text>
+  <text x="780" y="78" text-anchor="middle" class="t-muted">kva</text>
+
+  <line x1="340" y1="90" x2="340" y2="380" class="life"/>
+  <line x1="430" y1="120" x2="430" y2="300" class="life"/>
+  <line x1="690" y1="90" x2="690" y2="380" class="life"/>
+  <line x1="780" y1="120" x2="780" y2="300" class="life"/>
+  <line x1="780" y1="300" x2="780" y2="380" class="life-leak"/>
+
+  <text x="20" y="125" class="t-title">vm_get_frame()</text>
+  <circle cx="430" cy="120" r="8" class="born"/>
+  <circle cx="780" cy="120" r="8" class="born"/>
+
+  <text x="20" y="185" class="t-title">연결</text>
+  <text x="20" y="203" class="t-muted">page-&gt;frame · frame-&gt;page</text>
+  <line x1="350" y1="180" x2="420" y2="180" class="ptr" marker-start="url(#lfGrey2)" marker-end="url(#lfGrey2)"/>
+  <line x1="700" y1="180" x2="770" y2="180" class="ptr" marker-start="url(#lfGrey2)" marker-end="url(#lfGrey2)"/>
+
+  <text x="20" y="245" class="t-title">pml4_set_page() = false</text>
+  <text x="20" y="263" class="t-muted">pte = NULL · PTE 없음</text>
+
+  <text x="20" y="305" class="t-title">실패 분기</text>
+  <line x1="350" y1="300" x2="420" y2="300" class="dash"/>
+  <path d="M422 292 L438 308 M438 292 L422 308" class="dead"/>
+  <text x="446" y="296" class="t">page-&gt;frame = NULL</text>
+  <text x="446" y="312" class="t">palloc_free_page(kva)</text>
+  <text x="446" y="328" class="t">free(frame)</text>
+  <line x1="700" y1="300" x2="770" y2="300" class="dash"/>
+  <text x="796" y="296" class="t">frame-&gt;page = NULL</text>
+  <text x="796" y="312" class="t">page-&gt;frame = NULL</text>
+  <text x="796" y="328" class="t-gone">해제 없음</text>
+
+  <text x="20" y="365" class="t-title">return false 이후</text>
+  <text x="446" y="362" class="t-muted">va: SPT에 남음 · frame = NULL</text>
+  <text x="446" y="378" class="t-muted">다음 fault → 다시 claim</text>
+  <text x="796" y="362" class="t-gone">kva: 가리키는 포인터 0개</text>
+  <text x="796" y="378" class="t-gone">= 누수</text>
+</svg>
+<figcaption>그림 2. NULL 대입 = 기록 정리 · 누수를 막는 것 = 해제 · frame-&gt;page = NULL은 곧 free될 구조체라 불필요</figcaption>
+</figure>
+<p>false가 나는 곳 = <code>pml4e_walk()</code>의 세 단계(pdp · pd · pt 표) 중 한 곳에서 <code>palloc_get_page(PAL_ZERO)</code> 실패 · <code>PAL_USER</code> 없음 → kernel pool 쪽 고갈 · 그 호출에서 새로 단 중간 표는 walk가 스스로 반납(<code>allocated</code>) → <code>vm_do_claim_page()</code>도 자기가 만든 것(frame · 연결)을 자기가 치움</p>
+<table class="eval life-tab">
+<thead><tr><th>이름</th><th>생김</th><th>사라짐</th><th>사이</th></tr></thead>
+<tbody>
+<tr class="moves"><td><code>page-&gt;va</code></td><td><code>vm_alloc_page_with_initializer()</code> → <code>spt_insert_page()</code></td><td>종료: <code>spt_kill()</code> → <code>vm_dealloc_page()</code></td><td>frame 유무와 무관 · eviction에도 남음</td></tr>
+<tr><td><code>frame-&gt;kva</code></td><td><code>vm_get_frame()</code>: <code>palloc_get_page(PAL_USER)</code></td><td>claim 실패: <code>palloc_free_page()</code> · <code>free()</code> · 종료: <code>pml4_destroy()</code></td><td>page에 붙었다 떨어짐</td></tr>
+<tr><td>PTE</td><td><code>pml4_set_page()</code></td><td>eviction: <code>pml4_clear_page()</code> · 종료: <code>pml4_destroy()</code></td><td>CPU가 va → pa 번역에 씀</td></tr>
+<tr><td><code>page-&gt;frame</code></td><td><code>vm_do_claim_page()</code></td><td>실패 분기 · eviction</td><td>"지금 메모리에 있나"의 기록</td></tr>
+</tbody>
+</table>
 </div>
 </body>
 </html>
