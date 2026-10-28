@@ -86,6 +86,19 @@ table.exp tr.moves td { background: var(--s2-soft); }
 .num { fill: var(--muted); font-weight: 600; }
 table.life-tab td:first-child { white-space: nowrap; }
 @media (max-width: 600px) { table.life-tab td { grid-column: 1 / -1; } }
+/* section 2-2 begin */
+/* section 2-2: --s3 (the version hue, DESIGN.md section 2) marks a value that differs between ① parent and ② child */
+h3 { font-family: var(--font-head); font-size: 1.25rem; line-height: 1.4; margin: 28px 0 0; }
+.pc-fig svg { min-width: 900px; }
+.hl { fill: var(--s3-soft); stroke: var(--s3); stroke-width: 1; }
+.t-hl { fill: var(--s3); font-weight: 600; }
+.t-hl-s { fill: var(--s3); font-weight: 600; font-size: 12px; }
+.gap { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+table.copy { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.copy th, table.copy td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.copy th { font-family: var(--font-code); font-weight: 600; }
+table.copy td code { overflow-wrap: anywhere; }
+/* section 2-2 end */
 </style>
 </head>
 <body>
@@ -243,6 +256,325 @@ table.life-tab td:first-child { white-space: nowrap; }
 </svg>
 </div>
 <p><code>0x400000</code> fault → 커널이 page를 못 찾음 · 종료 때 free할 목록도 없음. frame·PML4 쪽은 1번과 같음 → 두 줄의 일 = page로 가는 길</p>
+
+<!-- section 2-2 begin: lab/probes/gen_spt_copy.py -->
+<h2>2-2. fork 직후: 부모 spt와 자식 spt</h2>
+<p class="lead"><code>supplemental_page_table_copy()</code> → 부모 page마다 자식 spt에 새 page · 새 frame. 같은 va · 같은 내용, 다른 주소</p>
+<p>값 = <code>fork-once</code> 실행 중 <code>__do_fork()</code>에서 copy 직후 찍은 probe 출력 · 보라 = 부모와 자식의 값이 다른 칸</p>
+
+<h3>① 부모: fork()를 부른 thread</h3>
+<div class="fig pc-fig">
+<svg viewBox="0 0 1010 620" role="img" aria-label="부모: fork를 부른 thread. 0x402000과 스택은 로드되어 frame과 PML4 매핑이 있고, 0x3ff000은 uninit이라 frame과 매핑이 없다.">
+  <defs>
+    <marker id="aGreyP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+    <marker id="aAccP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-acc"/></marker>
+  </defs>
+  <rect x="20" y="30" width="240" height="290" rx="4" class="box-strong"/>
+  <text x="32" y="52" class="t-title">struct thread</text>
+  <text x="32" y="70" class="t">@ </text>
+  <rect x="45" y="56" width="100" height="19" rx="2" class="hl"/>
+  <text x="47.6" y="70" class="t-hl">0x8004245000</text>
+  <text x="32" y="96" class="t">pml4 = </text>
+  <rect x="84" y="82" width="100" height="19" rx="2" class="hl"/>
+  <text x="86.6" y="96" class="t-hl">0x8004248000</text>
+  <circle cx="244" cy="92" r="4" class="dot"/>
+  <rect x="32" y="110" width="216" height="196" rx="3" class="box"/>
+  <text x="42" y="130" class="t-title">spt</text>
+  <text x="72" y="130" class="t">@ </text>
+  <rect x="85" y="116" width="100" height="19" rx="2" class="hl"/>
+  <text x="87.6" y="130" class="t-hl">0x8004245110</text>
+  <text x="42" y="146" class="t-muted">supplemental_page_table</text>
+  <text x="42" y="170" class="t">pages: struct hash</text>
+  <text x="54" y="194" class="t">elem_cnt = 9</text>
+  <text x="54" y="216" class="t">bucket_cnt = 4</text>
+  <text x="54" y="238" class="t">buckets = </text>
+  <rect x="129" y="224" width="100" height="19" rx="2" class="hl"/>
+  <text x="132.0" y="238" class="t-hl">0x8004246018</text>
+  <circle cx="238" cy="234" r="4" class="dot"/>
+  <text x="54" y="260" class="t">hash = hashing</text>
+  <text x="54" y="282" class="t">less = less</text>
+  <text x="320" y="132" class="t-title">buckets[]</text>
+  <text x="320" y="148" class="t-muted">hash_init이 malloc</text>
+  <rect x="320" y="160" width="110" height="40" class="box"/>
+  <text x="332" y="185" class="t">[0] list 2개</text>
+  <rect x="320" y="200" width="110" height="40" class="box"/>
+  <text x="332" y="225" class="t">[1] list 2개</text>
+  <rect x="320" y="240" width="110" height="40" class="box"/>
+  <text x="332" y="265" class="t">[2] list 2개</text>
+  <rect x="320" y="280" width="110" height="40" class="box"/>
+  <text x="332" y="305" class="t">[3] list 3개</text>
+  <path d="M242 234 C 280 234, 280 180, 318 180" class="ptr" marker-end="url(#aGreyP)"/>
+  <text x="320" y="346" class="t-muted">[3] head</text>
+  <text x="328" y="364" class="t">→ </text>
+  <rect x="346" y="350" width="68" height="19" rx="2" class="hl"/>
+  <text x="348.8" y="364" class="t-hl">0x406000</text>
+  <text x="328" y="382" class="t">→ </text>
+  <text x="348.8" y="382" class="t">0x402000</text>
+  <text x="328" y="400" class="t">→ </text>
+  <rect x="346" y="386" width="68" height="19" rx="2" class="hl"/>
+  <text x="348.8" y="400" class="t-hl">0x3ff000</text>
+  <text x="320" y="428" class="t-muted">[0]~[2]: 2개씩</text>
+  <text x="500" y="22" class="t-muted">힙 (malloc): page마다 따로 놓임</text>
+  <rect x="500" y="30" width="220" height="120" rx="4" class="box-strong"/>
+  <text x="512" y="52" class="t-title">struct page (스택)</text>
+  <text x="512" y="70" class="t">@ </text>
+  <rect x="525" y="56" width="100" height="19" rx="2" class="hl"/>
+  <text x="527.6" y="70" class="t-hl">0x8004246498</text>
+  <text x="546" y="96" class="t-acc">va = 0x4747f000</text>
+  <rect x="540" y="108" width="170" height="30" rx="3" class="elem"/>
+  <text x="548" y="128" class="t-acc">spt_elem {prev,next}</text>
+  <path d="M432 180 C 480 180, 500 123, 538 123" class="link" marker-end="url(#aAccP)"/>
+  <rect x="770" y="30" width="210" height="120" rx="4" class="box-strong"/>
+  <text x="782" y="52" class="t-title">struct frame</text>
+  <text x="782" y="70" class="t">@ </text>
+  <rect x="795" y="56" width="100" height="19" rx="2" class="hl"/>
+  <text x="797.6" y="70" class="t-hl">0x8004240098</text>
+  <text x="790" y="96" class="t">kva = </text>
+  <rect x="834" y="82" width="100" height="19" rx="2" class="hl"/>
+  <text x="836.8" y="96" class="t-hl">0x8004a26000</text>
+  <circle cx="964" cy="92" r="4" class="dot"/>
+  <text x="790" y="124" class="t">page</text>
+  <circle cx="964" cy="120" r="4" class="dot"/>
+  <rect x="500" y="190" width="220" height="230" rx="4" class="box-strong"/>
+  <text x="512" y="212" class="t-title">struct page</text>
+  <text x="512" y="230" class="t">@ </text>
+  <rect x="525" y="216" width="100" height="19" rx="2" class="hl"/>
+  <text x="527.6" y="230" class="t-hl">0x8004246218</text>
+  <text x="512" y="256" class="t-muted">+0</text>
+  <text x="546" y="256" class="t">operations = anon_ops</text>
+  <text x="512" y="282" class="t-muted">+8</text>
+  <text x="546" y="282" class="t-acc">va = 0x402000</text>
+  <text x="512" y="308" class="t-muted">+16</text>
+  <text x="546" y="308" class="t">frame = </text>
+  <rect x="605" y="294" width="100" height="19" rx="2" class="hl"/>
+  <text x="608.4" y="308" class="t-hl">0x8004240098</text>
+  <circle cx="712" cy="304" r="4" class="dot"/>
+  <rect x="540" y="320" width="170" height="30" rx="3" class="elem"/>
+  <text x="548" y="340" class="t-acc">+24 spt_elem</text>
+  <text x="512" y="376" class="t-muted">+40</text>
+  <text x="546" y="376" class="t">union: anon</text>
+  <path d="M432 300 C 480 300, 500 335, 538 335" class="link" marker-end="url(#aAccP)"/>
+  <text x="436" y="292" class="t-acc">서랍 list</text>
+  <rect x="770" y="190" width="210" height="230" rx="4" class="box-strong"/>
+  <text x="782" y="212" class="t-title">struct page</text>
+  <text x="782" y="230" class="t">@ </text>
+  <rect x="795" y="216" width="100" height="19" rx="2" class="hl"/>
+  <text x="797.6" y="230" class="t-hl">0x8004246098</text>
+  <text x="790" y="256" class="t">operations = </text>
+  <rect x="888" y="242" width="84" height="19" rx="2" class="hl"/>
+  <text x="891.4" y="256" class="t-hl">uninit_ops</text>
+  <text x="790" y="282" class="t-acc">va = 0x3ff000</text>
+  <text x="790" y="308" class="t">frame = </text>
+  <rect x="849" y="294" width="37" height="19" rx="2" class="hl"/>
+  <text x="852.4" y="308" class="t-hl">NULL</text>
+  <rect x="784" y="320" width="170" height="30" rx="3" class="elem"/>
+  <text x="792" y="340" class="t-acc">spt_elem {prev,next}</text>
+  <rect x="787" y="362" width="107" height="19" rx="2" class="hl"/>
+  <text x="790" y="376" class="t-hl">union: uninit</text>
+  <rect x="787" y="381" width="179" height="18" rx="2" class="hl"/>
+  <text x="790" y="394" class="t-hl-s">init = lazy_load_segment</text>
+  <rect x="787" y="399" width="119" height="18" rx="2" class="hl"/>
+  <text x="790" y="412" class="t-hl-s">aux → load_info</text>
+  <line x1="712" y1="335" x2="782" y2="335" class="link" marker-start="url(#aAccP)" marker-end="url(#aAccP)"/>
+  <text x="745" y="368" class="t-acc" text-anchor="middle">prev/next</text>
+  <path d="M716 304 C 748 304, 744 128, 768 128" class="ptr" marker-end="url(#aGreyP)"/>
+  <text x="726" y="222" class="t-muted">frame</text>
+  <path d="M968 120 C 996 120, 996 170, 940 170 L 740 170 C 712 170, 700 176, 700 186" class="ptr" marker-end="url(#aGreyP)"/>
+  <text x="850" y="164" class="t-muted" text-anchor="middle">page (역참조)</text>
+  <rect x="770" y="432" width="210" height="70" rx="4" class="gap"/>
+  <text x="782" y="452" class="t-muted">struct frame (0x3ff000)</text>
+  <rect x="779" y="462" width="141" height="19" rx="2" class="hl"/>
+  <text x="782" y="476" class="t-hl">없음: 아직 claim 전</text>
+  <rect x="770" y="516" width="210" height="88" rx="4" class="box"/>
+  <text x="782" y="538" class="t-title">물리 메모리 4KB</text>
+  <text x="782" y="556" class="t-muted">0x402000의 내용 (코드 바이트)</text>
+  <text x="782" y="576" class="t">첫 8B = b84800000020bfc6</text>
+  <text x="782" y="596" class="t">sum  = c05e6742</text>
+  <path d="M968 92 C 1000 92, 1000 500, 940 514" class="ptr" marker-end="url(#aGreyP)"/>
+  <text x="992" y="160" class="t-muted" text-anchor="end">kva</text>
+  <rect x="20" y="480" width="240" height="124" rx="4" class="box-strong"/>
+  <text x="32" y="502" class="t-title">PML4</text>
+  <text x="32" y="518" class="t-muted">MMU(하드웨어)가 읽는 표</text>
+  <text x="32" y="546" class="t">0x402000 → </text>
+  <rect x="120" y="532" width="100" height="19" rx="2" class="hl"/>
+  <text x="123.0" y="546" class="t-hl">0x8004a26000</text>
+  <text x="32" y="568" class="t">0x3ff000 → </text>
+  <rect x="120" y="554" width="102" height="19" rx="2" class="hl"/>
+  <text x="123.0" y="568" class="t-hl">(없음: fault)</text>
+  <text x="32" y="590" class="t">0x4747f000 → </text>
+  <rect x="136" y="576" width="100" height="19" rx="2" class="hl"/>
+  <text x="138.6" y="590" class="t-hl">0x8004a21000</text>
+  <path d="M248 92 C 292 92, 292 460, 140 478" class="ptr" marker-end="url(#aGreyP)"/>
+  <path d="M260 556 L 768 556" class="ptr" marker-end="url(#aGreyP)"/>
+  <text x="430" y="548" class="t-muted">claim 뒤에만 생기는 매핑</text>
+</svg>
+</div>
+
+<h3>② 자식: __do_fork() 안, copy 직후</h3>
+<div class="fig pc-fig">
+<svg viewBox="0 0 1010 620" role="img" aria-label="자식: supplemental_page_table_copy 직후. 같은 va마다 새 struct page와 새 frame이 있고, 0x3ff000도 이미 로드되어 frame과 매핑이 있다. 서랍 안 순서는 부모의 반대다.">
+  <defs>
+    <marker id="aGreyC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+    <marker id="aAccC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head-acc"/></marker>
+  </defs>
+  <rect x="20" y="30" width="240" height="290" rx="4" class="box-strong"/>
+  <text x="32" y="52" class="t-title">struct thread</text>
+  <text x="32" y="70" class="t">@ </text>
+  <rect x="45" y="56" width="100" height="19" rx="2" class="hl"/>
+  <text x="47.6" y="70" class="t-hl">0x800424e000</text>
+  <text x="32" y="96" class="t">pml4 = </text>
+  <rect x="84" y="82" width="100" height="19" rx="2" class="hl"/>
+  <text x="86.6" y="96" class="t-hl">0x800424f000</text>
+  <circle cx="244" cy="92" r="4" class="dot"/>
+  <rect x="32" y="110" width="216" height="196" rx="3" class="box"/>
+  <text x="42" y="130" class="t-title">spt</text>
+  <text x="72" y="130" class="t">@ </text>
+  <rect x="85" y="116" width="100" height="19" rx="2" class="hl"/>
+  <text x="87.6" y="130" class="t-hl">0x800424e110</text>
+  <text x="42" y="146" class="t-muted">supplemental_page_table</text>
+  <text x="42" y="170" class="t">pages: struct hash</text>
+  <text x="54" y="194" class="t">elem_cnt = 9</text>
+  <text x="54" y="216" class="t">bucket_cnt = 4</text>
+  <text x="54" y="238" class="t">buckets = </text>
+  <rect x="129" y="224" width="100" height="19" rx="2" class="hl"/>
+  <text x="132.0" y="238" class="t-hl">0x8004246518</text>
+  <circle cx="238" cy="234" r="4" class="dot"/>
+  <text x="54" y="260" class="t">hash = hashing</text>
+  <text x="54" y="282" class="t">less = less</text>
+  <text x="320" y="132" class="t-title">buckets[]</text>
+  <text x="320" y="148" class="t-muted">hash_init이 malloc</text>
+  <rect x="320" y="160" width="110" height="40" class="box"/>
+  <text x="332" y="185" class="t">[0] list 2개</text>
+  <rect x="320" y="200" width="110" height="40" class="box"/>
+  <text x="332" y="225" class="t">[1] list 2개</text>
+  <rect x="320" y="240" width="110" height="40" class="box"/>
+  <text x="332" y="265" class="t">[2] list 2개</text>
+  <rect x="320" y="280" width="110" height="40" class="box"/>
+  <text x="332" y="305" class="t">[3] list 3개</text>
+  <path d="M242 234 C 280 234, 280 180, 318 180" class="ptr" marker-end="url(#aGreyC)"/>
+  <text x="320" y="346" class="t-muted">[3] head</text>
+  <text x="328" y="364" class="t">→ </text>
+  <rect x="346" y="350" width="68" height="19" rx="2" class="hl"/>
+  <text x="348.8" y="364" class="t-hl">0x3ff000</text>
+  <text x="328" y="382" class="t">→ </text>
+  <text x="348.8" y="382" class="t">0x402000</text>
+  <text x="328" y="400" class="t">→ </text>
+  <rect x="346" y="386" width="68" height="19" rx="2" class="hl"/>
+  <text x="348.8" y="400" class="t-hl">0x406000</text>
+  <rect x="317" y="415" width="131" height="18" rx="2" class="hl"/>
+  <text x="320" y="428" class="t-hl-s">[0]~[2]도 순서 반대</text>
+  <text x="500" y="22" class="t-muted">힙 (malloc): page마다 따로 놓임</text>
+  <rect x="500" y="30" width="220" height="120" rx="4" class="box-strong"/>
+  <text x="512" y="52" class="t-title">struct page (스택)</text>
+  <text x="512" y="70" class="t">@ </text>
+  <rect x="525" y="56" width="100" height="19" rx="2" class="hl"/>
+  <text x="527.6" y="70" class="t-hl">0x8004246598</text>
+  <text x="546" y="96" class="t-acc">va = 0x4747f000</text>
+  <rect x="540" y="108" width="170" height="30" rx="3" class="elem"/>
+  <text x="548" y="128" class="t-acc">spt_elem {prev,next}</text>
+  <path d="M432 180 C 480 180, 500 123, 538 123" class="link" marker-end="url(#aAccC)"/>
+  <rect x="770" y="30" width="210" height="120" rx="4" class="box-strong"/>
+  <text x="782" y="52" class="t-title">struct frame</text>
+  <text x="782" y="70" class="t">@ </text>
+  <rect x="795" y="56" width="100" height="19" rx="2" class="hl"/>
+  <text x="797.6" y="70" class="t-hl">0x8004240138</text>
+  <text x="790" y="96" class="t">kva = </text>
+  <rect x="834" y="82" width="100" height="19" rx="2" class="hl"/>
+  <text x="836.8" y="96" class="t-hl">0x8004a30000</text>
+  <circle cx="964" cy="92" r="4" class="dot"/>
+  <text x="790" y="124" class="t">page</text>
+  <circle cx="964" cy="120" r="4" class="dot"/>
+  <rect x="500" y="190" width="220" height="230" rx="4" class="box-strong"/>
+  <text x="512" y="212" class="t-title">struct page</text>
+  <text x="512" y="230" class="t">@ </text>
+  <rect x="525" y="216" width="100" height="19" rx="2" class="hl"/>
+  <text x="527.6" y="230" class="t-hl">0x8004246918</text>
+  <text x="512" y="256" class="t-muted">+0</text>
+  <text x="546" y="256" class="t">operations = anon_ops</text>
+  <text x="512" y="282" class="t-muted">+8</text>
+  <text x="546" y="282" class="t-acc">va = 0x402000</text>
+  <text x="512" y="308" class="t-muted">+16</text>
+  <text x="546" y="308" class="t">frame = </text>
+  <rect x="605" y="294" width="100" height="19" rx="2" class="hl"/>
+  <text x="608.4" y="308" class="t-hl">0x8004240138</text>
+  <circle cx="712" cy="304" r="4" class="dot"/>
+  <rect x="540" y="320" width="170" height="30" rx="3" class="elem"/>
+  <text x="548" y="340" class="t-acc">+24 spt_elem</text>
+  <text x="512" y="376" class="t-muted">+40</text>
+  <text x="546" y="376" class="t">union: anon</text>
+  <path d="M432 300 C 480 300, 500 335, 538 335" class="link" marker-end="url(#aAccC)"/>
+  <text x="436" y="292" class="t-acc">서랍 list</text>
+  <rect x="770" y="190" width="210" height="230" rx="4" class="box-strong"/>
+  <text x="782" y="212" class="t-title">struct page</text>
+  <text x="782" y="230" class="t">@ </text>
+  <rect x="795" y="216" width="100" height="19" rx="2" class="hl"/>
+  <text x="797.6" y="230" class="t-hl">0x8004246998</text>
+  <text x="790" y="256" class="t">operations = </text>
+  <rect x="888" y="242" width="68" height="19" rx="2" class="hl"/>
+  <text x="891.4" y="256" class="t-hl">anon_ops</text>
+  <text x="790" y="282" class="t-acc">va = 0x3ff000</text>
+  <text x="790" y="308" class="t">frame = </text>
+  <rect x="849" y="294" width="100" height="19" rx="2" class="hl"/>
+  <text x="852.4" y="308" class="t-hl">0x8004240148</text>
+  <rect x="784" y="320" width="170" height="30" rx="3" class="elem"/>
+  <text x="792" y="340" class="t-acc">spt_elem {prev,next}</text>
+  <rect x="787" y="362" width="92" height="19" rx="2" class="hl"/>
+  <text x="790" y="376" class="t-hl">union: anon</text>
+  <line x1="712" y1="335" x2="782" y2="335" class="link" marker-start="url(#aAccC)" marker-end="url(#aAccC)"/>
+  <text x="745" y="368" class="t-acc" text-anchor="middle">prev/next</text>
+  <path d="M716 304 C 748 304, 744 128, 768 128" class="ptr" marker-end="url(#aGreyC)"/>
+  <text x="726" y="222" class="t-muted">frame</text>
+  <path d="M968 120 C 996 120, 996 170, 940 170 L 740 170 C 712 170, 700 176, 700 186" class="ptr" marker-end="url(#aGreyC)"/>
+  <text x="850" y="164" class="t-muted" text-anchor="middle">page (역참조)</text>
+  <rect x="770" y="432" width="210" height="70" rx="4" class="box-strong"/>
+  <text x="782" y="452" class="t-title">struct frame (0x3ff000)</text>
+  <text x="782" y="472" class="t">@ </text>
+  <rect x="795" y="458" width="100" height="19" rx="2" class="hl"/>
+  <text x="797.6" y="472" class="t-hl">0x8004240148</text>
+  <text x="782" y="492" class="t">kva = </text>
+  <rect x="826" y="478" width="100" height="19" rx="2" class="hl"/>
+  <text x="828.8" y="492" class="t-hl">0x8004a31000</text>
+  <circle cx="968" cy="304" r="4" class="dot"/>
+  <path d="M968 308 L 968 430" class="ptr" marker-end="url(#aGreyC)"/>
+  <rect x="770" y="516" width="210" height="88" rx="4" class="box"/>
+  <text x="782" y="538" class="t-title">물리 메모리 4KB</text>
+  <text x="782" y="556" class="t-muted">0x402000의 내용 (코드 바이트)</text>
+  <text x="782" y="576" class="t">첫 8B = b84800000020bfc6</text>
+  <text x="782" y="596" class="t">sum  = c05e6742</text>
+  <path d="M968 92 C 1000 92, 1000 500, 940 514" class="ptr" marker-end="url(#aGreyC)"/>
+  <text x="992" y="160" class="t-muted" text-anchor="end">kva</text>
+  <rect x="20" y="480" width="240" height="124" rx="4" class="box-strong"/>
+  <text x="32" y="502" class="t-title">PML4</text>
+  <text x="32" y="518" class="t-muted">MMU(하드웨어)가 읽는 표</text>
+  <text x="32" y="546" class="t">0x402000 → </text>
+  <rect x="120" y="532" width="100" height="19" rx="2" class="hl"/>
+  <text x="123.0" y="546" class="t-hl">0x8004a30000</text>
+  <text x="32" y="568" class="t">0x3ff000 → </text>
+  <rect x="120" y="554" width="100" height="19" rx="2" class="hl"/>
+  <text x="123.0" y="568" class="t-hl">0x8004a31000</text>
+  <text x="32" y="590" class="t">0x4747f000 → </text>
+  <rect x="136" y="576" width="100" height="19" rx="2" class="hl"/>
+  <text x="138.6" y="590" class="t-hl">0x8004a29000</text>
+  <path d="M248 92 C 292 92, 292 460, 140 478" class="ptr" marker-end="url(#aGreyC)"/>
+  <path d="M260 556 L 768 556" class="ptr" marker-end="url(#aGreyC)"/>
+  <text x="430" y="548" class="t-muted">claim 뒤에만 생기는 매핑</text>
+</svg>
+</div>
+<p>같음 = <code>va</code> · <code>elem_cnt</code> · <code>bucket_cnt</code> · 서랍 번호 · 로드된 page의 <code>operations</code> · 내용 바이트. 다름 = 구조체 주소와 그 주소를 담은 포인터 전부(<code>spt_elem</code>의 <code>prev</code>·<code>next</code> 포함) · <code>0x3ff000</code>의 상태 · 서랍 안 순서</p>
+<p>서랍 안 순서 반대 = <code>hash_insert()</code>가 <code>list_push_front()</code>로 넣음 → 부모 순회 순서대로 넣으면 뒤집힘</p>
+
+<table class="copy">
+<thead><tr><th>부모 page</th><th>copy()가 자식 쪽에서 부르는 것</th><th>내용 출처</th></tr></thead>
+<tbody>
+<tr><td>UNINIT (<code>0x3ff000</code>)</td><td><code>vm_alloc_page_with_initializer(type, va, writable, init, aux 사본)</code> → <code>vm_claim_page(va)</code></td><td>파일: <code>load_info</code>의 <code>file</code> · <code>ofs</code> · <code>read_bytes</code></td></tr>
+<tr><td>ANON, 로드됨 (나머지 8개)</td><td><code>vm_alloc_page(VM_ANON, va, writable)</code> → <code>vm_claim_page(va)</code> → <code>memcpy</code></td><td>부모 <code>frame-&gt;kva</code> 4KB</td></tr>
+</tbody>
+</table>
+<p><code>vm_alloc_page_with_initializer()</code> = page malloc · page_initializer 고르기 · <code>uninit_new()</code> · spt 삽입. frame · PML4 · 내용 없음, <code>aux</code>는 받은 포인터 그대로 보관</p>
+<p><code>vm_claim_page()</code> = 자식 spt에서 va로 page 찾기 → page·frame 연결 · PML4 매핑 → <code>swap_in()</code> → <code>uninit_initialize()</code>가 page_initializer, 이어서 <code>init(page, aux)</code> 실행 = 내용 채우기</p>
+<p><code>aux</code> 사본 이유 = page 하나에 <code>load_info</code> 하나, free 한 번(<code>lazy_load_segment()</code> 또는 <code>uninit_destroy()</code>). 포인터 공유 → 자식 claim이 free → 부모 page에 해제된 주소 → 부모 fault 때 use-after-free, 종료 때 double free</p>
+<!-- section 2-2 end -->
+
 
 <h2>3. fault 주소에서 page 찾기</h2>
 <p class="lead">내리기 → 해시 → 서랍 고르기 → 비교 → <code>hash_entry</code>. PML4는 보지 않음</p>
