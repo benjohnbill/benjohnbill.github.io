@@ -1,7 +1,7 @@
 ---
 scope: This repository and its descendants
 role: Codex bridge to the shared Jungle workspace policy
-updated: 2026-09-22
+updated: 2026-10-14
 ---
 
 # Codex instructions
@@ -30,6 +30,10 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   시스템, C언어; a new topic also needs a title-color rule), `data-kind`
   (`note`, `deck`, `repo`), `data-src`, and an absolute `href`. Card shape:
   `skills/jungle-deck/reference/local-template.md`, "Built-in card".
+- **Skill cards.** The `자동화 스킬` group (`id="skills"`) sits above the
+  sort buttons, outside `#list`. Its cards link to skill repositories, with
+  `data-kind="repo"`, `data-src`, and an absolute `href`. They have no
+  `data-week` and no `data-topic`.
 - **Week headings.** `N주차 · <week name>`, wrapped in
   `<a class="wk-repo" href="https://github.com/<owner>/<repo>">` pointing at
   that week's repository (the `origin` of `~/dev/krafton-jungle/weekNN/`),
@@ -56,6 +60,11 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   A page with its own token names keeps the names and points them at site
   tokens (`--rule:var(--line)`, `--paper:var(--bg)`). Dark `--line`
   (`#2A2A2A`) is shared with the index cards: ask before raising it.
+- **Design reference.** Before you write or restyle a note, read
+  [DESIGN.md](DESIGN.md). It is a reference of formats to copy (type, cards,
+  fold cards, heading voice), not a full spec. Its "Keep" items are firm;
+  "Default" items change only with a written reason; "Pattern" items are
+  optional. Pages made before 2026-10-14 follow it only when edited.
 - **Moved pages.** `study/c-workshop/` and `study/malloc-lab/` hold redirect
   stubs for links shared before 2026-10-08. Do not delete them or add pages
   there.
