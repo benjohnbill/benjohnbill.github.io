@@ -29,7 +29,7 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
 #list{display:flex; flex-direction:column; gap:48px}
 .group{display:flex; flex-direction:column; scroll-margin-top:40px}
 .gh{position:relative; display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px solid transparent}
-.gh::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:var(--ink); transform:scaleX(0); transform-origin:left; transition:transform .7s var(--eo)}
+.gh::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:var(--ink); transform:scaleX(0); transform-origin:left; transition:transform .4s var(--eo)}
 .gh.in::after,.gh:not(.rv)::after{transform:none}
 .gh h2{flex:1 1 auto; min-width:0; margin:0; font-size:20px; letter-spacing:-0.01em}
 a.wk-repo{color:inherit; text-decoration:none}
@@ -64,14 +64,15 @@ a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
 #skills a.card .t{font-size:15px; line-height:1.6; letter-spacing:0}
 #skills a.card .t::after,.decks a.card .t::after{content:none}
 #skills a.card .d{font-size:15px; line-height:1.6}
-#skills a.card:active > *,.decks a.card:active > *{transform:none}
+.decks a.card:active > *{transform:none}
 .cards.decks{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; padding-top:14px}
 .decks a.card{display:flex; flex-direction:column; gap:6px; aspect-ratio:16/9; padding:16px 18px; border:1px solid var(--line)}
 .decks a.card::before{display:none}
 .decks a.card .t{line-height:1.35}
 .decks a.card .d{font-size:13.5px; line-height:1.55; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden}
 .decks a.card .m{margin-top:auto; padding-top:2px}
-.decks a.card.in{transition:opacity .5s var(--eo), transform .5s var(--eo), border-color .15s ease}
+.decks a.card{transition:transform .2s var(--eo), border-color .15s ease}
+.decks a.card.in{transition:opacity .28s var(--eo), transform .28s var(--eo), border-color .15s ease}
 .rt{display:flex; flex-direction:column}
 .rr{display:grid; grid-template-columns:62px 190px 170px minmax(0,1fr); gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px; align-items:baseline; color:inherit; text-decoration:none}
 a.rr:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
@@ -108,7 +109,8 @@ a.rr:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 .toc-toggle{display:none}
 @keyframes toc-in{from{opacity:0; transform:translateY(5px)}}
 .rv{opacity:0; transform:translateY(12px)}
-.rv.in{opacity:1; transform:none; transition:opacity .5s var(--eo), transform .5s var(--eo)}
+.rv.in{opacity:1; transform:none; transition:opacity .28s var(--eo), transform .28s var(--eo)}
+.no-enter .toc-list a{animation:none}
 @media (hover:hover) and (pointer:fine){
   .toc-list a:hover{color:var(--ink)}
   .toc-list a:not(.on):hover .toc-n,.toc-list a:not(.on):hover .toc-name{transform:translateX(3px)}
@@ -122,11 +124,16 @@ a.rr:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
   #skills a.card:hover .t{text-decoration:underline; text-underline-offset:3px}
   a.rr:hover .rn{text-decoration:underline; text-underline-offset:3px}
   .decks a.card:hover{border-color:var(--muted)}
-  .decks a.card.in:hover{transform:translateY(-2px)}
+  .decks a.card:hover{transform:translateY(-2px)}
 }
+.decks a.card:active{transform:scale(.98)}
+a.rr{transform-origin:left center; transition:transform .14s ease-out}
+a.rr:active{transform:scale(.995)}
 @media (prefers-reduced-motion:reduce){
   .toc-list a{animation:none}
   .toc-list a.on .toc-n,.toc-list a.on .toc-name{transform:none}
+  a.card .t::after{transition:none}
+  .decks a.card:hover{transform:none}
 }
 /* 표의 고정 열 합이 452px라 사이드바 옆 좁은 본문에서는 내용 열이 사라진다 */
 @media (max-width:960px){
@@ -512,6 +519,10 @@ a.card .d code{white-space:nowrap}
   skillsGroup.remove();
 
   const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // 노트를 읽고 돌아온 방문에서는 입장 효과를 다시 보여 주지 않는다
+  const returning = ['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type);
+  let skipEnter = returning;
+  wrap.classList.toggle('no-enter', returning);
   let view = 'week', sections = [], active = '', lock = 0;
 
   function placeTabLine() {
@@ -547,9 +558,9 @@ a.card .d code{white-space:nowrap}
     if (scrollY > 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) id = sections[sections.length - 1].id;
     setActive(id);
   }
-  function jump(id) {
+  function jump(id, instant) {
     setActive(id);
-    const c = calm();
+    const c = calm() || instant;
     lock = Date.now() + (c ? 0 : 1200);
     document.getElementById(id).scrollIntoView({ behavior: c ? 'auto' : 'smooth' });
   }
@@ -564,14 +575,20 @@ a.card .d code{white-space:nowrap}
     entries.forEach(e => {
       if (!e.isIntersecting) return;
       const t = e.target;
-      t.style.transitionDelay = `${Math.min(n++, 5) * 45}ms`;
+      t.style.transitionDelay = `${Math.min(n++, 3) * 30}ms`;
       t.classList.add('in');
-      t.addEventListener('transitionend', () => { t.style.transitionDelay = ''; }, { once: true });
+      const done = ev => {
+        if (ev.target !== t) return;
+        t.removeEventListener('transitionend', done);
+        t.style.transitionDelay = '';
+        t.classList.remove('rv', 'in');
+      };
+      t.addEventListener('transitionend', done);
       reveals.unobserve(t);
     });
   }, { rootMargin: '0px 0px -6% 0px' });
   function reveal(els) {
-    if (!reveals) return;
+    if (!reveals || skipEnter) return;
     els.forEach(e => {
       e.classList.remove('in');
       e.classList.add('rv');
@@ -623,6 +640,7 @@ a.card .d code{white-space:nowrap}
     });
     const { extra } = VIEWS[view];
     toc.replaceChildren(tocList(), ...(extra ? [tocExtra(extra)] : []));
+    if (!skipEnter) wrap.classList.remove('no-enter');
     setOpen(false);
     placeTabLine();
     active = ''; lock = 0;
@@ -637,7 +655,7 @@ a.card .d code{white-space:nowrap}
       e.preventDefault();
       if (a.dataset.view) render(a.dataset.view);
       setOpen(false);
-      jump(a.dataset.jump);
+      jump(a.dataset.jump, e.detail === 0);
       return;
     }
     const tab = e.target.closest('button[data-view]');
@@ -668,6 +686,7 @@ a.card .d code{white-space:nowrap}
   try { saved = localStorage.getItem('study-index-mode'); } catch (e) {}
   render(Object.hasOwn(VIEWS, saved) ? saved : 'week');
   reveal(document.querySelectorAll('.head > *'));
+  skipEnter = false;
 })();
 </script>
 </body>
