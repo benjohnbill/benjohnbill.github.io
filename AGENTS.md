@@ -28,11 +28,16 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
 - **Cards.** One `<a class="card">` per page in `index.html`, inside its
   week's group, with `data-week`, `data-topic` (exactly one: 알고리즘,
   시스템, C언어; a new topic also needs a title-color rule), `data-kind`
-  (`note`, `deck`, `repo`), `data-src`, and an absolute `href`. Card shape:
-  `skills/jungle-deck/reference/local-template.md`, "Built-in card".
-- **Skill cards.** The `자동화 스킬` group (`id="skills"`) sits above the
-  sort buttons, outside `#list`. Its cards link to skill repositories, with
-  `data-kind="repo"`, `data-src`, and an absolute `href`. They have no
+  (`note`, `deck`, `repo`), `data-src`, and an absolute `href`. CSS makes each
+  card a row, and the visible type label comes from `data-kind`, not `.b`.
+  Card shape: `skills/jungle-deck/reference/local-template.md`, "Built-in
+  card". Cards must stay in the HTML, because `jungle-deck` `publish.py` and
+  `jungle-week-init` read that markup; the script only adds the sidebar, the
+  repository table, and clones for the `주제` and `유형` views.
+- **Skill cards.** The `자동화 스킬` group (`id="skills"`) sits below `#list`,
+  outside it. The script shows the group only in the `유형` view. Without
+  JavaScript it shows below the weeks. Its cards link to skill repositories,
+  with `data-kind="repo"`, `data-src`, and an absolute `href`. They have no
   `data-week` and no `data-topic`.
 - **Week headings.** `N주차 · <week name>`, wrapped in
   `<a class="wk-repo" href="https://github.com/<owner>/<repo>">` pointing at

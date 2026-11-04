@@ -5,61 +5,161 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>크래프톤 정글 학습 기록</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111111'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EJ%3C/text%3E%3C/svg%3E">
-<meta name="description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드로 남긴 목차입니다.">
+<meta name="description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드, 저장소와 자동화 스킬로 남긴 목차입니다.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="크래프톤 정글 학습 기록">
-<meta property="og:description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드로 남긴 목차입니다.">
+<meta property="og:description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드, 저장소와 자동화 스킬로 남긴 목차입니다.">
 <meta property="og:url" content="https://benjohnbill.github.io/">
 <link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
 <style>
-.wrap{max-width:780px; margin:0 auto; padding:56px 22px 90px; display:flex; flex-direction:column; gap:34px}
+:root{--eo:cubic-bezier(.23,1,.32,1)}
+.wrap{max-width:780px; margin:0 auto; padding:56px 22px 90px; display:flex; flex-direction:column; gap:30px}
+.wrap.with-side{display:grid; max-width:1180px; grid-template-columns:276px minmax(0,780px); grid-template-areas:"s h" "s m"; grid-template-rows:auto 1fr; gap:30px 64px; justify-content:center}
+.head{grid-area:h; display:flex; flex-direction:column; gap:30px}
+.main{grid-area:m; display:flex; flex-direction:column; gap:48px; min-width:0}
 header{display:flex; flex-direction:column; gap:12px; padding-bottom:26px; border-bottom:3px solid var(--ink)}
 h1{margin:0; font-size:clamp(32px,6vw,50px); line-height:1.12; letter-spacing:-0.02em}
 .repo{font-family:var(--font-code); font-size:13px; color:var(--muted)}
 p{margin:0; color:var(--ink-2); max-width:60ch}
-h2{margin:0 0 4px; font-size:20px; letter-spacing:-0.01em}
-.cards{display:flex; flex-direction:column; gap:16px}
-a.card{display:flex; flex-direction:column; gap:7px; padding:22px 22px 24px;
-  background:var(--surface); border:1px solid var(--line);
-  text-decoration:none; color:inherit; transition:border-color .12s ease, background .12s ease}
-a.card:hover{border-color:var(--muted); background:var(--surface-2)}
-a.card:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
-a.card .t{font-size:22px; letter-spacing:-0.01em; display:flex; align-items:baseline; gap:10px}
-a.card .t::after{content:"→"; font-family:var(--font-code); font-size:16px; color:var(--muted); transition:transform .12s ease}
-a.card:hover .t::after{transform:translateX(4px)}
-a.card[data-topic="알고리즘"]{--tc:var(--t-alg)} a.card[data-topic="시스템"]{--tc:var(--t-sys)} a.card[data-topic="C언어"]{--tc:var(--t-c)}
-a.card[data-topic] .t::before{content:""; flex:none; width:8px; height:8px; background:var(--tc); align-self:center; margin-right:-2px}
-.group{display:flex; flex-direction:column; gap:14px}
-.group + .group{margin-top:30px}
-a.card .d{font-size:15.5px; color:var(--ink-2); line-height:1.7}
-a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
-a.card .m{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px}
-.b{font-family:var(--font-code); font-size:11.5px; line-height:1.5; padding:0 7px; border:1px solid var(--line); color:var(--ink-2); background:var(--surface-2)}
-.b.wk{display:none}
-#list.by-topic .b.wk{display:inline}
-.gh{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap}
-.gh h2{margin:0}
-.wil{font-family:var(--font-code); font-size:13px; color:var(--s2); text-decoration:none; white-space:nowrap}
-.wil:hover{text-decoration:underline}
-a.wk-repo{color:inherit; text-decoration:none}
-a.wk-repo:hover{text-decoration:underline; text-underline-offset:4px}
 a.repo{color:var(--muted); text-decoration:none}
 a.repo:hover{color:var(--ink-2); text-decoration:underline}
 .essay{font-size:15.5px; color:var(--s2); text-decoration:none; align-self:flex-start}
 .essay:hover{text-decoration:underline}
 .intro{display:flex; flex-direction:column; gap:10px}
-.sortbar{display:flex; align-items:center; font-family:var(--font-code); font-size:13px}
-.sortbar button{font:inherit; color:var(--ink-2); background:var(--surface); border:1px solid var(--line);
-  padding:6px 14px; cursor:pointer; transition:border-color .12s ease, background .12s ease}
-.sortbar button+button{margin-left:-1px}
-.sortbar button:hover{border-color:var(--muted)}
-.sortbar button.active{color:var(--surface); background:var(--ink); border-color:var(--ink)}
-.sortbar button:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
-#list{display:flex; flex-direction:column}
+#list{display:flex; flex-direction:column; gap:48px}
+.group{display:flex; flex-direction:column; scroll-margin-top:40px}
+.gh{position:relative; display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px solid transparent}
+.gh::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:var(--ink); transform:scaleX(0); transform-origin:left; transition:transform .7s var(--eo)}
+.gh.in::after,.gh:not(.rv)::after{transform:none}
+.gh h2{flex:1 1 auto; min-width:0; margin:0; font-size:20px; letter-spacing:-0.01em}
+a.wk-repo{color:inherit; text-decoration:none}
+a.wk-repo:hover{text-decoration:underline; text-underline-offset:4px}
+/* 제목 줄 오른쪽 끝에 두면 마크업을 바꾸지 않고 WIL 링크 왼쪽에 놓인다 */
+a.wk-repo::after{content:"저장소 ↗"; float:right; margin-top:2px; font-family:var(--font-code); font-size:13px; font-weight:400; line-height:37px; letter-spacing:0; color:var(--s2)}
+.wil{margin-left:4px; font-family:var(--font-code); font-size:13px; color:var(--s2); text-decoration:none; white-space:nowrap}
+.wil:hover{text-decoration:underline}
+.cards{display:flex; flex-direction:column}
+a.card{display:grid; grid-template-columns:62px minmax(0,1fr); gap:3px 10px; padding:15px 0 16px; border-bottom:1px solid var(--line); text-decoration:none; color:inherit}
+a.card:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
+a.card::before{content:""; padding-top:8px; font-family:var(--font-code); font-size:12px; line-height:1.5; color:var(--muted)}
+a.card[data-kind="note"]::before{content:"노트"}
+a.card[data-kind="deck"]::before{content:"슬라이드"}
+a.card[data-kind="repo"]::before{content:"저장소"}
+a.card > *{grid-column:-2 / -1; min-width:0; transform-origin:left center; transition:transform .14s ease-out, color .15s ease}
+a.card:active > *{transform:scale(.995)}
+a.card .t{font-size:18px; line-height:1.45; letter-spacing:-0.01em}
+a.card .t::after{content:"→"; display:inline-block; margin-left:8px; font-family:var(--font-code); font-size:14px; font-weight:400; color:var(--muted); transition:transform .2s var(--eo), color .15s ease}
+[data-topic="알고리즘"]{--tc:var(--t-alg)} [data-topic="시스템"]{--tc:var(--t-sys)} [data-topic="C언어"]{--tc:var(--t-c)}
+a.card[data-topic] .t::before,.sq{content:""; display:inline-block; width:8px; height:8px; margin-right:9px; vertical-align:2px; background:var(--tc)}
+a.card .d{font-size:15px; line-height:1.65; color:var(--ink-2)}
+a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
+.b{display:none}
+.with-week .b.wk{display:inline}
+.with-week .b.wk::after{content:" · "}
+.no-kind a.card{grid-template-columns:minmax(0,1fr)}
+.no-kind a.card::before{display:none}
+#skills a.card{grid-template-columns:150px minmax(0,1fr); gap:10px; padding:11px 0}
+#skills a.card > *{grid-column:auto}
+#skills a.card::before,#skills a.card .m{display:none}
+#skills a.card .t{font-size:15px; line-height:1.6; letter-spacing:0}
+#skills a.card .t::after,.decks a.card .t::after{content:none}
+#skills a.card .d{font-size:15px; line-height:1.6}
+#skills a.card:active > *,.decks a.card:active > *{transform:none}
+.cards.decks{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; padding-top:14px}
+.decks a.card{display:flex; flex-direction:column; gap:6px; aspect-ratio:16/9; padding:16px 18px; border:1px solid var(--line)}
+.decks a.card::before{display:none}
+.decks a.card .t{line-height:1.35}
+.decks a.card .d{font-size:13.5px; line-height:1.55; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden}
+.decks a.card .m{margin-top:auto; padding-top:2px}
+.decks a.card.in{transition:opacity .5s var(--eo), transform .5s var(--eo), border-color .15s ease}
+.rt{display:flex; flex-direction:column}
+.rr{display:grid; grid-template-columns:62px 190px 170px minmax(0,1fr); gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px; align-items:baseline; color:inherit; text-decoration:none}
+a.rr:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
+.rr.hd{font-family:var(--font-code); font-size:12px; color:var(--muted)}
+.rn{font-family:var(--font-code); font-size:13.5px; color:var(--ink); overflow-wrap:anywhere}
+.ro{font-family:var(--font-code); font-size:12.5px; color:var(--muted); overflow-wrap:anywhere}
+.rw{font-family:var(--font-code); font-size:12.5px; color:var(--muted)}
+.side{grid-area:s; align-self:start; position:sticky; top:40px; display:flex; flex-direction:column; gap:24px}
+.tabs{position:relative; display:flex; gap:22px; padding-bottom:10px; border-bottom:1px solid var(--line)}
+.tabs button{all:unset; cursor:pointer; font:600 16px/1.4 var(--font-head); color:var(--muted); transition:color .15s ease, transform .14s ease-out}
+.tabs button.on{color:var(--ink)}
+.tabs button:active{transform:scale(.96)}
+.tabs button:focus-visible{outline:2px solid var(--s3); outline-offset:3px}
+.tab-line{position:absolute; left:0; bottom:-1px; height:2px; background:var(--ink); transition:transform .26s var(--eo)}
+.toc{display:flex; flex-direction:column; gap:14px}
+.toc-list{position:relative; display:flex; flex-direction:column; padding-left:18px}
+.toc-track,.toc-fill,.toc-mark{position:absolute; left:0; top:0; pointer-events:none}
+.toc-track{bottom:0; width:1px; background:var(--line)}
+.toc-fill{width:1px; height:1px; background:var(--muted); transform-origin:top; transition:transform .28s var(--eo)}
+.toc-mark{left:-1px; width:3px; height:1px; background:var(--ink); transform-origin:top; transition:transform .28s var(--eo)}
+.toc-list a{display:flex; gap:10px; align-items:baseline; padding:8px 0; font:500 16px/1.4 var(--font-head); color:var(--ink-2); text-decoration:none; transform-origin:left center;
+  transition:color .15s ease, transform .14s ease-out; animation:toc-in .32s var(--eo) both; animation-delay:calc(var(--i) * 28ms)}
+.toc-list a.on{color:var(--ink)}
+.toc-n,.toc-name{transition:color .15s ease, transform .22s var(--eo)}
+.toc-list a.on .toc-n,.toc-list a.on .toc-name{transform:translateX(5px)}
+.toc-list a:active{transform:scale(.98)}
+.toc-list a:focus-visible,.toc-extra:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
+.toc-n{flex:none; min-width:34px; font:400 13px/1.7 var(--font-code); color:var(--muted)}
+.toc-list a.on .toc-n{color:var(--ink)}
+.toc-name{flex:1; min-width:0}
+.toc-c{font:400 13px/1.7 var(--font-code); color:var(--muted)}
+.toc-extra{display:flex; align-items:baseline; gap:10px; padding:12px 0 0 18px; border-top:1px solid var(--line); font:500 16px/1.4 var(--font-head); color:var(--ink-2); text-decoration:none; transition:color .15s ease}
+.toc-arrow{font-family:var(--font-code); font-size:14px; color:var(--muted); transition:transform .2s var(--eo)}
+.toc-toggle{display:none}
+@keyframes toc-in{from{opacity:0; transform:translateY(5px)}}
+.rv{opacity:0; transform:translateY(12px)}
+.rv.in{opacity:1; transform:none; transition:opacity .5s var(--eo), transform .5s var(--eo)}
+@media (hover:hover) and (pointer:fine){
+  .toc-list a:hover{color:var(--ink)}
+  .toc-list a:not(.on):hover .toc-n,.toc-list a:not(.on):hover .toc-name{transform:translateX(3px)}
+  .toc-list a:hover .toc-n{color:var(--ink-2)}
+  .tabs button:hover{color:var(--ink)}
+  .toc-extra:hover{color:var(--ink)}
+  .toc-extra:hover .toc-arrow{transform:translateX(4px)}
+  a.card:hover .t::after{transform:translateX(4px); color:var(--ink)}
+  a.card:hover .d{color:var(--ink)}
+  #skills a.card:hover .d,.decks a.card:hover .d{color:var(--ink-2)}
+  #skills a.card:hover .t{text-decoration:underline; text-underline-offset:3px}
+  a.rr:hover .rn{text-decoration:underline; text-underline-offset:3px}
+  .decks a.card:hover{border-color:var(--muted)}
+  .decks a.card.in:hover{transform:translateY(-2px)}
+}
+@media (prefers-reduced-motion:reduce){
+  .toc-list a{animation:none}
+  .toc-list a.on .toc-n,.toc-list a.on .toc-name{transform:none}
+}
+/* 표의 고정 열 합이 452px라 사이드바 옆 좁은 본문에서는 내용 열이 사라진다 */
+@media (max-width:960px){
+  .rr{grid-template-columns:minmax(0,1fr); gap:1px; padding:11px 0}
+  .rr.hd{display:none}
+}
+@media (max-width:860px){
+  .wrap.with-side{grid-template-columns:minmax(0,1fr); grid-template-areas:"h" "s" "m"; grid-template-rows:none; gap:22px}
+  .side{top:0; z-index:5; gap:6px; padding:10px 0 6px; background:var(--bg); border-bottom:1px solid var(--line)}
+  .tabs{border-bottom:none; padding-bottom:6px}
+  .toc-toggle{all:unset; box-sizing:border-box; cursor:pointer; display:flex; justify-content:space-between; gap:10px; font:600 16px/1.4 var(--font-head); padding:6px 0}
+  .toc-toggle:focus-visible{outline:2px solid var(--s3)}
+  .chev{transition:transform .2s var(--eo)}
+  .toc-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .toc{position:absolute; left:0; right:0; top:100%; padding:12px 0 14px; background:var(--bg); border-bottom:1px solid var(--ink); max-height:62vh; overflow:hidden auto;
+    opacity:0; visibility:hidden; transform:translateY(-6px); transform-origin:top; transition:opacity .16s ease, transform .2s var(--eo), visibility 0s .2s}
+  .toc.open{opacity:1; visibility:visible; transform:none; transition:opacity .16s ease, transform .2s var(--eo), visibility 0s}
+  .group{scroll-margin-top:110px}
+}
+@media (max-width:760px){
+  .wrap{padding:36px 16px 50px}
+  a.card{grid-template-columns:minmax(0,1fr)}
+  a.card::before{padding-top:0}
+  #skills a.card{grid-template-columns:minmax(0,1fr); gap:1px}
+  .cards.decks{grid-template-columns:minmax(0,1fr)}
+}
+a.card .d code{white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+<div class="head">
 
 <header>
   <h1 class="dh">크래프톤 정글 학습 기록</h1>
@@ -71,38 +171,9 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
   <a class="essay" href="https://velog.io/@benjohnbill/jungle-essey">정글을 시작하며 쓴 글 →</a>
 </div>
 
-<div class="group" id="skills">
-  <div class="gh">
-    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/krafton-jungle">자동화 스킬</a></h2>
-  </div>
-  <div class="cards">
-    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init">
-      <div class="t dh">한 주의 시작</div>
-      <div class="d">새 주차 저장소의 첫날을 준비합니다. 빌드 구성과 에디터 설정을 잡고, 혼자 하는 주에는 이슈 보드를, 주차별 <code>CLAUDE.md</code> 초안까지 만듭니다.</div>
-      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-week-init</span></div>
-    </a>
-    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge">
-      <div class="t dh">팀 PR 검증</div>
-      <div class="d">Pintos 팀 주차에서 내 PR, 팀원의 PR, 깨진 develop을 최신 기준에서 검증하고 보고합니다. 승인과 병합은 사람이 합니다.</div>
-      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-team-merge</span></div>
-    </a>
-    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/jungle-deck" href="https://github.com/benjohnbill/jungle-deck">
-      <div class="t dh">2분 발표 자료</div>
-      <div class="d">매주 2분 발표에 쓰는 HTML 슬라이드를 만들고, 이어서 고치고, GitHub Pages에 올립니다. 저장소에서 예시 발표 자료도 볼 수 있습니다.</div>
-      <div class="m"><span class="b">스킬</span><span>github.com/benjohnbill/jungle-deck</span></div>
-    </a>
-    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close">
-      <div class="t dh">하루의 마무리</div>
-      <div class="d">주차 저장소의 하루를 닫습니다. 검증, 커밋, 푸시, 보드 갱신을 거쳐 다음 날 이어갈 메모를 남깁니다.</div>
-      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-close</span></div>
-    </a>
-  </div>
 </div>
 
-<div class="sortbar" role="group" aria-label="보기 기준">
-  <button type="button" data-mode="week" class="active" aria-pressed="true">주차</button>
-  <button type="button" data-mode="topic" aria-pressed="false">주제</button>
-</div>
+<main class="main">
 
 <div id="list">
 <div class="group">
@@ -292,49 +363,311 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
 </div>
 </div>
 
+<div class="group" id="skills">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/krafton-jungle">자동화 스킬</a></h2>
+  </div>
+  <div class="cards">
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init">
+      <div class="t dh">한 주의 시작</div>
+      <div class="d">새 주차 저장소의 첫날을 준비합니다. 빌드 구성과 에디터 설정을 잡고, 혼자 하는 주에는 이슈 보드를, 주차별 <code>CLAUDE.md</code> 초안까지 만듭니다.</div>
+      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-week-init</span></div>
+    </a>
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge">
+      <div class="t dh">팀 PR 검증</div>
+      <div class="d">Pintos 팀 주차에서 내 PR, 팀원의 PR, 깨진 develop을 최신 기준에서 검증하고 보고합니다. 승인과 병합은 사람이 합니다.</div>
+      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-team-merge</span></div>
+    </a>
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/jungle-deck" href="https://github.com/benjohnbill/jungle-deck">
+      <div class="t dh">2분 발표 자료</div>
+      <div class="d">매주 2분 발표에 쓰는 HTML 슬라이드를 만들고, 이어서 고치고, GitHub Pages에 올립니다. 저장소에서 예시 발표 자료도 볼 수 있습니다.</div>
+      <div class="m"><span class="b">스킬</span><span>github.com/benjohnbill/jungle-deck</span></div>
+    </a>
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close">
+      <div class="t dh">하루의 마무리</div>
+      <div class="d">주차 저장소의 하루를 닫습니다. 검증, 커밋, 푸시, 보드 갱신을 거쳐 다음 날 이어갈 메모를 남깁니다.</div>
+      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-close</span></div>
+    </a>
+  </div>
+</div>
+
+</main>
+
 </div>
 
 <script>
-/* 주차 보기는 손으로 쓴 마크업 그대로다(주차 이름과 WIL 링크가 여기에만 있다).
-   주제 보기는 카드를 data-topic으로 다시 묶고, 주제가 없는 카드는 맨 뒤 '그 외'에 둔다.
-   마지막 선택은 이 브라우저에만 기억한다 */
+/* 주차 보기는 손으로 쓴 마크업의 노드를 그대로 쓴다(주차 이름과 WIL 링크가 여기에만 있다).
+   주제와 유형 보기는 카드를 복제해 다시 묶고, 주제가 없는 카드는 주제 보기 맨 뒤 '그 외'에 둔다.
+   사이드바와 본문은 같은 섹션 목록에서 나온다. 마지막 선택은 이 브라우저에만 기억한다 */
 (() => {
   const list = document.getElementById('list');
-  const byWeek = Array.from(list.children).map(n => n.cloneNode(true));
-  const cards = Array.from(list.querySelectorAll('a.card'));
-  const buttons = Array.from(document.querySelectorAll('.sortbar button'));
-  const topics = [...new Set(cards.map(c => c.dataset.topic).filter(Boolean))];
+  const skillsGroup = document.getElementById('skills');
 
-  function group(title, members) {
-    const g = document.createElement('div'); g.className = 'group';
-    const gh = document.createElement('div'); gh.className = 'gh';
-    const h2 = document.createElement('h2'); h2.className = 'dh'; h2.textContent = title;
-    const box = document.createElement('div'); box.className = 'cards';
-    members.forEach(c => box.appendChild(c.cloneNode(true)));
-    gh.appendChild(h2); g.append(gh, box); return g;
-  }
+  const weeks = [...list.querySelectorAll(':scope > .group')].map((group, i) => {
+    const repo = group.querySelector('a.wk-repo');
+    const wil = group.querySelector('a.wil');
+    const [head, ...rest] = repo.textContent.trim().split(' · ');
+    return {
+      id: `week-${i}`, n: head.replace('주차', ''), name: rest.join(' · '),
+      repo: repo.href, wil: wil ? wil.href : '', group, cards: [...group.querySelectorAll('a.card')],
+    };
+  });
+  const repos = [];
+  weeks.forEach(w => {
+    const hit = repos.find(r => r.href === w.repo);
+    if (hit) { hit.weeks.push(w.n); hit.names.push(w.name); return; }
+    const [owner, name] = new URL(w.repo).pathname.slice(1).split('/');
+    repos.push({ href: w.repo, owner, name, weeks: [w.n], names: [w.name] });
+  });
+  const cards = weeks.flatMap(w => w.cards);
+  const model = {
+    weeks, repos,
+    skills: [...skillsGroup.querySelectorAll('a.card')],
+    topics: [...new Set(cards.map(c => c.dataset.topic).filter(Boolean))],
+  };
 
-  function render(mode) {
-    list.textContent = '';
-    list.classList.toggle('by-topic', mode === 'topic');
-    if (mode === 'week') {
-      byWeek.forEach(n => list.appendChild(n.cloneNode(true)));
-    } else {
-      topics.forEach(t => list.appendChild(group(t, cards.filter(c => c.dataset.topic === t))));
-      const rest = cards.filter(c => !c.dataset.topic);
-      if (rest.length) list.appendChild(group('그 외', rest));
-    }
-    buttons.forEach(b => {
-      const on = b.dataset.mode === mode;
-      b.classList.toggle('active', on); b.setAttribute('aria-pressed', on);
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  const group = (title, body) => {
+    const g = el('div', 'group'), gh = el('div', 'gh');
+    gh.append(el('h2', 'dh', title));
+    g.append(gh, body);
+    return g;
+  };
+  const rows = (members, cls) => {
+    const box = el('div', `cards ${cls}`);
+    box.append(...members.map(c => c.cloneNode(true)));
+    return box;
+  };
+  const deckCards = members => {
+    const box = rows(members, 'decks with-week');
+    box.querySelectorAll('.m > span:not(.b)').forEach(s => { s.textContent = s.textContent.split(' · ').pop(); });
+    return box;
+  };
+  const repoTable = () => {
+    const box = el('div', 'rt'), hd = el('div', 'rr hd');
+    hd.append(...['주차', '저장소', '소유자', '내용'].map(t => el('span', '', t)));
+    box.append(hd);
+    model.repos.forEach(r => {
+      const a = el('a', 'rr');
+      a.href = r.href;
+      const span = r.weeks.length > 1 ? `${r.weeks[0]}~${r.weeks[r.weeks.length - 1]}` : r.weeks[0];
+      a.append(el('span', 'rw', `${span}주차`), el('span', 'rn', `${r.name} ↗`), el('span', 'ro', r.owner), el('span', '', r.names.join(', ')));
+      box.append(a);
     });
-    try { localStorage.setItem('study-index-mode', mode); } catch (e) {}
+    return box;
+  };
+
+  const VIEWS = {
+    week: {
+      label: '주차',
+      extra: { label: '자동화 스킬', view: 'type', id: 'skills' },
+      sections: () => model.weeks.map(w => ({ id: w.id, n: w.n, label: w.name, node: w.group })),
+    },
+    topic: {
+      label: '주제',
+      sections: () => {
+        const of = t => cards.filter(c => (c.dataset.topic || '') === t);
+        const named = model.topics.map(t => ({ label: t, topic: t, members: of(t) }));
+        const rest = of('').length ? [{ label: '그 외', members: of('') }] : [];
+        return [...named, ...rest].map((s, i) => ({
+          id: `topic-${i}`, label: s.label, topic: s.topic, count: s.members.length,
+          node: group(s.label, rows(s.members, 'with-week')),
+        }));
+      },
+    },
+    type: {
+      label: '유형',
+      sections: () => {
+        const notes = cards.filter(c => c.dataset.kind === 'note');
+        const decks = cards.filter(c => c.dataset.kind === 'deck');
+        return [
+          { id: 'type-repos', label: '저장소', count: model.repos.length, node: group('저장소', repoTable()) },
+          { id: 'skills', label: '자동화 스킬', count: model.skills.length, node: skillsGroup },
+          { id: 'type-notes', label: '노트', count: notes.length, node: group('노트', rows(notes, 'no-kind with-week')) },
+          { id: 'type-decks', label: '슬라이드', count: decks.length, node: group('슬라이드', deckCards(decks)) },
+        ];
+      },
+    },
+  };
+
+  const side = el('aside', 'side');
+  side.innerHTML = `<div class="tabs" role="group" aria-label="보기 기준">${
+    Object.entries(VIEWS).map(([k, v]) => `<button type="button" data-view="${k}">${v.label}</button>`).join('')
+  }<span class="tab-line"></span></div>
+    <button type="button" class="toc-toggle" aria-expanded="false"><span class="cur"></span><span class="chev">▾</span></button>
+    <nav class="toc" aria-label="목차"></nav>`;
+  const tabs = [...side.querySelectorAll('.tabs button')];
+  const tabLine = side.querySelector('.tab-line');
+  const toggle = side.querySelector('.toc-toggle');
+  const toc = side.querySelector('.toc');
+
+  const wrap = document.querySelector('.wrap');
+  wrap.classList.add('with-side');
+  wrap.insertBefore(side, document.querySelector('.main'));
+  skillsGroup.remove();
+
+  const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let view = 'week', sections = [], active = '', lock = 0;
+
+  function placeTabLine() {
+    const cur = side.querySelector('.tabs button.on');
+    tabLine.style.width = `${cur.offsetWidth}px`;
+    tabLine.style.transform = `translateX(${cur.offsetLeft}px)`;
+  }
+  function placeMark() {
+    const a = toc.querySelector('.toc-list a.on');
+    if (!a) return;
+    const y = a.offsetTop, h = a.offsetHeight;
+    toc.querySelector('.toc-mark').style.transform = `translateY(${y}px) scaleY(${h})`;
+    toc.querySelector('.toc-fill').style.transform = `scaleY(${y + h})`;
+  }
+  function setActive(id) {
+    if (id === active) return;
+    active = id;
+    toc.querySelectorAll('.toc-list a').forEach(a => {
+      const on = a.dataset.jump === id;
+      a.classList.toggle('on', on);
+      if (on) {
+        a.setAttribute('aria-current', 'true');
+        side.querySelector('.cur').textContent = a.querySelector('.toc-name').textContent;
+      } else a.removeAttribute('aria-current');
+    });
+    placeMark();
+  }
+  function spy() {
+    if (Date.now() < lock) return;
+    const line = innerHeight * 0.3;
+    let id = sections[0].id;
+    sections.forEach(s => { if (s.node.getBoundingClientRect().top <= line) id = s.id; });
+    if (scrollY > 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) id = sections[sections.length - 1].id;
+    setActive(id);
+  }
+  function jump(id) {
+    setActive(id);
+    const c = calm();
+    lock = Date.now() + (c ? 0 : 1200);
+    document.getElementById(id).scrollIntoView({ behavior: c ? 'auto' : 'smooth' });
+  }
+  function setOpen(open) {
+    toggle.setAttribute('aria-expanded', open);
+    toc.classList.toggle('open', open);
   }
 
-  buttons.forEach(b => b.addEventListener('click', () => render(b.dataset.mode)));
+  const REVEAL = '.gh, a.card, .rr';
+  const reveals = calm() ? null : new IntersectionObserver(entries => {
+    let n = 0;
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const t = e.target;
+      t.style.transitionDelay = `${Math.min(n++, 5) * 45}ms`;
+      t.classList.add('in');
+      t.addEventListener('transitionend', () => { t.style.transitionDelay = ''; }, { once: true });
+      reveals.unobserve(t);
+    });
+  }, { rootMargin: '0px 0px -6% 0px' });
+  function reveal(els) {
+    if (!reveals) return;
+    els.forEach(e => {
+      e.classList.remove('in');
+      e.classList.add('rv');
+      reveals.observe(e);
+    });
+  }
+
+  function tocList() {
+    const box = el('div', 'toc-list');
+    box.append(el('span', 'toc-track'), el('span', 'toc-fill'), el('span', 'toc-mark'));
+    sections.forEach((s, i) => {
+      const a = el('a');
+      a.href = `#${s.id}`;
+      a.dataset.jump = s.id;
+      a.style.setProperty('--i', i);
+      if (s.n) a.append(el('span', 'toc-n', s.n));
+      const name = el('span', 'toc-name');
+      if (s.topic) {
+        const sq = el('span', 'sq');
+        sq.dataset.topic = s.topic;
+        name.append(sq);
+      }
+      name.append(s.label);
+      a.append(name);
+      if (s.count != null) a.append(el('span', 'toc-c', s.count));
+      box.append(a);
+    });
+    return box;
+  }
+  function tocExtra({ label, view: target, id }) {
+    const a = el('a', 'toc-extra');
+    a.href = `#${id}`;
+    a.dataset.jump = id;
+    a.dataset.view = target;
+    a.append(el('span', 'toc-name', label), el('span', 'toc-arrow', '→'));
+    return a;
+  }
+
+  function render(next) {
+    view = next;
+    sections = VIEWS[view].sections();
+    if (reveals) list.querySelectorAll(REVEAL).forEach(e => reveals.unobserve(e));
+    sections.forEach(s => { s.node.id = s.id; });
+    list.replaceChildren(...sections.map(s => s.node));
+    tabs.forEach(b => {
+      const on = b.dataset.view === view;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on);
+    });
+    const { extra } = VIEWS[view];
+    toc.replaceChildren(tocList(), ...(extra ? [tocExtra(extra)] : []));
+    setOpen(false);
+    placeTabLine();
+    active = ''; lock = 0;
+    spy();
+    reveal(list.querySelectorAll(REVEAL));
+    try { localStorage.setItem('study-index-mode', view); } catch (e) {}
+  }
+
+  side.addEventListener('click', e => {
+    const a = e.target.closest('a[data-jump]');
+    if (a) {
+      e.preventDefault();
+      if (a.dataset.view) render(a.dataset.view);
+      setOpen(false);
+      jump(a.dataset.jump);
+      return;
+    }
+    const tab = e.target.closest('button[data-view]');
+    if (tab) {
+      if (tab.dataset.view === view) return;
+      render(tab.dataset.view);
+      const first = sections[0].node;
+      if (first.getBoundingClientRect().top < 0) first.scrollIntoView();
+      return;
+    }
+    if (e.target.closest('.toc-toggle')) setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+  });
+
+  let ticking = false;
+  addEventListener('scroll', () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; spy(); });
+  }, { passive: true });
+  addEventListener('scrollend', () => { lock = 0; spy(); });
+  addEventListener('wheel', () => { lock = 0; }, { passive: true });
+  addEventListener('touchstart', () => { lock = 0; }, { passive: true });
+  const place = () => { placeTabLine(); placeMark(); };
+  addEventListener('resize', place);
+  if (document.fonts) document.fonts.ready.then(place);
+
   let saved = null;
   try { saved = localStorage.getItem('study-index-mode'); } catch (e) {}
-  if (saved === 'topic') render('topic');
+  render(Object.hasOwn(VIEWS, saved) ? saved : 'week');
+  reveal(document.querySelectorAll('.head > *'));
 })();
 </script>
 </body>
