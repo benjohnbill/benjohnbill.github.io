@@ -30,6 +30,8 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   시스템, C언어; a new topic also needs a title-color rule), `data-kind`
   (`note`, `deck`, `repo`), `data-src`, and an absolute `href`. CSS makes each
   card a row, and the visible type label comes from `data-kind`, not `.b`.
+  A team deck also has `data-scope="team"`. A deck without it counts as
+  personal in the `유형` view.
   Card shape: `skills/jungle-deck/reference/local-template.md`, "Built-in
   card". Cards must stay in the HTML, because `jungle-deck` `publish.py` and
   `jungle-week-init` read that markup; the script only adds the sidebar, the

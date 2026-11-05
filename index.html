@@ -48,6 +48,7 @@ a.card:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 a.card::before{content:""; padding-top:8px; font-family:var(--font-code); font-size:12px; line-height:1.5; color:var(--muted)}
 a.card[data-kind="note"]::before{content:"노트"}
 a.card[data-kind="deck"]::before{content:"슬라이드"}
+a.card[data-scope="team"]::before{content:"팀 슬라이드"; white-space:nowrap}
 a.card[data-kind="repo"]::before{content:"저장소"}
 a.card > *{grid-column:-2 / -1; min-width:0; transform-origin:left center; transition:transform .14s ease-out, color .15s ease}
 a.card:active > *{transform:scale(.995)}
@@ -316,7 +317,7 @@ a.card .d code{white-space:nowrap}
       <div class="d">내 코드의 <code>debug_panic</code>은 <code>exit(1)</code>로 끝나는데, Pintos 커널의 같은 함수는 <code>power_off()</code>나 <code>for (;;)</code>로 끝났습니다. 공통 코드와 다른 부분을 나란히 놓고, 밑에 받아 줄 OS가 있느냐가 끝을 가른다는 것을 Pintos와 Linux의 실제 커널 PANIC 로그로 확인합니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">7주차</span><span>jingeunOS / harness/boot.c · lib/kernel/debug.c</span></div>
     </a>
-    <a class="card" data-week="7" data-topic="시스템" data-kind="deck" data-src="week07/study/team9/team9.html" href="https://benjohnbill.github.io/study/week07/team9.html">
+    <a class="card" data-week="7" data-topic="시스템" data-kind="deck" data-scope="team" data-src="week07/study/team9/team9.html" href="https://benjohnbill.github.io/study/week07/team9.html">
       <div class="t dh">PintOS 1주차 [Thread] · 9팀 발표</div>
       <div class="d">9팀 세 사람의 발표를 순서대로 잇습니다. 원형 리스트(benjohnbill), 인터럽트 핸들러에서 lock을 잡을 수 없는 이유(Jun), MLFQS에서 바뀐 것만 다시 계산하기(Yena). 한 덱이 끝나면 다음 덱으로 넘어가고, 화살표 키로 넘깁니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">7주차</span><span>week7 / pintos-team9 · 6분 팀 발표</span></div>
@@ -345,7 +346,7 @@ a.card .d code{white-space:nowrap}
       <div class="d">남은 테스트를 사람과 요일에 배치한 팀 분업표입니다. fork·wait·exec는 셋이 각자 구현하고 파일 쪽은 나눠 맡으며, 테스트마다 이슈 링크와 체크박스를 달아 두었습니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 분업표</span></div>
     </a>
-    <a class="card" data-week="8" data-topic="시스템" data-kind="deck" data-src="week08/study/team8/team8.html" href="https://benjohnbill.github.io/study/week08/team8.html">
+    <a class="card" data-week="8" data-topic="시스템" data-kind="deck" data-scope="team" data-src="week08/study/team8/team8.html" href="https://benjohnbill.github.io/study/week08/team8.html">
       <div class="t dh">PintOS 2주차 [User Programs] · 8팀 발표</div>
       <div class="d">8팀 세 사람의 발표를 순서대로 잇습니다. 1주일간의 8팀(benjohnbill), 부모가 <code>child_status</code>와 세마포어로 자식의 종료를 기다리는 <code>wait()</code>(정승영), 출력은 다른데 테스트는 PASS였던 이유(누리). 한 덱이 끝나면 다음 덱으로 넘어가고, 화살표 키로 넘깁니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 팀 발표</span></div>
@@ -368,7 +369,7 @@ a.card .d code{white-space:nowrap}
       <div class="d">보조 페이지 테이블(SPT)과 Pintos hash, <code>struct page</code>가 메모리에서 어떻게 엮이는지 그린 연결도입니다. <code>spt_elem</code>과 <code>pages</code> 두 줄이 있을 때와 없을 때를 같은 배치로 위아래에 두었고, fault 주소 <code>0x401234</code>에서 page를 찾는 길을 실제 probe 실행 값으로 따라갑니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · SPT 연결도</span></div>
     </a>
-    <a class="card" data-week="9" data-topic="시스템" data-kind="deck" data-src="week09/study/team6/team6.html" href="https://benjohnbill.github.io/study/week09/team6.html">
+    <a class="card" data-week="9" data-topic="시스템" data-kind="deck" data-scope="team" data-src="week09/study/team6/team6.html" href="https://benjohnbill.github.io/study/week09/team6.html">
       <div class="t dh">PintOS 3~4주차 [VM] · 6팀 발표</div>
       <div class="d">6팀 세 사람의 발표를 18장으로 잇습니다. COW를 제외한 140개 테스트 통과와 협업 도구, <code>munmap</code> 설계와 병합 뒤에 공유 필드를 다시 맞춘 경험, Lazy loading 이후 <code>read</code> 실패와 락 이중 획득을 해결한 과정, Clean Code와 책임 경계 순서입니다. 화살표 키로 넘깁니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · 팀 발표</span></div>
@@ -504,11 +505,14 @@ a.card .d code{white-space:nowrap}
       sections: () => {
         const notes = cards.filter(c => c.dataset.kind === 'note');
         const decks = cards.filter(c => c.dataset.kind === 'deck');
+        const teamDecks = decks.filter(c => c.dataset.scope === 'team');
+        const soloDecks = decks.filter(c => c.dataset.scope !== 'team');
         return [
           { id: 'type-repos', label: '저장소', count: model.repos.length, node: group('저장소', repoTable()) },
           { id: 'skills', label: '자동화 스킬', count: model.skills.length, node: skillsGroup },
           { id: 'type-notes', label: '노트', count: notes.length, node: group('노트', rows(notes, 'no-kind with-week')) },
-          { id: 'type-decks', label: '슬라이드', count: decks.length, node: group('슬라이드', deckCards(decks)) },
+          { id: 'type-team-decks', label: '팀 슬라이드', count: teamDecks.length, node: group('팀 슬라이드', deckCards(teamDecks)) },
+          { id: 'type-solo-decks', label: '개인 슬라이드', count: soloDecks.length, node: group('개인 슬라이드', deckCards(soloDecks)) },
         ];
       },
     },
