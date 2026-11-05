@@ -105,6 +105,8 @@ panes with vertical scroll, horizontal scroll in code panes.
 ## 7. Check before publish
 
 1. Headless render at 1000px and 390px wide: no cut text, no page-level
-   horizontal scroll.
+   horizontal scroll. Then run `~/.claude/scripts/page-check/page-check <file>`
+   and fix each Block before any push: it sees clipped content that a headless
+   screenshot hides.
 2. Slop scan (section 5).
 3. Copy the original byte-for-byte to `study/weekNN/` (Site rules: Copies).
