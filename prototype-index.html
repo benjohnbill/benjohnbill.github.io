@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>PROTOTYPE · 크래프톤 정글 학습 기록</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23111111'/%3E%3Ctext x='16' y='23' font-size='19' font-family='monospace' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EJ%3C/text%3E%3C/svg%3E">
+<meta name="description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드로 남긴 목차입니다.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="크래프톤 정글 학습 기록">
+<meta property="og:description" content="크래프톤 정글을 지나면서 공부한 것을 주차별 문서와 발표 슬라이드로 남긴 목차입니다.">
+<meta property="og:url" content="https://benjohnbill.github.io/">
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+.wrap{max-width:780px; margin:0 auto; padding:56px 22px 90px; display:flex; flex-direction:column; gap:34px}
+header{display:flex; flex-direction:column; gap:12px; padding-bottom:26px; border-bottom:3px solid var(--ink)}
+h1{margin:0; font-size:clamp(32px,6vw,50px); line-height:1.12; letter-spacing:-0.02em}
+.repo{font-family:var(--font-code); font-size:13px; color:var(--muted)}
+p{margin:0; color:var(--ink-2); max-width:60ch}
+h2{margin:0 0 4px; font-size:20px; letter-spacing:-0.01em}
+.cards{display:flex; flex-direction:column; gap:16px}
+a.card{display:flex; flex-direction:column; gap:7px; padding:22px 22px 24px;
+  background:var(--surface); border:1px solid var(--line);
+  text-decoration:none; color:inherit; transition:border-color .12s ease, background .12s ease}
+a.card:hover{border-color:var(--muted); background:var(--surface-2)}
+a.card:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
+a.card .t{font-size:22px; letter-spacing:-0.01em; display:flex; align-items:baseline; gap:10px}
+a.card .t::after{content:"→"; font-family:var(--font-code); font-size:16px; color:var(--muted); transition:transform .12s ease}
+a.card:hover .t::after{transform:translateX(4px)}
+a.card[data-topic="알고리즘"]{--tc:var(--t-alg)} a.card[data-topic="시스템"]{--tc:var(--t-sys)} a.card[data-topic="C언어"]{--tc:var(--t-c)}
+a.card[data-topic] .t::before{content:""; flex:none; width:8px; height:8px; background:var(--tc); align-self:center; margin-right:-2px}
+.group{display:flex; flex-direction:column; gap:14px}
+.group + .group{margin-top:30px}
+a.card .d{font-size:15.5px; color:var(--ink-2); line-height:1.7}
+a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
+a.card .m{display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px}
+.b{font-family:var(--font-code); font-size:11.5px; line-height:1.5; padding:0 7px; border:1px solid var(--line); color:var(--ink-2); background:var(--surface-2)}
+.b.wk{display:none}
+#list.by-topic .b.wk{display:inline}
+.gh{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap}
+.gh h2{margin:0}
+.wil{font-family:var(--font-code); font-size:13px; color:var(--s2); text-decoration:none; white-space:nowrap}
+.wil:hover{text-decoration:underline}
+a.wk-repo{color:inherit; text-decoration:none}
+a.wk-repo:hover{text-decoration:underline; text-underline-offset:4px}
+a.repo{color:var(--muted); text-decoration:none}
+a.repo:hover{color:var(--ink-2); text-decoration:underline}
+.essay{font-size:15.5px; color:var(--s2); text-decoration:none; align-self:flex-start}
+.essay:hover{text-decoration:underline}
+.intro{display:flex; flex-direction:column; gap:10px}
+.sortbar{display:flex; align-items:center; font-family:var(--font-code); font-size:13px}
+.sortbar button{font:inherit; color:var(--ink-2); background:var(--surface); border:1px solid var(--line);
+  padding:6px 14px; cursor:pointer; transition:border-color .12s ease, background .12s ease}
+.sortbar button+button{margin-left:-1px}
+.sortbar button:hover{border-color:var(--muted)}
+.sortbar button.active{color:var(--surface); background:var(--ink); border-color:var(--ink)}
+.sortbar button:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
+#list{display:flex; flex-direction:column}
+/* PROTOTYPE: throwaway styles. Everything below is prefixed p- and never ships. */
+#p-root{display:none}
+body.p-on .wrap{display:none}
+body.p-on #p-root{display:block}
+body{padding-bottom:90px}
+#p-root a{color:inherit; text-decoration:none}
+.p-page{margin:0 auto; padding:56px 22px 60px; display:flex; flex-direction:column; gap:30px}
+.p-a{max-width:780px}
+.p-b{max-width:1200px}
+.p-c{max-width:1160px}
+.p-head{display:flex; flex-direction:column; gap:12px; padding-bottom:26px; border-bottom:3px solid var(--ink)}
+.p-head h1{margin:0; font-size:clamp(32px,6vw,50px); line-height:1.12; letter-spacing:-0.02em}
+#p-root a.p-gh{font-family:var(--font-code); font-size:13px; color:var(--muted)}
+.p-intro{margin:0; color:var(--ink-2); max-width:60ch}
+.p-essay{font-size:15.5px; color:var(--s2)!important}
+.p-essay:hover,.p-wlink:hover{text-decoration:underline!important}
+.p-sq{display:inline-block; flex:none; width:8px; height:8px; margin-right:9px; vertical-align:2px; background:var(--tc,transparent)}
+.p-sq[data-topic="알고리즘"]{--tc:var(--t-alg)} .p-sq[data-topic="시스템"]{--tc:var(--t-sys)} .p-sq[data-topic="C언어"]{--tc:var(--t-c)}
+.p-sort{display:flex; font-family:var(--font-code); font-size:13px}
+.p-sort button{font:inherit; color:var(--ink-2); background:var(--surface); border:1px solid var(--line); padding:6px 14px; cursor:pointer}
+.p-sort button+button{margin-left:-1px}
+.p-sort button.on{color:var(--surface); background:var(--ink); border-color:var(--ink)}
+.p-jump{display:flex; gap:6px 16px; font-family:var(--font-code); font-size:13px; color:var(--muted); overflow-x:auto; white-space:nowrap; scrollbar-width:none}
+.p-jump a:hover{color:var(--ink)}
+.p-sec{display:flex; flex-direction:column; scroll-margin-top:16px}
+.p-sec + .p-sec{margin-top:18px}
+.p-sech{display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px solid var(--ink)}
+.p-sech h2{margin:0; font-size:20px; letter-spacing:-0.01em}
+.p-links{display:flex; gap:16px; font-family:var(--font-code); font-size:13px; color:var(--s2)}
+.p-wlink{color:var(--s2)!important}
+.p-count{font-family:var(--font-code); font-size:13px; color:var(--muted)}
+/* row */
+.p-row{display:grid; grid-template-columns:62px 1fr; gap:0 10px; padding:15px 0 16px; border-bottom:1px solid var(--line)}
+.p-row.notype{grid-template-columns:1fr}
+.p-row:hover{background:var(--surface-2)}
+.p-type{font-family:var(--font-code); font-size:12px; color:var(--muted); padding-top:6px}
+.p-body{display:flex; flex-direction:column; gap:3px; min-width:0}
+.p-t{font-size:18px; line-height:1.45; letter-spacing:-0.01em}
+.p-arrow{font-family:var(--font-code); font-size:14px; color:var(--muted); margin-left:8px; font-weight:400}
+.p-d{font-size:15px; line-height:1.65; color:var(--ink-2)}
+.p-m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
+/* repo table */
+.p-rt{display:flex; flex-direction:column}
+.p-rr{display:grid; grid-template-columns:62px 190px 170px 1fr; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px; align-items:baseline}
+.p-rr:hover{background:var(--surface-2)}
+.p-rr.hd{font-family:var(--font-code); font-size:12px; color:var(--muted)}
+.p-rr.hd:hover{background:none}
+.p-rn{font-family:var(--font-code); font-size:13.5px; color:var(--ink); overflow-wrap:anywhere}
+.p-ro{font-family:var(--font-code); font-size:12.5px; color:var(--muted); overflow-wrap:anywhere}
+.p-rw{font-family:var(--font-code); font-size:12.5px; color:var(--muted)}
+/* skills */
+.p-sk{display:grid; grid-template-columns:150px 1fr; gap:10px; padding:11px 0; border-bottom:1px solid var(--line); font-size:15px; line-height:1.6}
+.p-sk:hover{background:var(--surface-2)}
+.p-skn{font-weight:700; font-family:var(--font-head)}
+.p-skd{color:var(--ink-2)}
+/* slide cards */
+.p-decks{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; padding-top:14px}
+.p-deck{aspect-ratio:16/9; border:1px solid var(--line); padding:16px 18px; display:flex; flex-direction:column; justify-content:space-between; gap:8px}
+.p-deck:hover{border-color:var(--muted); background:var(--surface-2)}
+.p-deckt{font-size:18px; line-height:1.35; letter-spacing:-0.01em}
+.p-deckd{font-size:13.5px; line-height:1.55; color:var(--ink-2); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden}
+.p-deckw{display:flex; flex-direction:column; gap:6px; min-height:0}
+.p-intro-w{display:flex; flex-direction:column; gap:10px}
+/* B: week matrix */
+.p-legend{display:flex; gap:16px; font-family:var(--font-code); font-size:12.5px; color:var(--muted)}
+.p-mx{display:flex; flex-direction:column}
+.p-mr{display:grid; grid-template-columns:210px 170px 1fr 1fr; gap:0 18px; padding:14px 0; border-bottom:1px solid var(--line)}
+.p-mr.hd{position:sticky; top:0; background:var(--bg); z-index:2; padding:8px 0; border-bottom:1px solid var(--ink); font-family:var(--font-code); font-size:12px; color:var(--muted)}
+.p-mw{display:flex; flex-direction:column; gap:3px}
+.p-mwn{font-size:16px; line-height:1.4}
+.p-mcell{display:flex; flex-direction:column; gap:7px; min-width:0}
+.p-mlink{font-size:15px; line-height:1.45}
+.p-mlink:hover{text-decoration:underline; text-underline-offset:3px}
+.p-mrepo{font-family:var(--font-code); font-size:12.5px; color:var(--ink-2); overflow-wrap:anywhere}
+.p-mrepo:hover{text-decoration:underline}
+.p-empty{color:var(--line)}
+/* C: facet rail */
+.p-cgrid{display:grid; grid-template-columns:190px minmax(0,1fr); gap:40px; align-items:start}
+.p-rail{position:sticky; top:20px; display:flex; flex-direction:column; gap:18px; min-width:0}
+.p-fh{font-family:var(--font-code); font-size:12px; color:var(--muted); padding-bottom:6px}
+.p-f{display:flex; flex-direction:column}
+.p-f button{all:unset; box-sizing:border-box; cursor:pointer; display:flex; justify-content:space-between; gap:8px; font-size:14.5px; line-height:1.3; padding:3px 8px; border-left:2px solid var(--line); color:var(--ink-2)}
+.p-f button:hover{color:var(--ink)}
+.p-f button.on{border-left-color:var(--ink); color:var(--ink); font-weight:700; background:var(--surface-2)}
+.p-f button:focus-visible{outline:2px solid var(--s3)}
+.p-fc{font-family:var(--font-code); font-size:12px; color:var(--muted); font-weight:400}
+.p-res{display:flex; flex-direction:column; gap:26px; min-width:0}
+/* switcher: not part of the design under review */
+#p-bar{position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:50; display:flex; align-items:center; gap:4px; padding:5px 8px;
+  background:#FFD400; color:#000; border-radius:999px; box-shadow:0 4px 18px rgba(0,0,0,.45); font:600 13px/1.3 var(--font-code); white-space:nowrap}
+#p-bar button{all:unset; cursor:pointer; padding:4px 10px; border-radius:999px}
+#p-bar button:hover{background:rgba(0,0,0,.14)}
+#p-note{position:fixed; left:50%; bottom:62px; transform:translateX(-50%); z-index:50; width:min(460px,calc(100vw - 24px)); display:none; flex-direction:column; gap:8px; padding:12px;
+  background:#FFD400; color:#000; border-radius:10px; box-shadow:0 4px 18px rgba(0,0,0,.45); font:13px/1.5 var(--font-code)}
+#p-note.open{display:flex}
+#p-note textarea{width:100%; height:110px; font:14px/1.5 var(--font-body); padding:8px; border:1px solid #000; background:#fff; color:#000; resize:vertical}
+#p-note button{all:unset; cursor:pointer; align-self:flex-end; padding:4px 12px; background:#000; color:#FFD400; border-radius:999px; font-weight:600}
+@media (max-width:760px){
+  .p-page{padding:36px 16px 50px}
+  .p-rr{grid-template-columns:1fr; gap:1px; padding:11px 0}
+  .p-rr.hd{display:none}
+  .p-sk{grid-template-columns:1fr; gap:1px}
+  .p-decks{grid-template-columns:minmax(0,1fr)}
+  .p-row{grid-template-columns:1fr}
+  .p-type{padding-top:0}
+  .p-mr{grid-template-columns:1fr; gap:10px}
+  .p-mr.hd{display:none}
+  .p-mcell[data-l]::before{content:attr(data-l); font-family:var(--font-code); font-size:12px; color:var(--muted)}
+  .p-mcell.none{display:none}
+  .p-cgrid{grid-template-columns:minmax(0,1fr); gap:20px}
+  .p-rail{position:static; gap:10px}
+  .p-rail > div{min-width:0}
+  .p-f{flex-direction:row; overflow-x:auto; scrollbar-width:none; gap:6px}
+  .p-fh{display:none}
+  .p-f button{flex:none; border:1px solid var(--line); padding:4px 10px; font-size:13.5px}
+  .p-f button.on{border-color:var(--ink)}
+}
+/* D: sidebar directing A's rows */
+.p-pd{max-width:1180px; --eo:cubic-bezier(.23,1,.32,1)}
+.p-dgrid{display:grid; grid-template-columns:276px minmax(0,780px); grid-template-areas:"s h" "s m"; grid-template-rows:auto 1fr; gap:30px 64px; justify-content:center}
+.p-dhead{grid-area:h; display:flex; flex-direction:column; gap:30px}
+.p-dmain{grid-area:m; display:flex; flex-direction:column; gap:30px; min-width:0}
+.p-dside{grid-area:s; align-self:start; position:sticky; top:40px; display:flex; flex-direction:column; gap:24px}
+.p-pd section{scroll-margin-top:40px}
+/* tabs: text with one shared sliding underline */
+.p-dtabs{position:relative; display:flex; gap:22px; padding-bottom:10px; border-bottom:1px solid var(--line)}
+.p-dtabs button{all:unset; cursor:pointer; font:600 16px/1.4 var(--font-head); color:var(--muted); transition:color .15s ease, transform .14s ease-out}
+.p-dtabs button.on{color:var(--ink)}
+.p-dtabs button:active{transform:scale(.96)}
+.p-dtabs button:focus-visible{outline:2px solid var(--s3); outline-offset:3px}
+.p-dtabi{position:absolute; left:0; bottom:-1px; height:2px; background:var(--ink); transition:transform .26s var(--eo)}
+/* list: one track, one sliding marker, the read part stays lit */
+.p-dnav{display:flex; flex-direction:column; gap:14px}
+.p-dlist{position:relative; display:flex; flex-direction:column; padding-left:18px}
+.p-dtrack,.p-dfill,.p-dmark{position:absolute; left:0; top:0; pointer-events:none}
+.p-dtrack{bottom:0; width:1px; background:var(--line)}
+.p-dfill{width:1px; height:1px; background:var(--muted); transform-origin:top; transition:transform .28s var(--eo)}
+.p-dmark{left:-1px; width:3px; height:1px; background:var(--ink); transform-origin:top; transition:transform .28s var(--eo)}
+#p-root .p-dlist a{display:flex; gap:10px; align-items:baseline; padding:8px 0; font:500 16px/1.4 var(--font-head); color:var(--ink-2); transform-origin:left center;
+  transition:color .15s ease, transform .14s ease-out; animation:p-nav-in .32s var(--eo) both; animation-delay:calc(var(--i) * 28ms)}
+#p-root .p-dlist a.on{color:var(--ink)}
+.p-dlist .p-dn,.p-dlist .p-dname{transition:color .15s ease, transform .22s var(--eo)}
+.p-dlist a.on .p-dn,.p-dlist a.on .p-dname{transform:translateX(5px)}
+#p-root .p-dlist a:active{transform:scale(.98)}
+#p-root .p-dlist a:focus-visible,#p-root .p-dextra:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
+.p-dn{flex:none; min-width:34px; font:400 13px/1.7 var(--font-code); color:var(--muted)}
+.p-dlist a.on .p-dn{color:var(--ink)}
+.p-dname{flex:1; min-width:0}
+.p-dc{font:400 13px/1.7 var(--font-code); color:var(--muted)}
+#p-root .p-dextra{display:flex; align-items:baseline; gap:10px; padding:12px 0 0 18px; border-top:1px solid var(--line); font:500 16px/1.4 var(--font-head); color:var(--ink-2); transition:color .15s ease}
+.p-darrow{font-family:var(--font-code); font-size:14px; color:var(--muted); transition:transform .2s var(--eo)}
+.p-dtoggle{display:none}
+@keyframes p-nav-in{from{opacity:0; transform:translateY(5px)}}
+/* scroll reveal */
+.p-rv{opacity:0; transform:translateY(12px)}
+.p-rv.p-in{opacity:1; transform:none; transition:opacity .5s var(--eo), transform .5s var(--eo)}
+.p-pd .p-sech{position:relative; border-bottom-color:transparent}
+.p-pd .p-sech::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:var(--ink); transform:scaleX(0); transform-origin:left; transition:transform .7s var(--eo)}
+.p-pd .p-sech.p-in::after,.p-pd .p-sech:not(.p-rv)::after{transform:none}
+/* body micro-interactions: no fill, the arrow answers */
+.p-pd .p-row:hover,.p-pd .p-rr:hover,.p-pd .p-sk:hover{background:none}
+.p-pd .p-arrow{display:inline-block; transition:transform .2s var(--eo), color .15s ease}
+.p-pd .p-row:active .p-body{transform:scale(.995)}
+.p-pd .p-body{transform-origin:left center; transition:transform .14s ease-out}
+.p-pd .p-deck.p-in{transition:opacity .5s var(--eo), transform .5s var(--eo), border-color .15s ease}
+@media (hover:hover) and (pointer:fine){
+  #p-root .p-dlist a:hover{color:var(--ink)}
+  .p-dlist a:not(.on):hover .p-dn,.p-dlist a:not(.on):hover .p-dname{transform:translateX(3px)}
+  .p-dlist a:hover .p-dn{color:var(--ink-2)}
+  .p-dtabs button:hover{color:var(--ink)}
+  #p-root .p-dextra:hover{color:var(--ink)}
+  .p-dextra:hover .p-darrow{transform:translateX(4px)}
+  .p-pd .p-row:hover .p-arrow{transform:translateX(4px); color:var(--ink)}
+  .p-pd .p-row:hover .p-d{color:var(--ink)}
+  .p-pd .p-d{transition:color .15s ease}
+  .p-pd .p-rr:hover .p-rn{text-decoration:underline; text-underline-offset:3px}
+  .p-pd .p-sk:hover .p-skn{text-decoration:underline; text-underline-offset:3px}
+  .p-pd .p-deck:hover{background:none; border-color:var(--muted)}
+  .p-pd .p-deck.p-in:hover{transform:translateY(-2px)}
+}
+@media (prefers-reduced-motion:reduce){
+  #p-root .p-dlist a{animation:none}
+  .p-dlist a.on .p-dn,.p-dlist a.on .p-dname{transform:none}
+}
+@media (max-width:860px){
+  .p-dgrid{grid-template-columns:minmax(0,1fr); grid-template-areas:"h" "s" "m"; grid-template-rows:none; gap:22px}
+  .p-dside{top:0; z-index:5; gap:6px; padding:10px 0 6px; background:var(--bg); border-bottom:1px solid var(--line)}
+  .p-dtabs{border-bottom:none; padding-bottom:6px}
+  .p-dtoggle{all:unset; box-sizing:border-box; cursor:pointer; display:flex; justify-content:space-between; gap:10px; font:600 16px/1.4 var(--font-head); padding:6px 0}
+  .p-dtoggle:focus-visible{outline:2px solid var(--s3)}
+  .p-dchev{transition:transform .2s var(--eo)}
+  .p-dtoggle[aria-expanded="true"] .p-dchev{transform:rotate(180deg)}
+  .p-dnav{position:absolute; left:0; right:0; top:100%; padding:12px 0 14px; background:var(--bg); border-bottom:1px solid var(--ink); max-height:62vh; overflow:hidden auto;
+    opacity:0; visibility:hidden; transform:translateY(-6px); transform-origin:top; transition:opacity .16s ease, transform .2s var(--eo), visibility 0s .2s}
+  .p-dnav.open{opacity:1; visibility:visible; transform:none; transition:opacity .16s ease, transform .2s var(--eo), visibility 0s}
+  .p-pd section{scroll-margin-top:110px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1 class="dh">크래프톤 정글 학습 기록</h1>
+  <a class="repo" href="https://github.com/benjohnbill">github.com/benjohnbill</a>
+</header>
+
+<div class="intro">
+  <p>크래프톤 정글을 지나면서 공부한 것을 문서로 남긴 페이지들의 목차입니다. 알고리즘은 한 문제를 여러 번 다시 짜는 과정을, 시스템은 C 코드가 기계에서 실제로 어떻게 굴러가는지를 다룹니다. 대부분 실제로 측정한 값과 직접 뜯어본 바이트를 함께 싣고 있습니다.</p>
+  <a class="essay" href="https://velog.io/@benjohnbill/jungle-essey">정글을 시작하며 쓴 글 →</a>
+</div>
+
+<div class="group" id="skills">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/krafton-jungle">자동화 스킬</a></h2>
+  </div>
+  <div class="cards">
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init">
+      <div class="t dh">한 주의 시작</div>
+      <div class="d">새 주차 저장소의 첫날을 준비합니다. 빌드 구성과 에디터 설정을 잡고, 혼자 하는 주에는 이슈 보드를, 주차별 <code>CLAUDE.md</code> 초안까지 만듭니다.</div>
+      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-week-init</span></div>
+    </a>
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge">
+      <div class="t dh">팀 PR 검증</div>
+      <div class="d">Pintos 팀 주차에서 내 PR, 팀원의 PR, 깨진 develop을 최신 기준에서 검증하고 보고합니다. 승인과 병합은 사람이 합니다.</div>
+      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-team-merge</span></div>
+    </a>
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/jungle-deck" href="https://github.com/benjohnbill/jungle-deck">
+      <div class="t dh">2분 발표 자료</div>
+      <div class="d">매주 2분 발표에 쓰는 HTML 슬라이드를 만들고, 이어서 고치고, GitHub Pages에 올립니다. 저장소에서 예시 발표 자료도 볼 수 있습니다.</div>
+      <div class="m"><span class="b">스킬</span><span>github.com/benjohnbill/jungle-deck</span></div>
+    </a>
+    <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close">
+      <div class="t dh">하루의 마무리</div>
+      <div class="d">주차 저장소의 하루를 닫습니다. 검증, 커밋, 푸시, 보드 갱신을 거쳐 다음 날 이어갈 메모를 남깁니다.</div>
+      <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-close</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="sortbar" role="group" aria-label="보기 기준">
+  <button type="button" data-mode="week" class="active" aria-pressed="true">주차</button>
+  <button type="button" data-mode="topic" aria-pressed="false">주제</button>
+</div>
+
+<div id="list">
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/Youjaeseon/jungle10team">1주차 · 정글장터 - 크래프톤 당근</a></h2>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="1" data-kind="repo" data-src="https://github.com/Youjaeseon/jungle10team" href="https://github.com/Youjaeseon/jungle10team">
+      <div class="t dh">정글장터 저장소</div>
+      <div class="m"><span class="b">저장소</span><span class="b wk">1주차</span><span>github.com/Youjaeseon/jungle10team</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/SW-AI-W02-03">2주차 · 알고리즘(1)</a></h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-2-%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%A3%BC%EC%B0%A81">WIL →</a>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/quicksort-three-stages.html" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-three-stages.html">
+      <div class="t dh">퀵 정렬 세 단계</div>
+      <div class="d">같은 문제를 세 번 다시 짜면서 무엇이 잘못됐고 무엇을 바꿨는지, 실제 코드와 그림과 측정값으로 따라갑니다. 로무토 분할과의 대조를 부록으로 실었습니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 01_quick_sort</span></div>
+    </a>
+    <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/quicksort-partition-rewrite.html" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-partition-rewrite.html">
+      <div class="t dh">분할 함수 재작성 기록</div>
+      <div class="d">호어 분할을 바로잡던 과정의 중간 기록입니다. 같은 값만 있는 구간에서 두 지수가 어떻게 움직이는지를 회전 단위로 추적했습니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 01_quick_sort</span></div>
+    </a>
+    <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/priority-queue-stages.html" href="https://benjohnbill.github.io/SW-AI-W02-03/priority-queue-stages.html">
+      <div class="t dh">응급실 대기줄</div>
+      <div class="d">같은 문제를 다섯 번 짠 기록입니다. 완전탐색이 왜 입력 모양에 따라 제곱도 되고 세제곱도 되는지, 접었던 버전이 왜 느리기 전에 이미 틀렸는지, 그리고 정석이라던 heapq가 왜 이 문제에서는 .sort()보다 느린지를 측정값으로 따라갑니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 03_priority_queue</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/SW-AI-W02-03">3주차 · 알고리즘(2)</a></h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-3-%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0-%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98-%EC%A3%BC%EC%B0%A82">WIL →</a>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="3" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/bfs-dfs-wave-and-thread.html" href="https://benjohnbill.github.io/SW-AI-W02-03/bfs-dfs-wave-and-thread.html">
+      <div class="t dh">물결과 실타래</div>
+      <div class="d">BFS와 DFS를 한 걸음씩 직접 돌려 보는 문서입니다. 큐와 스택의 차이, visited의 정체, 재귀와 호출 스택의 관계를 다루고, 하노이 탑을 상태 그래프로 뒤집어 봅니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>week3 / 1. basic / 04_bfs · 05_dfs</span></div>
+    </a>
+    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/preprocessor-hello-i.html" href="https://benjohnbill.github.io/SW-AI-W02-03/preprocessor-hello-i.html">
+      <div class="t dh">hello.i 해부도</div>
+      <div class="d">세 줄짜리 C 파일이 <code>gcc -E</code>를 거쳐 844줄이 되는 과정입니다. 늘어난 줄이 각각 무엇인지 세어서 나눠 놓았습니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 컴파일 파이프라인</span></div>
+    </a>
+    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/linker-elf-hello.html" href="https://benjohnbill.github.io/SW-AI-W02-03/linker-elf-hello.html">
+      <div class="t dh">hello.i에서 hello까지</div>
+      <div class="d">위 문서의 다음 편입니다. 어셈블러가 주소 자리에 0을 적고 남긴 쪽지, 링커가 그것을 채우는 순간, 그리고 완성된 ELF 파일이 실행 직전에 스스로 문을 잠그는 과정을 바이트 단위로 확인했습니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 링킹과 ELF</span></div>
+    </a>
+    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/threads-blueprints.html" href="https://benjohnbill.github.io/SW-AI-W02-03/threads-blueprints.html">
+      <div class="t dh">쓰레드 도면집</div>
+      <div class="d">프로세스와 쓰레드, 가상 메모리 배치, 컨텍스트 스위칭, race condition을 도면 여섯 장으로 정리했습니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP 1장 · 운영체제</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/SW-AI-C">4주차 · C언어(1)</a></h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-4-C%EC%96%B8%EC%96%B4-1">WIL →</a>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="4" data-topic="시스템" data-kind="note" data-src="week04/study/csapp-ch3/" href="https://benjohnbill.github.io/SW-AI-C/study/csapp-ch3/">
+      <div class="t dh">3장 기계어 문제집</div>
+      <div class="d">CS:APP 3장 3.1~3.7을 조원들과 함께 풀도록 만든 12문항 문제집입니다. 답을 확인하면 정답 근거와 더 찾아볼 검색어, 그리고 그 사실이 C 코딩과 gdb, malloc-lab, pintos에서 어디에 걸리는지가 함께 펼쳐집니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">4주차</span><span>week4 / CS:APP 3장 · 조별 학습</span></div>
+    </a>
+    <a class="card" data-week="4" data-topic="시스템" data-kind="deck" data-src="week04/study/week04-array-in-c.html" href="https://benjohnbill.github.io/SW-AI-C/study/week04-array-in-c.html">
+      <div class="t dh">함수에 들어가는 순간 배열이 아니다</div>
+      <div class="d">파이썬 버블 정렬을 C로 옮기다 만난 일입니다. 함수 안에서 <code>sizeof(arr)</code>가 8인 이유를 퀴즈로 열고, 직접 만든 길이 함수가 왜 조용히 0을 돌려줬는지를 gdb 기록으로 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">4주차</span><span>week4 / porting/08_bubble_sort · 2분 발표</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/SW-AI-C-debugging">5주차 · C언어(2) [Debugging lab]</a></h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-5-C%EC%96%B8%EC%96%B4-2">WIL →</a>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="5" data-topic="C언어" data-kind="note" data-src="c-workshop/projects/study-cli/study-design.html" href="https://benjohnbill.github.io/study/week05/study-design.html">
+      <div class="t dh">study 설계 노트</div>
+      <div class="d">공부 기록 CLI를 C로 키우는 설계의 현재 상태입니다. 왜 만드는지, 어디까지 됐는지, 명령과 경계선을 적었고, 세웠다가 고친 가설은 그때 쓴 문장 그대로 따라가는 설계 로그로 이어집니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · Stage 8 진행 중</span></div>
+    </a>
+    <a class="card" data-week="5" data-topic="C언어" data-kind="deck" data-src="c-workshop/study/oop-in-c.html" href="https://benjohnbill.github.io/study/week05/oop-in-c.html">
+      <div class="t dh">C에서 객체지향 프로그래밍하기</div>
+      <div class="d">study CLI의 구조체를 <code>record.c</code> 안에 숨겼더니 <code>main</code>이 <code>r-&gt;count</code>를 읽지 못하게 됐습니다. 불완전 타입이 몸체를 숨기는 원리를 컴파일과 링크 두 단계로 나눠 보고, 출력을 함수 포인터로 넘겨 양쪽이 서로를 모르게 만든 과정을 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · 2분 발표</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/SW-AI-malloc-lab">6주차 · malloc-lab</a></h2>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="6" data-topic="C언어" data-kind="deck" data-src="week06/study/bsize-cast-v2.html" href="https://benjohnbill.github.io/study/week06/bsize-cast.html">
+      <div class="t dh">Typecasting - 컴파일러가 통과시키는 오류</div>
+      <div class="d">malloc-lab에서 경고 없이 컴파일된 할당기가 20MB를 다 쓰고 멈췄습니다. gdb로 따라가 보니 <code>first_fit()</code>이 함수 포인터 <code>bsize</code>를 <code>(size_t)</code>로 바꾼 값과 크기를 비교하고 있었습니다. 캐스트가 컴파일러의 경고를 어떻게 막았는지, 그리고 <code>unsigned int</code>가 4GB를 넘는 크기를 어떻게 잘라 내는지를 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">6주차</span><span>week6 / malloc-lab · 2분 발표</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/cc8s/pintos-team9">7주차 · PintOS(1) [Threads]</a></h2>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="7" data-topic="시스템" data-kind="note" data-src="jingeunOS/notes/debug-panic-eli5.html" href="https://benjohnbill.github.io/study/week07/debug-panic-exit.html">
+      <div class="t dh">exit(1)을 받아 줄 OS가 없을 때</div>
+      <div class="d">내 코드의 <code>debug_panic</code>은 <code>exit(1)</code>로 끝나는데, Pintos 커널의 같은 함수는 <code>power_off()</code>나 <code>for (;;)</code>로 끝났습니다. 공통 코드와 다른 부분을 나란히 놓고, 밑에 받아 줄 OS가 있느냐가 끝을 가른다는 것을 Pintos와 Linux의 실제 커널 PANIC 로그로 확인합니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">7주차</span><span>jingeunOS / harness/boot.c · lib/kernel/debug.c</span></div>
+    </a>
+    <a class="card" data-week="7" data-topic="시스템" data-kind="deck" data-src="week07/study/team9/team9.html" href="https://benjohnbill.github.io/study/week07/team9.html">
+      <div class="t dh">PintOS 1주차 [Thread] · 9팀 발표</div>
+      <div class="d">9팀 세 사람의 발표를 순서대로 잇습니다. 원형 리스트(benjohnbill), 인터럽트 핸들러에서 lock을 잡을 수 없는 이유(Jun), MLFQS에서 바뀐 것만 다시 계산하기(Yena). 한 덱이 끝나면 다음 덱으로 넘어가고, 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">7주차</span><span>week7 / pintos-team9 · 6분 팀 발표</span></div>
+    </a>
+    <a class="card" data-week="7" data-topic="시스템" data-kind="deck" data-src="week07/study/circular-list/circular-list.html" href="https://benjohnbill.github.io/study/week07/circular-list.html">
+      <div class="t dh">list에서 끝을 없앴더니, 분기가 사라졌다</div>
+      <div class="d">PintOS 1주차 9팀의 진행과 협업 방식에서 출발합니다. <code>struct thread</code>의 필드를 재배치해 패딩을 줄이려 했지만 gdb로 재 보니 0바이트였고, 직접 짠 jingeunOS에서 list를 다시 보다가 Linux의 원형 이중 연결 리스트에 닿았습니다. 원형이라 끝이 없으니 모든 삽입이 두 이웃 사이가 되는 과정을 따라갑니다. 2분 20초 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">7주차</span><span>week7 / pintos-team9 · jingeunOS · 2분 20초 발표</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/pintos-userprog">8주차 · PintOS(2) [User Programs]</a></h2>
+    <a class="wil" href="https://velog.io/@benjohnbill/WILWeek-8-lea-iacta-est">WIL →</a>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="8" data-topic="시스템" data-kind="note" data-src="week08/docs/userprog-flow-map.html" href="https://benjohnbill.github.io/study/week08/userprog-flow-map.html">
+      <div class="t dh">명령줄 한 줄의 일생</div>
+      <div class="d"><code>run 'args-single onearg'</code> 한 줄이 프로세스가 되어 끝나기까지를 마디 A–K로 나누고, Project 2 문서 6개와 userprog 테스트 64개를 그 마디에 매핑합니다. 팀 개념 체크용 12문항은 단서와 답을 두 겹으로 접어 두었고, 실제 커널을 돌려 얻은 출력을 문항에 썼습니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 개념 체크 12문항</span></div>
+    </a>
+    <a class="card" data-week="8" data-topic="시스템" data-kind="note" data-src="week08/notes/team-plan.html" href="https://benjohnbill.github.io/study/week08/team-plan.html">
+      <div class="t dh">수요일 저녁까지 userprog 95개</div>
+      <div class="d">남은 테스트를 사람과 요일에 배치한 팀 분업표입니다. fork·wait·exec는 셋이 각자 구현하고 파일 쪽은 나눠 맡으며, 테스트마다 이슈 링크와 체크박스를 달아 두었습니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 분업표</span></div>
+    </a>
+    <a class="card" data-week="8" data-topic="시스템" data-kind="deck" data-src="week08/study/team8/team8.html" href="https://benjohnbill.github.io/study/week08/team8.html">
+      <div class="t dh">PintOS 2주차 [User Programs] · 8팀 발표</div>
+      <div class="d">8팀 세 사람의 발표를 순서대로 잇습니다. 1주일간의 8팀(benjohnbill), 부모가 <code>child_status</code>와 세마포어로 자식의 종료를 기다리는 <code>wait()</code>(정승영), 출력은 다른데 테스트는 PASS였던 이유(누리). 한 덱이 끝나면 다음 덱으로 넘어가고, 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 팀 발표</span></div>
+    </a>
+    <a class="card" data-week="8" data-topic="시스템" data-kind="deck" data-src="week08/study/p2-team-workflow/p2-team-workflow.html" href="https://benjohnbill.github.io/study/week08/p2-team-workflow.html">
+      <div class="t dh">1주일간의 8팀</div>
+      <div class="d">PintOS userprog를 함께 푼 8팀의 일주일을 날짜순으로 따라갑니다. 누가 짠 코드든 합칠 수 있도록 같은 컨벤션, 같은 테스트 명령(<code>ptest</code>), 같은 보드를 만든 과정과, 팀은 합쳐졌지만 내 이해는 따라가지 못했다는 회고로 끝납니다. 2분 20초 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 2분 20초 발표</span></div>
+    </a>
+  </div>
+</div>
+
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/Pintos-W9-10-T6-VM/Pintos-W9-10-T6-VM">9~10주차 · PintOS(3) [Virtual Memory]</a></h2>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/spt-hash-page-map.html" href="https://benjohnbill.github.io/study/week09/spt-hash-page-map.html">
+      <div class="t dh">fault 난 주소에서 struct page까지</div>
+      <div class="d">보조 페이지 테이블(SPT)과 Pintos hash, <code>struct page</code>가 메모리에서 어떻게 엮이는지 그린 연결도입니다. <code>spt_elem</code>과 <code>pages</code> 두 줄이 있을 때와 없을 때를 같은 배치로 위아래에 두었고, fault 주소 <code>0x401234</code>에서 page를 찾는 길을 실제 probe 실행 값으로 따라갑니다.</div>
+      <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · SPT 연결도</span></div>
+    </a>
+    <a class="card" data-week="9" data-topic="시스템" data-kind="deck" data-src="week09/study/clean-code/clean-code.html" href="https://benjohnbill.github.io/study/week09/clean-code.html">
+      <div class="t dh">Clean Code를 어떻게 짜야 할까?</div>
+      <div class="d">남이 짠 코드를 받았을 때의 막막함에서 출발합니다. 44줄짜리 <code>do_mmap()</code>이 함수 이름으로 접히는 과정을 보고, <code>mmap()</code>의 함수 흐름을 따라가며 책임 소재가 구조체로 어떻게 이어지고 어디서 파일과 페이지로 갈라지는지 확인합니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · 2분 발표</span></div>
+    </a>
+  </div>
+</div>
+</div>
+
+</div>
+
+<script>
+/* PROTOTYPE: throwaway. Three structurally different index layouts on one page, switched by ?variant=.
+   All data is read from the real cards in this page's DOM, so nothing here is invented.
+   0 = current page, A = view switch with rows, B = week matrix, C = facet rail. */
+(() => {
+  const txt = el => el ? el.textContent.trim() : '';
+  const KIND = {note:'노트', deck:'슬라이드', repo:'저장소', skill:'스킬'};
+  const parse = (c, week) => ({
+    kind: c.dataset.kind, topic: c.dataset.topic || '', title: txt(c.querySelector('.t')),
+    d: c.querySelector('.d') ? c.querySelector('.d').innerHTML : '', dText: txt(c.querySelector('.d')),
+    meta: [...c.querySelectorAll('.m > span:not(.b)')].map(txt).join(''), href: c.href, week
+  });
+  const skills = [...document.querySelectorAll('#skills a.card')].map(c => parse(c, null));
+  const weeks = [...document.querySelectorAll('#list > .group')].map(g => {
+    const [head, ...rest] = txt(g.querySelector('h2')).split(' · ');
+    const w = {n: head.replace('주차', ''), name: rest.join(' · '), repo: g.querySelector('a.wk-repo').href,
+      wil: g.querySelector('a.wil') ? g.querySelector('a.wil').href : ''};
+    w.cards = [...g.querySelectorAll('a.card')].map(c => parse(c, w));
+    return w;
+  });
+  const all = weeks.flatMap(w => w.cards);
+  const notes = all.filter(c => c.kind === 'note');
+  const decks = all.filter(c => c.kind === 'deck');
+  const repos = [];
+  weeks.forEach(w => {
+    const hit = repos.find(r => r.href === w.repo);
+    if (hit) { hit.weeks.push(w.n); hit.names.push(w.name); return; }
+    const [owner, name] = new URL(w.repo).pathname.slice(1).split('/');
+    repos.push({href: w.repo, owner, name, weeks: [w.n], names: [w.name]});
+  });
+  const rlabel = r => r.weeks.length > 1 ? r.weeks[0] + '~' + r.weeks[r.weeks.length - 1] : r.weeks[0];
+  const topics = [...new Set(all.map(c => c.topic).filter(Boolean))];
+
+  const sq = t => t ? `<span class="p-sq" data-topic="${t}"></span>` : '';
+  const row = (c, o = {}) => `<a class="p-row${o.type ? '' : ' notype'}" href="${c.href}">
+    ${o.type ? `<span class="p-type">${KIND[c.kind]}</span>` : ''}
+    <span class="p-body"><span class="p-t dh">${sq(c.topic)}${c.title}<span class="p-arrow">→</span></span>
+    ${c.d ? `<span class="p-d">${c.d}</span>` : ''}
+    <span class="p-m">${o.week && c.week ? c.week.n + '주차 · ' : ''}${c.meta}</span></span></a>`;
+  const repoTable = list => `<div class="p-rt"><div class="p-rr hd"><span>주차</span><span>저장소</span><span>소유자</span><span>내용</span></div>
+    ${list.map(r => `<a class="p-rr" href="${r.href}"><span class="p-rw">${rlabel(r)}주차</span><span class="p-rn">${r.name} ↗</span><span class="p-ro">${r.owner}</span><span>${r.names.join(', ')}</span></a>`).join('')}</div>`;
+  const skillRows = list => list.map(s => `<a class="p-sk" href="${s.href}"><span class="p-skn">${s.title}</span><span class="p-skd">${s.d}</span></a>`).join('');
+  const deckCards = list => `<div class="p-decks">${list.map(c => {
+    const len = c.meta.split(' · ').pop();
+    return `<a class="p-deck" href="${c.href}"><span class="p-deckw"><span class="p-deckt dh">${sq(c.topic)}${c.title}</span><span class="p-deckd">${c.d}</span></span><span class="p-m">${c.week.n}주차 · ${len}</span></a>`;
+  }).join('')}</div>`;
+  const sech = (title, right = '') => `<div class="p-sech"><h2 class="dh">${title}</h2>${right}</div>`;
+  const links = w => `<span class="p-links"><a class="p-wlink" href="${w.repo}">저장소 ↗</a>${w.wil ? `<a class="p-wlink" href="${w.wil}">WIL →</a>` : ''}</span>`;
+  const headHtml = `<header class="p-head"><h1 class="dh">크래프톤 정글 학습 기록</h1><a class="p-gh" href="https://github.com/benjohnbill">github.com/benjohnbill</a></header>`;
+  const introHtml = `<div class="p-intro-w"><p class="p-intro">${txt(document.querySelector('.intro p'))}</p><a class="p-essay" href="${document.querySelector('.essay').href}">정글을 시작하며 쓴 글 →</a></div>`;
+
+  /* A: one column, view switch, rows without boxes. Week is home. */
+  const params = new URLSearchParams(location.search);
+  let aview = params.get('view') || 'week';
+  function A() {
+    let body = '';
+    if (aview === 'week') {
+      body = `<div class="p-jump">${weeks.map((w, i) => `<a href="#p-w${i}">${w.n}</a>`).join('')}</div>` +
+        weeks.map((w, i) => `<section class="p-sec" id="p-w${i}">${sech(`${w.n}주차 · ${w.name}`, links(w))}${w.cards.map(c => row(c, {type: true})).join('')}</section>`).join('');
+    } else if (aview === 'topic') {
+      body = topics.map(t => `<section class="p-sec">${sech(t)}${all.filter(c => c.topic === t).map(c => row(c, {type: true, week: true})).join('')}</section>`).join('');
+    } else {
+      body = `<div class="p-jump"><a href="#p-t0">저장소 ${repos.length}</a><a href="#p-t1">스킬 ${skills.length}</a><a href="#p-t2">노트 ${notes.length}</a><a href="#p-t3">슬라이드 ${decks.length}</a></div>
+        <section class="p-sec" id="p-t0">${sech('저장소')}${repoTable(repos)}</section>
+        <section class="p-sec" id="p-t1">${sech('자동화 스킬')}${skillRows(skills)}</section>
+        <section class="p-sec" id="p-t2">${sech('노트')}${notes.map(c => row(c, {week: true})).join('')}</section>
+        <section class="p-sec" id="p-t3">${sech('슬라이드')}${deckCards(decks)}</section>`;
+    }
+    const b = (k, l) => `<button type="button" data-v="${k}" class="${aview === k ? 'on' : ''}">${l}</button>`;
+    return `<div class="p-page p-a">${headHtml}${introHtml}<div class="p-sort">${b('week', '주차')}${b('topic', '주제')}${b('type', '유형')}</div>${body}</div>`;
+  }
+
+  /* B: one wide matrix. Every week and type on one view, titles only. No view switch. */
+  function B() {
+    const cell = (list, label) => `<div class="p-mcell${list.length ? '' : ' none'}" data-l="${label}">${list.length
+      ? list.map(c => `<a class="p-mlink" href="${c.href}" title="${c.dText.replace(/"/g, '&quot;')}">${sq(c.topic)}${c.title}</a>`).join('')
+      : '<span class="p-empty">·</span>'}</div>`;
+    const r = weeks.map(w => {
+      const [o, n] = new URL(w.repo).pathname.slice(1).split('/');
+      return `<div class="p-mr"><div class="p-mw"><span class="p-mwn dh">${w.n}주차 · ${w.name}</span>${w.wil ? `<a class="p-wlink p-m" href="${w.wil}">WIL →</a>` : ''}</div>
+        <div class="p-mcell" data-l="저장소"><a class="p-mrepo" href="${w.repo}">${n} ↗</a><span class="p-ro">${o === 'benjohnbill' ? '' : o}</span></div>
+        ${cell(w.cards.filter(c => c.kind === 'note'), '노트')}${cell(w.cards.filter(c => c.kind === 'deck'), '슬라이드')}</div>`;
+    }).join('');
+    return `<div class="p-page p-b">${headHtml}${introHtml}
+      <div class="p-legend">${topics.map(t => `<span>${sq(t)}${t}</span>`).join('')}</div>
+      <div class="p-mx"><div class="p-mr hd"><span>주차</span><span>저장소</span><span>노트 ${notes.length}</span><span>슬라이드 ${decks.length}</span></div>${r}</div>
+      <section class="p-sec">${sech('자동화 스킬')}${skillRows(skills)}</section></div>`;
+  }
+
+  /* C: left rail of filters, one result column. Layout follows the type. No view switch. */
+  const f = {type: 'all', week: 'all', topic: 'all'};
+  function C() {
+    const wk = c => f.week === 'all' || (c.week && c.week.n === f.week);
+    const tp = c => f.topic === 'all' || c.topic === f.topic;
+    const sn = notes.filter(c => wk(c) && tp(c)), sd = decks.filter(c => wk(c) && tp(c));
+    const sr = f.topic === 'all' ? repos.filter(r => f.week === 'all' || r.weeks.includes(f.week)) : [];
+    const ss = f.week === 'all' && f.topic === 'all' ? skills : [];
+    const show = t => f.type === 'all' || f.type === t;
+    const sec = (t, title, list, html) => show(t) && list.length ? `<section class="p-sec">${sech(title, `<span class="p-count">${list.length}</span>`)}${html(list)}</section>` : '';
+    const res = sec('repo', '저장소', sr, repoTable) + sec('skill', '자동화 스킬', ss, skillRows) +
+      sec('note', '노트', sn, l => l.map(c => row(c, {week: true})).join('')) + sec('deck', '슬라이드', sd, deckCards);
+    const btn = (g, v, l, n = '') => `<button type="button" data-g="${g}" data-val="${v}" class="${f[g] === v ? 'on' : ''}">${l}${n !== '' ? `<span class="p-fc">${n}</span>` : ''}</button>`;
+    return `<div class="p-page p-c">${headHtml}<div class="p-cgrid"><aside class="p-rail">
+      <div><div class="p-fh">유형</div><div class="p-f">${btn('type', 'all', '전체')}${btn('type', 'repo', '저장소', repos.length)}${btn('type', 'skill', '스킬', skills.length)}${btn('type', 'note', '노트', notes.length)}${btn('type', 'deck', '슬라이드', decks.length)}</div></div>
+      <div><div class="p-fh">주차</div><div class="p-f">${btn('week', 'all', '전체')}${weeks.map(w => btn('week', w.n, w.n + '주차')).join('')}</div></div>
+      <div><div class="p-fh">주제</div><div class="p-f">${btn('topic', 'all', '전체')}${topics.map(t => btn('topic', t, t)).join('')}</div></div>
+    </aside><div class="p-res">${res || '<p class="p-intro">이 조합에 해당하는 문서가 없습니다.</p>'}</div></div></div>`;
+  }
+
+  /* D: A's rows and type layouts, directed by a sidebar with a sliding marker and scroll reveal. */
+  let dview = params.get('view') || 'week';
+  let dOpen = false, dTabX = null, dLock = 0, dReveal = null, dActive = '';
+  const calm = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function D() {
+    const items = dview === 'week' ? weeks.map((w, i) => ({id: 'p-d' + i, n: w.n, name: w.name}))
+      : dview === 'topic' ? topics.map((t, i) => ({id: 'p-d' + i, name: t, topic: t, c: all.filter(c => c.topic === t).length}))
+      : [['저장소', repos.length], ['자동화 스킬', skills.length], ['노트', notes.length], ['슬라이드', decks.length]].map(([name, c], i) => ({id: 'p-d' + i, name, c}));
+    let body = '';
+    if (dview === 'week') body = weeks.map((w, i) => `<section class="p-sec" id="p-d${i}">${sech(`${w.n}주차 · ${w.name}`, links(w))}${w.cards.map(c => row(c, {type: true})).join('')}</section>`).join('');
+    else if (dview === 'topic') body = topics.map((t, i) => `<section class="p-sec" id="p-d${i}">${sech(t)}${all.filter(c => c.topic === t).map(c => row(c, {type: true, week: true})).join('')}</section>`).join('');
+    else body = `<section class="p-sec" id="p-d0">${sech('저장소')}${repoTable(repos)}</section><section class="p-sec" id="p-d1">${sech('자동화 스킬')}${skillRows(skills)}</section><section class="p-sec" id="p-d2">${sech('노트')}${notes.map(c => row(c, {week: true})).join('')}</section><section class="p-sec" id="p-d3">${sech('슬라이드')}${deckCards(decks)}</section>`;
+    const tab = (k, l) => `<button type="button" data-dv="${k}" aria-pressed="${dview === k}" class="${dview === k ? 'on' : ''}">${l}</button>`;
+    const nav = items.map((it, i) => `<a href="#${it.id}" data-jump="${it.id}" style="--i:${i}">${it.n ? `<span class="p-dn">${it.n}</span>` : ''}<span class="p-dname">${it.topic ? sq(it.topic) : ''}${it.name}</span>${it.c ? `<span class="p-dc">${it.c}</span>` : ''}</a>`).join('');
+    const extra = dview === 'week' ? `<a class="p-dextra" href="#" data-goskills="1"><span class="p-dname">자동화 스킬</span><span class="p-darrow">→</span></a>` : '';
+    return `<div class="p-page p-pd"><div class="p-dgrid">
+      <div class="p-dhead">${headHtml}${introHtml}</div>
+      <aside class="p-dside"><div class="p-dtabs">${tab('week', '주차')}${tab('topic', '주제')}${tab('type', '유형')}<span class="p-dtabi"></span></div>
+        <button type="button" class="p-dtoggle" aria-expanded="${dOpen}"><span id="p-dcur"></span><span class="p-dchev">▾</span></button>
+        <nav class="p-dnav${dOpen ? ' open' : ''}"><div class="p-dlist"><span class="p-dtrack"></span><span class="p-dfill"></span><span class="p-dmark"></span>${nav}</div>${extra}</nav></aside>
+      <main class="p-dmain">${body}</main></div></div>`;
+  }
+  function placeMark() {
+    const a = root.querySelector('.p-dlist a.on'); if (!a) return;
+    const y = a.offsetTop, h = a.offsetHeight;
+    root.querySelector('.p-dmark').style.transform = `translateY(${y}px) scaleY(${h})`;
+    root.querySelector('.p-dfill').style.transform = `scaleY(${y + h})`;
+  }
+  function setActive(id) {
+    if (id === dActive) return; dActive = id;
+    root.querySelectorAll('.p-dlist a').forEach(a => {
+      const on = a.dataset.jump === id; a.classList.toggle('on', on);
+      if (on) { a.setAttribute('aria-current', 'true'); root.querySelector('#p-dcur').textContent = a.querySelector('.p-dname').textContent; }
+      else a.removeAttribute('aria-current');
+    });
+    placeMark();
+  }
+  function spyD() {
+    if (v !== 'D' || Date.now() < dLock) return;
+    const secs = [...root.querySelectorAll('.p-dmain > section')]; if (!secs.length) return;
+    const line = innerHeight * 0.3; let id = secs[0].id;
+    secs.forEach(s => { if (s.getBoundingClientRect().top <= line) id = s.id; });
+    if (scrollY > 0 && innerHeight + scrollY >= document.documentElement.scrollHeight - 2) id = secs[secs.length - 1].id;
+    setActive(id);
+  }
+  function jumpD(id) {
+    setActive(id);
+    const c = calm(); dLock = Date.now() + (c ? 0 : 1200);
+    document.getElementById(id).scrollIntoView({behavior: c ? 'auto' : 'smooth'});
+  }
+  function setupD() {
+    if (dReveal) { dReveal.disconnect(); dReveal = null; }
+    if (v !== 'D') return;
+    dActive = ''; dLock = 0; spyD(); if (!dActive) setActive('p-d0');
+    const tabs = root.querySelector('.p-dtabs'), ind = tabs.querySelector('.p-dtabi'), cur = tabs.querySelector('button.on');
+    ind.style.width = cur.offsetWidth + 'px';
+    if (dTabX !== null) ind.style.transform = `translateX(${dTabX}px)`;
+    void ind.offsetWidth;
+    ind.style.transform = `translateX(${cur.offsetLeft}px)`; dTabX = cur.offsetLeft;
+    if (calm()) return;
+    const els = [...root.querySelectorAll('.p-dhead > *, .p-sech, .p-row, .p-rr, .p-sk, .p-deck')];
+    els.forEach(e => e.classList.add('p-rv'));
+    dReveal = new IntersectionObserver(es => {
+      let n = 0;
+      es.forEach(e => {
+        if (!e.isIntersecting) return;
+        e.target.style.transitionDelay = Math.min(n++, 5) * 45 + 'ms';
+        e.target.classList.add('p-in');
+        dReveal.unobserve(e.target);
+      });
+    }, {rootMargin: '0px 0px -6% 0px'});
+    els.forEach(e => dReveal.observe(e));
+  }
+  let dTick = false;
+  addEventListener('scroll', () => { if (dTick) return; dTick = true; requestAnimationFrame(() => { dTick = false; spyD(); }); }, {passive: true});
+  addEventListener('scrollend', () => { dLock = 0; spyD(); });
+  addEventListener('wheel', () => { dLock = 0; }, {passive: true});
+  addEventListener('touchstart', () => { dLock = 0; }, {passive: true});
+  addEventListener('resize', () => { if (v === 'D') placeMark(); });
+  if (document.fonts) document.fonts.ready.then(() => { if (v === 'D') placeMark(); });
+
+  /* Switcher and feedback notes. Notes live in memory only, so switching does not reload. */
+  const VARIANTS = [['0', '현재 페이지'], ['A', '보기 전환 + 행'], ['B', '주차 표 한 장'], ['C', '왼쪽 필터'], ['D', '사이드바 + 행']];
+  const root = document.createElement('div'); root.id = 'p-root'; document.body.appendChild(root);
+  const bar = document.createElement('div'); bar.id = 'p-bar';
+  bar.innerHTML = `<button type="button" id="p-prev" aria-label="이전">◀</button><span id="p-label"></span><button type="button" id="p-next" aria-label="다음">▶</button><button type="button" id="p-memo">메모</button>`;
+  const note = document.createElement('div'); note.id = 'p-note';
+  note.innerHTML = `<label id="p-nl" for="p-ta"></label><textarea id="p-ta" placeholder="이 안의 좋은 점, 싫은 점, 가져올 부분"></textarea><button type="button" id="p-copy">전체 메모 복사</button>`;
+  document.body.append(bar, note);
+  const memos = {};
+  let v = VARIANTS.some(x => x[0] === params.get('variant')) ? params.get('variant') : 'D';
+  const ta = note.querySelector('#p-ta');
+  function paint() {
+    const i = VARIANTS.findIndex(x => x[0] === v);
+    document.body.classList.toggle('p-on', v !== '0');
+    root.innerHTML = v === 'A' ? A() : v === 'B' ? B() : v === 'C' ? C() : v === 'D' ? D() : '';
+    setupD();
+    bar.querySelector('#p-label').textContent = `PROTOTYPE ${v} · ${VARIANTS[i][1]}`;
+    note.querySelector('#p-nl').textContent = `${v} 안 메모`;
+    ta.value = memos[v] || '';
+  }
+  function go(step) {
+    const i = VARIANTS.findIndex(x => x[0] === v);
+    v = VARIANTS[(i + step + VARIANTS.length) % VARIANTS.length][0];
+    const u = new URL(location); u.searchParams.set('variant', v); u.hash = ''; history.replaceState(null, '', u);
+    paint(); scrollTo(0, 0);
+  }
+  bar.querySelector('#p-prev').onclick = () => go(-1);
+  bar.querySelector('#p-next').onclick = () => go(1);
+  bar.querySelector('#p-memo').onclick = () => { note.classList.toggle('open'); if (note.classList.contains('open')) ta.focus(); };
+  ta.oninput = () => { memos[v] = ta.value; };
+  note.querySelector('#p-copy').onclick = async e => {
+    const out = VARIANTS.filter(x => memos[x[0]]).map(x => `[${x[0]} ${x[1]}]\n${memos[x[0]]}`).join('\n\n');
+    try { await navigator.clipboard.writeText(out); e.target.textContent = '복사됨'; }
+    catch { ta.value = out; ta.select(); e.target.textContent = 'Ctrl+C로 복사'; }
+    setTimeout(() => { e.target.textContent = '전체 메모 복사'; }, 1500);
+  };
+  addEventListener('keydown', e => {
+    if (e.target.matches('input,textarea,[contenteditable]')) return;
+    if (e.key === 'ArrowLeft') go(-1);
+    if (e.key === 'ArrowRight') go(1);
+  });
+  root.addEventListener('click', e => {
+    const a = e.target.closest('a[data-jump],a[data-goskills]');
+    if (a) {
+      e.preventDefault();
+      if (a.dataset.goskills) { dview = 'type'; paint(); jumpD('p-d1'); return; }
+      dOpen = false; root.querySelector('.p-dnav').classList.remove('open');
+      root.querySelector('.p-dtoggle').setAttribute('aria-expanded', 'false');
+      jumpD(a.dataset.jump);
+      return;
+    }
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.v) { aview = b.dataset.v; paint(); }
+    if (b.dataset.g) { f[b.dataset.g] = b.dataset.val; paint(); }
+    if (b.dataset.dv) {
+      if (b.dataset.dv === dview) return;
+      dview = b.dataset.dv; dOpen = false; paint();
+      const s0 = document.getElementById('p-d0');
+      if (s0.getBoundingClientRect().top < 0) s0.scrollIntoView();
+    }
+    if (b.classList.contains('p-dtoggle')) { dOpen = !dOpen; b.setAttribute('aria-expanded', dOpen); root.querySelector('.p-dnav').classList.toggle('open', dOpen); }
+  });
+  paint();
+})();
+</script>
+<script>
+/* 주차 보기는 손으로 쓴 마크업 그대로다(주차 이름과 WIL 링크가 여기에만 있다).
+   주제 보기는 카드를 data-topic으로 다시 묶고, 주제가 없는 카드는 맨 뒤 '그 외'에 둔다.
+   마지막 선택은 이 브라우저에만 기억한다 */
+(() => {
+  const list = document.getElementById('list');
+  const byWeek = Array.from(list.children).map(n => n.cloneNode(true));
+  const cards = Array.from(list.querySelectorAll('a.card'));
+  const buttons = Array.from(document.querySelectorAll('.sortbar button'));
+  const topics = [...new Set(cards.map(c => c.dataset.topic).filter(Boolean))];
+
+  function group(title, members) {
+    const g = document.createElement('div'); g.className = 'group';
+    const gh = document.createElement('div'); gh.className = 'gh';
+    const h2 = document.createElement('h2'); h2.className = 'dh'; h2.textContent = title;
+    const box = document.createElement('div'); box.className = 'cards';
+    members.forEach(c => box.appendChild(c.cloneNode(true)));
+    gh.appendChild(h2); g.append(gh, box); return g;
+  }
+
+  function render(mode) {
+    list.textContent = '';
+    list.classList.toggle('by-topic', mode === 'topic');
+    if (mode === 'week') {
+      byWeek.forEach(n => list.appendChild(n.cloneNode(true)));
+    } else {
+      topics.forEach(t => list.appendChild(group(t, cards.filter(c => c.dataset.topic === t))));
+      const rest = cards.filter(c => !c.dataset.topic);
+      if (rest.length) list.appendChild(group('그 외', rest));
+    }
+    buttons.forEach(b => {
+      const on = b.dataset.mode === mode;
+      b.classList.toggle('active', on); b.setAttribute('aria-pressed', on);
+    });
+    try { localStorage.setItem('study-index-mode', mode); } catch (e) {}
+  }
+
+  buttons.forEach(b => b.addEventListener('click', () => render(b.dataset.mode)));
+  let saved = null;
+  try { saved = localStorage.getItem('study-index-mode'); } catch (e) {}
+  if (saved === 'topic') render('topic');
+})();
+</script>
+</body>
+</html>
