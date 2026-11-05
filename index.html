@@ -31,6 +31,10 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
 .gh{position:relative; display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; padding-bottom:10px; border-bottom:1px solid transparent}
 .gh::after{content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px; background:var(--ink); transform:scaleX(0); transform-origin:left; transition:transform .4s var(--eo)}
 .gh.in::after,.gh:not(.rv)::after{transform:none}
+@keyframes rule-draw{from{transform:scaleX(0)}}
+@media (prefers-reduced-motion:no-preference){
+  .gh.arrive::after{animation:rule-draw .28s var(--eo)}
+}
 .gh h2{flex:1 1 auto; min-width:0; margin:0; font-size:20px; letter-spacing:-0.01em}
 a.wk-repo{color:inherit; text-decoration:none}
 a.wk-repo:hover{text-decoration:underline; text-underline-offset:4px}
@@ -104,7 +108,8 @@ a.rr:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 .toc-list a.on .toc-n{color:var(--ink)}
 .toc-name{flex:1; min-width:0}
 .toc-c{font:400 13px/1.7 var(--font-code); color:var(--muted)}
-.toc-extra{display:flex; align-items:baseline; gap:10px; padding:12px 0 0 18px; border-top:1px solid var(--line); font:500 16px/1.4 var(--font-head); color:var(--ink-2); text-decoration:none; transition:color .15s ease}
+.toc-extra{display:flex; align-items:baseline; gap:10px; padding:12px 0 0 18px; border-top:1px solid var(--line); font:500 16px/1.4 var(--font-head); color:var(--ink-2); text-decoration:none; transform-origin:left center; transition:color .15s ease, transform .14s ease-out}
+.toc-extra:active{transform:scale(.98)}
 .toc-arrow{font-family:var(--font-code); font-size:14px; color:var(--muted); transition:transform .2s var(--eo)}
 .toc-toggle{display:none}
 @keyframes toc-in{from{opacity:0; transform:translateY(5px)}}
@@ -144,13 +149,15 @@ a.rr:active{transform:scale(.995)}
   .wrap.with-side{grid-template-columns:minmax(0,1fr); grid-template-areas:"h" "s" "m"; grid-template-rows:none; gap:22px}
   .side{top:0; z-index:5; gap:6px; padding:10px 0 6px; background:var(--bg); border-bottom:1px solid var(--line)}
   .tabs{border-bottom:none; padding-bottom:6px}
-  .toc-toggle{all:unset; box-sizing:border-box; cursor:pointer; display:flex; justify-content:space-between; gap:10px; font:600 16px/1.4 var(--font-head); padding:6px 0}
+  .toc-toggle{all:unset; box-sizing:border-box; cursor:pointer; display:flex; justify-content:space-between; gap:10px; font:600 16px/1.4 var(--font-head); padding:6px 0; transform-origin:left center; transition:transform .14s ease-out}
+  .toc-toggle:active{transform:scale(.97)}
   .toc-toggle:focus-visible{outline:2px solid var(--s3)}
   .chev{transition:transform .2s var(--eo)}
   .toc-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
   .toc{position:absolute; left:0; right:0; top:100%; padding:12px 0 14px; background:var(--bg); border-bottom:1px solid var(--ink); max-height:62vh; overflow:hidden auto;
     opacity:0; visibility:hidden; transform:translateY(-6px); transform-origin:top; transition:opacity .16s ease, transform .2s var(--eo), visibility 0s .2s}
   .toc.open{opacity:1; visibility:visible; transform:none; transition:opacity .16s ease, transform .2s var(--eo), visibility 0s}
+  .toc.instant{transition:none}
   .group{scroll-margin-top:110px}
 }
 @media (max-width:760px){
@@ -528,7 +535,7 @@ a.card .d code{white-space:nowrap}
   const returning = ['reload', 'back_forward'].includes(performance.getEntriesByType('navigation')[0]?.type);
   let skipEnter = returning;
   wrap.classList.toggle('no-enter', returning);
-  let view = 'week', sections = [], active = '', lock = 0;
+  let view = 'week', sections = [], active = '', lock = 0, arriving = null;
 
   function placeTabLine() {
     const cur = side.querySelector('.tabs button.on');
@@ -567,7 +574,18 @@ a.card .d code{white-space:nowrap}
     setActive(id);
     const c = calm() || instant;
     lock = Date.now() + (c ? 0 : 1200);
+    const before = scrollY;
+    arriving = c ? null : id;
     document.getElementById(id).scrollIntoView({ behavior: c ? 'auto' : 'smooth' });
+    // 이미 그 위치면 scrollend가 오지 않는다
+    if (arriving) requestAnimationFrame(() => requestAnimationFrame(() => { if (scrollY === before) arrive(); }));
+  }
+  function arrive() {
+    const gh = arriving && document.getElementById(arriving)?.querySelector('.gh');
+    arriving = null;
+    if (!gh || gh.classList.contains('rv') || gh.classList.contains('arrive')) return;
+    gh.classList.add('arrive');
+    gh.addEventListener('animationend', () => gh.classList.remove('arrive'), { once: true });
   }
   function setOpen(open) {
     toggle.setAttribute('aria-expanded', open);
@@ -648,7 +666,7 @@ a.card .d code{white-space:nowrap}
     if (!skipEnter) wrap.classList.remove('no-enter');
     setOpen(false);
     placeTabLine();
-    active = ''; lock = 0;
+    active = ''; lock = 0; arriving = null;
     spy();
     reveal(list.querySelectorAll(REVEAL));
     try { localStorage.setItem('study-index-mode', view); } catch (e) {}
@@ -674,15 +692,31 @@ a.card .d code{white-space:nowrap}
     if (e.target.closest('.toc-toggle')) setOpen(toggle.getAttribute('aria-expanded') !== 'true');
   });
 
+  // 메뉴 밖을 누른 첫 탭은 메뉴만 닫고, 그 아래 링크로 이동하지 않는다
+  addEventListener('click', e => {
+    if (!toc.classList.contains('open') || side.contains(e.target)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(false);
+  }, true);
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !toc.classList.contains('open')) return;
+    if (toc.contains(document.activeElement)) toggle.focus();
+    toc.classList.add('instant');
+    setOpen(false);
+    void toc.offsetHeight;
+    toc.classList.remove('instant');
+  });
+
   let ticking = false;
   addEventListener('scroll', () => {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(() => { ticking = false; spy(); });
   }, { passive: true });
-  addEventListener('scrollend', () => { lock = 0; spy(); });
-  addEventListener('wheel', () => { lock = 0; }, { passive: true });
-  addEventListener('touchstart', () => { lock = 0; }, { passive: true });
+  addEventListener('scrollend', () => { lock = 0; spy(); arrive(); });
+  addEventListener('wheel', () => { lock = 0; arriving = null; }, { passive: true });
+  addEventListener('touchstart', () => { lock = 0; arriving = null; }, { passive: true });
   const place = () => { placeTabLine(); placeMark(); };
   addEventListener('resize', place);
   if (document.fonts) document.fonts.ready.then(place);
