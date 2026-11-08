@@ -69,10 +69,12 @@ header { display: grid; gap: 14px; }
 .bars { display: inline-flex; gap: 2px; }
 .bars i { width: 8px; height: 8px; border-radius: 1px; background: var(--line); }
 .bars i.a { background: var(--add-mark); } .bars i.d { background: var(--del-mark); }
-.tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
-.tabs button { position: relative; isolation: isolate; font: 500 12px var(--mono); padding: 6px 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 160ms var(--ease-out); }
+.tabs { position: relative; display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.tabs button { position: relative; z-index: 1; font: 500 12px var(--mono); padding: 6px 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 160ms var(--ease-out); }
 .tabs button:active { transform: scale(0.97); transition-duration: 100ms; }
-.tabs .ind { position: absolute; inset: 0; z-index: -1; background: var(--fg); pointer-events: none; }
+/* one marker per tab group, moved with transform only (width via scaleX, origin left) */
+.tabs .ind { position: absolute; top: 0; bottom: 0; left: 0; width: 100px; transform-origin: left center; background: var(--fg); z-index: 0; pointer-events: none; transition: transform 240ms var(--ease-out); }
+.tabs .ind.instant { transition: none; }
 .tabs.has-ind button[aria-selected="true"], .tabs.has-ind button[aria-pressed="true"] { background: transparent; }
 .tabs button + button { border-left: 1px solid var(--line); }
 .tabs button[aria-selected="true"] { background: var(--fg); color: var(--surface); }
@@ -274,6 +276,7 @@ details[open]::details-content { block-size: auto; opacity: 1; }
   ::view-transition-old(*), ::view-transition-old(*.blur) { animation: 150ms linear both vt-fade-out; }
   ::view-transition-new(*), ::view-transition-new(*.blur) { animation: 150ms linear both vt-fade-in; }
   .tabs button:active { transform: none; }
+  .tabs .ind { transition: none; }
   details::details-content { transition: opacity 150ms linear, content-visibility 150ms allow-discrete; }
   .xn i { transition: opacity 150ms linear; transform: none !important; }
   .why.single li.on { transform: none; transition: opacity 150ms linear; }
@@ -641,13 +644,20 @@ details[open]::details-content { block-size: auto; opacity: 1; }
     });
   }
   /* sliding selected marker for a tab group */
-  function addIndicator(group, i, selected) {
+  function addIndicator(group, selected) {
     const ind = document.createElement("span");
-    ind.className = "ind"; ind.style.viewTransitionName = "ind" + i;
-    group.style.viewTransitionName = "tabs" + i;
-    group.classList.add("has-ind");
-    selected.append(ind);
-    return ind;
+    ind.className = "ind instant"; ind.setAttribute("aria-hidden", "true");
+    group.prepend(ind); group.classList.add("has-ind");
+    let on = selected;
+    function place(btn, instant) {
+      on = btn;
+      ind.classList.toggle("instant", instant);
+      const x = btn.offsetLeft, w = btn.offsetWidth;
+      ind.style.transform = `translateX(${x}px) scaleX(${w / 100})`;
+    }
+    place(selected, true);
+    new ResizeObserver(() => place(on, true)).observe(group);
+    return { move: btn => place(btn, false) };
   }
   const vtIds = {};
 
@@ -683,14 +693,12 @@ details[open]::details-content { block-size: auto; opacity: 1; }
     }
   }
   const tabs = box.querySelectorAll(".tabs button[data-view]");
-  const viewInd = addIndicator(box.querySelector(".tabs"), 0, box.querySelector('.tabs button[aria-selected="true"]'));
+  const viewInd = addIndicator(box.querySelector(".tabs"), box.querySelector('.tabs button[aria-selected="true"]'));
   tabs.forEach(b => b.addEventListener("click", () => {
-    morph(() => {
-      tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
-      tree.setAttribute("aria-labelledby", b.id);
-      b.append(viewInd);
-      view = b.dataset.view; apply();
-    });
+    tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
+    tree.setAttribute("aria-labelledby", b.id);
+    viewInd.move(b);
+    morph(() => { view = b.dataset.view; apply(); });
   }));
   build(TREES.main);
 
@@ -708,9 +716,9 @@ details[open]::details-content { block-size: auto; opacity: 1; }
   function setMode(m) {
     if (m === mode) return;
     mode = m;
+    modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+    modeInd.move([...modeBtns].find(b => b.dataset.mode === m));
     morph(() => {
-      modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
-      [...modeBtns].find(b => b.dataset.mode === m).append(modeInd);
       build(TREES[m]);
       box.querySelector(".cnt-add").textContent = COUNTS[m][0];
       box.querySelector(".cnt-del").textContent = COUNTS[m][1];
@@ -719,7 +727,7 @@ details[open]::details-content { block-size: auto; opacity: 1; }
       markBlock(current);
     });
   }
-  const modeInd = addIndicator(document.querySelector(".mode"), 1, document.querySelector('.mode button[aria-pressed="true"]'));
+  const modeInd = addIndicator(document.querySelector(".mode"), document.querySelector('.mode button[aria-pressed="true"]'));
   modeBtns.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
   const jump = document.querySelector("[data-goto-ex]");
   if (jump) jump.addEventListener("click", () => {
