@@ -242,7 +242,7 @@ footer { color: var(--muted); font-size: 12.5px; }
   <section aria-labelledby="h-diff">
     <div class="head">
       <h2 id="h-diff">product 레포: 대조군에서 실험군으로</h2>
-      <span class="draft">파일 이름과 언어는 초안이에요</span>
+      <span class="draft">두 버전 모두 TypeScript. 파일 이름은 초안이에요</span>
     </div>
     <div class="pr">
       <div class="pr-bar">
@@ -276,7 +276,7 @@ footer { color: var(--muted); font-size: 12.5px; }
       <div class="colh" style="grid-row:1;grid-column:2"><h3>대조군</h3><span>DB 없던 시절: CSV 파일을 서버가 직접</span></div>
 
       <div class="blk react down" data-edge="HTTP" style="grid-row:2;grid-column:1"><span class="ly">화면</span><span class="what"><span class="num">1</span>mini-react</span><span class="how">VNode → Diff → Patch, hooks</span></div>
-      <div class="blk down" data-edge="HTTP" style="grid-row:2;grid-column:2"><span class="ly">화면</span><span class="what">바닐라 JS</span><span class="how">innerHTML로 다시 그리기</span></div>
+      <div class="blk down" data-edge="HTTP" style="grid-row:2;grid-column:2"><span class="ly">화면</span><span class="what">바닐라 TS</span><span class="how">innerHTML로 다시 그리기</span></div>
 
       <div class="blk down" data-edge="HTTP: 캐시 확인" style="grid-row:3;grid-column:1"><span class="ly">서버</span><span class="what">product 서버</span><span class="how">같은 라우트, cache.ts와 dbms-client.ts는 요청만 보내요</span></div>
       <div class="blk redis proc-tag down" data-edge="없으면 HTTP: SQL" style="grid-row:4;grid-column:1"><span class="ly">캐시</span><span class="what"><span class="num">2</span>mini-redis</span><span class="how">해시 테이블, 만료, 무효화</span></div>
@@ -285,7 +285,7 @@ footer { color: var(--muted); font-size: 12.5px; }
       <div class="ctl-proc">
         <div class="blk down" data-edge="바로 파일로"><span class="ly">서버</span><span class="what">product 서버</span><span class="how">같은 라우트</span></div>
         <div class="blk none"><span class="ly">캐시</span><span class="what">없음</span><span class="how">매 요청마다 파일을 읽어요</span></div>
-        <div class="blk"><span class="ly">저장</span><span class="what">store-file.js + users.csv</span><span class="how">fs로 한 줄 추가, 전체 읽고 반복문으로 비교. 색인, 잠금, 질의 언어 없음</span></div>
+        <div class="blk"><span class="ly">저장</span><span class="what">store-file.ts + users.csv</span><span class="how">fs로 한 줄 추가, 전체 읽고 반복문으로 비교. 색인, 잠금, 질의 언어 없음</span></div>
       </div>
     </div>
     <ol class="why">
@@ -404,7 +404,7 @@ footer { color: var(--muted); font-size: 12.5px; }
         <div class="opts"><div class="opt rec"><b>A</b>product 레포 하나에 폴더 2개, 테스트 공용</div><div class="opt"><b>B</b>product 레포 2개</div></div></article>
       <article class="card"><div class="k"><span class="num">4</span><h3>제품 주제</h3></div>
         <div class="opts"><div class="opt rec"><b>A</b>React 테스트 페이지 주제로, 11-11까지</div><div class="opt"><b>B</b>React 발표 뒤에 따로</div></div></article>
-      <article class="card"><div class="k"><span class="num">5</span><h3>언어와 테스트 도구</h3></div>
+      <article class="card"><div class="k"><span class="num">5</span><h3>Redis, DBMS 언어와 테스트 도구</h3></div>
         <div class="opts"><div class="opt rec"><b>A</b>11-13 전에 따로 정하기</div><div class="opt"><b>B</b>이 회의에서 정하기</div></div></article>
     </div>
   </section>
@@ -417,7 +417,7 @@ footer { color: var(--muted); font-size: 12.5px; }
       <article class="risk"><div class="k"><h3>발표 2는 한 개</h3><span class="lvl hi">높음</span></div><p>product 레포가 그 한 개로 인정되는지 몰라요. 4분이에요.</p>
         <details><summary>원문</summary><blockquote>"본인 팀에서 만든 프로젝트 중 한 개" "발표시간 4분, QnA 시간 1분" <span class="chip c-src">1308</span></blockquote></details></article>
       <article class="risk"><div class="k"><h3>2주차 6일</h3><span class="lvl hi">높음</span></div><p>Redis, DBMS(Phase 3개, 100만 건), product 두 버전을 함께 해요.</p></article>
-      <article class="risk"><div class="k"><h3>product 서버, 언어 미정</h3><span class="lvl mid">중간</span></div><p>두 버전이 같은 테스트를 쓰려면 API 형식을 먼저 맞춰야 해요.</p></article>
+      <article class="risk"><div class="k"><h3>API 형식을 먼저 맞춰야 해요</h3><span class="lvl mid">중간</span></div><p>두 버전이 같은 테스트를 쓰려면 형식이 같아야 해요. <code>shared/types.ts</code>를 함께 써서 컴파일러가 맞춰요.</p></article>
       <article class="risk"><div class="k"><h3>대조군도 설명해야 해요</h3><span class="lvl mid">중간</span></div><p>AI가 짠 코드도 원리를 말할 수 있어야 해요.</p>
         <details><summary>원문</summary><blockquote>"AI가 작성한 코드를 완벽히 내 것으로 소화해 그 원리를 설명할 수 있어야 합니다." <span class="chip c-src">1308</span></blockquote></details></article>
       <article class="risk"><div class="k"><h3>원문의 1순위는 구현</h3><span class="lvl mid">중간</span></div><p>"이해"보다 "측정 결과가 있는 결과물"로 설명해요.</p>
@@ -449,14 +449,16 @@ footer { color: var(--muted); font-size: 12.5px; }
   const rows = [
     [" ", "product/", "dir"],
     [" ", "├─ web/", "dir"],
-    ["−", "│  ├─ render.js", "del", "손으로 DOM 고치기", "ctl"],
+    ["−", "│  ├─ render.ts", "del", "손으로 DOM 고치기", "ctl"],
     ["+", "│  ├─ App.ts", "add", "컴포넌트와 useState", "react"],
     [" ", "│  └─ index.html", "same"],
     [" ", "├─ server/", "dir"],
-    [" ", "│  ├─ routes", "same", "같은 API 형식"],
-    ["−", "│  ├─ store-file.js", "del", "텍스트 파일 전체 읽기", "ctl"],
+    [" ", "│  ├─ routes.ts", "same", "같은 API 형식"],
+    ["−", "│  ├─ store-file.ts", "del", "텍스트 파일 전체 읽기", "ctl"],
     ["+", "│  ├─ dbms-client.ts", "add", "SQL, B+ 트리", "dbms"],
     ["+", "│  └─ cache.ts", "add", "만료, 무효화", "redis"],
+    [" ", "├─ shared/", "dir"],
+    [" ", "│  └─ types.ts", "same", "데이터와 API 타입, 두 버전 공용"],
     [" ", "└─ tests/functional/", "same", "두 버전 공용"]
   ];
   const chipLabel = { react: "mini-react", redis: "mini-redis", dbms: "mini-dbms", ctl: "대조군 전용" };
