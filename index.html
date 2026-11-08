@@ -54,7 +54,7 @@ a.card > *{grid-column:-2 / -1; min-width:0; transform-origin:left center; trans
 a.card:active > *{transform:scale(.995)}
 a.card .t{font-size:18px; line-height:1.45; letter-spacing:-0.01em}
 a.card .t::after{content:"→"; display:inline-block; margin-left:8px; font-family:var(--font-code); font-size:14px; font-weight:400; color:var(--muted); transition:transform .2s var(--eo), color .15s ease}
-[data-topic="알고리즘"]{--tc:var(--t-alg)} [data-topic="시스템"]{--tc:var(--t-sys)} [data-topic="C언어"]{--tc:var(--t-c)}
+[data-topic="알고리즘"]{--tc:var(--t-alg)} [data-topic="시스템"]{--tc:var(--t-sys)} [data-topic="C언어"]{--tc:var(--t-c)} [data-topic="웹"]{--tc:var(--t-web)}
 a.card[data-topic] .t::before,.sq{content:""; display:inline-block; width:8px; height:8px; margin-right:9px; vertical-align:2px; background:var(--tc)}
 a.card .d{font-size:15px; line-height:1.65; color:var(--ink-2)}
 a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
@@ -378,6 +378,18 @@ a.card .d code{white-space:nowrap}
       <div class="t dh">Clean Code를 어떻게 짜야 할까?</div>
       <div class="d">남이 짠 코드를 받았을 때의 막막함에서 출발합니다. 44줄짜리 <code>do_mmap()</code>이 함수 이름으로 접히는 과정을 보고, <code>mmap()</code>의 함수 흐름을 따라가며 책임 소재가 구조체로 어떻게 이어지고 어디서 파일과 페이지로 갈라지는지 확인합니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · 2분 발표</span></div>
+    </a>
+  </div>
+</div>
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/users/benjohnbill/projects/7">11~12주차 · 미니 React, Redis, DBMS</a></h2>
+  </div>
+  <div class="cards">
+    <a class="card" data-week="11" data-topic="웹" data-kind="deck" data-src="week11-12/lab/meeting-1110/plan.html" href="https://benjohnbill.github.io/study/week11/framework-control.html">
+      <div class="t dh">같은 제품을 두 번 만들기</div>
+      <div class="d">미니 React, Redis, DBMS를 라이브러리로 쓰는 제품 하나와, 셋 없이 만든 대조군을 같은 기능 테스트로 비교하자는 팀 회의 제안입니다. 대조군에서 실험군으로 바뀌는 파일을 PR diff처럼 보여 주고, 원문 요구사항과 제품 기능의 빈칸, 테스트 지도, 결정 카드와 반론을 한 화면에 둡니다.</div>
+      <div class="m"><span class="b">덱</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 팀 회의 제안</span></div>
     </a>
   </div>
 </div>

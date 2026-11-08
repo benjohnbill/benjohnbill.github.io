@@ -18,7 +18,7 @@
   --s3:#453AA6; --s3-soft:#E5E3F7; --s3-rail:#9A92DC;
   --s4:#7E6416; --s4-soft:#F5EEDA; --s4-rail:#C3A85C;
   /* topic markers on the index; same contrast on the page background */
-  --t-alg:#5347BF; --t-sys:#09645A; --t-c:#884918;
+  --t-alg:#5347BF; --t-sys:#09645A; --t-c:#884918; --t-web:#A3305C;
 }
 @media (prefers-color-scheme:dark){ :root{
   --bg:#0B0B0B; --surface:#0B0B0B; --surface-2:#171717; --sunken:#121212;
@@ -27,7 +27,7 @@
   --s2:#4FC5B3; --s2-soft:#0D2A26; --s2-rail:#2C6B61;
   --s3:#A398F3; --s3-soft:#1B1836; --s3-rail:#4E4696;
   --s4:#D8B65E; --s4-soft:#2A2312; --s4-rail:#7A6631;
-  --t-alg:#ABA0F4; --t-sys:#3EBDAA; --t-c:#DF9C63;
+  --t-alg:#ABA0F4; --t-sys:#3EBDAA; --t-c:#DF9C63; --t-web:#F28DB2;
 }}
 
 *{box-sizing:border-box}
