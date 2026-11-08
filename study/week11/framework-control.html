@@ -656,7 +656,7 @@ details[open]::details-content { block-size: auto; opacity: 1; }
       ind.style.transform = `translateX(${x}px) scaleX(${w / 100})`;
     }
     place(selected, true);
-    new ResizeObserver(() => place(on, true)).observe(group);
+    if (window.ResizeObserver) new ResizeObserver(() => place(on, true)).observe(group);
     return { move: btn => place(btn, false) };
   }
   const vtIds = {};
