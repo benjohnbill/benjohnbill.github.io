@@ -75,7 +75,7 @@ header { display: grid; gap: 14px; }
 .tabs button[aria-selected="true"] { background: var(--fg); color: var(--surface); }
 .tabs button:hover:not([aria-selected="true"]) { color: var(--fg); background: var(--sunken); }
 .tree { font-family: var(--mono); font-size: 13px; line-height: 1.5; padding: 6px 0; }
-.row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 0 10px; padding: 3px 14px 3px 0; transition: background-color .25s cubic-bezier(.16,1,.3,1); }
+.row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 0 10px; padding: 3px 14px 3px 0; transition: background-color 220ms var(--ease-out); }
 .row .g { text-align: center; color: var(--muted); user-select: none; }
 .row .path { white-space: pre; overflow: hidden; text-overflow: ellipsis; }
 .row .note { font-family: var(--body); font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
@@ -129,6 +129,8 @@ header { display: grid; gap: 14px; }
   .blk .what { font-size: 13px; }
 }
 
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-fade-in { from { opacity: 0; } }
 /* example section */
 .ex { border-top: 1px dashed var(--line); padding-top: 40px; }
 .ex-badge { font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px dashed var(--muted); color: var(--muted); vertical-align: 4px; margin-left: 6px; }
@@ -224,48 +226,51 @@ details blockquote + blockquote { margin-top: 6px; }
 .hw p { max-width: 70ch; }
 footer { color: var(--muted); font-size: 12.5px; }
 /* motion */
-.rw { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 220ms var(--ease-out), opacity 220ms var(--ease-out); }
-.rw > .row { min-height: 0; overflow: hidden; }
-.rw.gone { grid-template-rows: 0fr; opacity: 0; transition-duration: 200ms; }
-.rw.gone > .row { padding-block: 0; }
-.row { transition: background-color 220ms var(--ease-out), padding 200ms var(--ease-out); }
-.tree, .swap { transition: opacity 150ms var(--ease-out); }
-.tree.fading, .swap.fading { opacity: 0; }
+.rw.gone { display: none; }
+/* View Transitions: rows and blocks slide to their new place (transform), contents crossfade with a 2px blur */
+:root { view-transition-name: none; }
+::view-transition-group(*) { animation-duration: 260ms; animation-timing-function: var(--ease-out); }
+::view-transition-old(*) { animation: 160ms var(--ease-out) both vt-out; }
+::view-transition-new(*) { animation: 220ms var(--ease-out) 40ms both vt-in; }
+@keyframes vt-out { to { opacity: 0; filter: blur(2px); } }
+@keyframes vt-in { from { opacity: 0; filter: blur(2px); } }
 .tabs button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
 .tabs button[aria-pressed="false"]:hover { color: var(--fg); background: var(--sunken); }
 .mode button { padding: 7px 12px; font-size: 12.5px; }
-.blk { outline: 2px solid transparent; outline-offset: 3px; transition: outline-color 120ms var(--ease-out); }
+.blk { outline: 2px solid transparent; outline-offset: 3px; transition: outline-color 160ms var(--ease-out); }
 .blk.hl { outline-color: var(--fg); }
 .arch .num { cursor: pointer; border: 0; padding: 0; font-family: var(--mono); }
 .why-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .why-nav button { font: 600 12px var(--mono); border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; min-width: 30px; height: 30px; padding: 0 10px; cursor: pointer; transition: transform 160ms var(--ease-out), background-color 120ms var(--ease-out); }
 .why-nav button[aria-pressed="true"] { background: var(--fg); color: var(--surface); border-color: var(--fg); }
 .why-nav .all { margin-left: auto; font-weight: 500; }
-.why-nav button:active, .play:active { transform: scale(0.97); }
+.why-nav button:active, .play:active { transform: scale(0.97); transition-duration: 100ms; }
 .why.single li { display: none; }
-.why.single li.on { display: grid; animation: why-in 150ms var(--ease-out); }
-@keyframes why-in { from { opacity: 0; } }
-details::details-content { block-size: 0; overflow: hidden; transition: block-size 220ms var(--ease-out), content-visibility 220ms allow-discrete; }
-details[open]::details-content { block-size: auto; }
+.why.single li.on { display: grid; opacity: 1; transform: none; transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); }
+@starting-style { .why.single li.on { opacity: 0; transform: translateY(4px); } }
+details::details-content { block-size: 0; opacity: 0; overflow: hidden; transition: block-size 220ms var(--ease-out), opacity 180ms var(--ease-out), content-visibility 220ms allow-discrete; }
+details[open]::details-content { block-size: auto; opacity: 1; }
 .fold > summary { color: var(--fg); font-size: 16px; }
 .fold > summary h3 { display: inline; font-size: 16px; }
 .trace-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .play { font: 500 12.5px var(--mono); padding: 7px 14px; border: 1px solid var(--fg); border-radius: 6px; background: var(--surface); color: var(--fg); cursor: pointer; transition: transform 160ms var(--ease-out); }
 .lane li { transition: opacity 200ms var(--ease-out), outline-color 200ms var(--ease-out); outline: 2px solid transparent; outline-offset: 1px; }
 .trace.playing .lane li { opacity: .3; }
+.trace.playing .lane li.done { opacity: .6; }
 .trace.playing .lane li.on { opacity: 1; outline-color: currentColor; }
 .xn { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; vertical-align: middle; }
 .xn i { width: 8px; height: 8px; border-radius: 2px; background: var(--del-mark); transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out); }
 .xn em { font-style: normal; font-family: var(--mono); font-size: 11.5px; margin-left: 3px; }
 .xn.reset i { opacity: 0; transform: scale(0.8); }
 .ex-jump { font: 500 12.5px var(--mono); padding: 7px 12px; border: 1px dashed var(--muted); border-radius: 6px; background: transparent; color: var(--fg); cursor: pointer; justify-self: start; transition: transform 160ms var(--ease-out); }
-.ex-jump:active { transform: scale(0.97); }
+.ex-jump:active { transform: scale(0.97); transition-duration: 100ms; }
 @media (prefers-reduced-motion: reduce) {
-  .rw, .rw.gone { transition: opacity 150ms linear; }
-  .row { transition: background-color 150ms linear; }
-  details::details-content { transition: none; }
+  ::view-transition-group(*) { animation-duration: 0s; }
+  ::view-transition-old(*) { animation: 150ms linear both vt-fade-out; }
+  ::view-transition-new(*) { animation: 150ms linear both vt-fade-in; }
+  details::details-content { transition: opacity 150ms linear, content-visibility 150ms allow-discrete; }
   .xn i { transition: opacity 150ms linear; transform: none !important; }
-  .why.single li.on { animation: none; }
+  .why.single li.on { transform: none; transition: opacity 150ms linear; }
   .why-nav button:active, .play:active, .ex-jump:active { transform: none; }
 }
 </style>
@@ -618,7 +623,11 @@ details[open]::details-content { block-size: auto; }
   const COUNTS = { main: ["+3", "−2"], ex: ["+5", "−4"] };
   const chipLabel = { react: "mini-react", redis: "mini-redis", dbms: "mini-dbms", ctl: "대조군 전용" };
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const FADE = reduce ? 0 : 150;
+  /* one DOM update, animated by the browser when View Transitions exist; instant otherwise */
+  function morph(update) {
+    if (document.startViewTransition) document.startViewTransition(update); else update();
+  }
+  const vtIds = {};
 
   /* tree: rows stay in the DOM; a view change collapses or expands them */
   const box = document.querySelector(".pr[data-tree]");
@@ -629,6 +638,7 @@ details[open]::details-content { block-size: auto; }
     tree.textContent = "";
     built = rows.map(([g, path, kind, note, chip]) => {
       const rw = document.createElement("div"); rw.className = "rw";
+      rw.style.viewTransitionName = "r" + (vtIds[path] ??= Object.keys(vtIds).length);
       const row = document.createElement("div");
       const gut = document.createElement("span"); gut.className = "g";
       const p = document.createElement("span"); p.className = "path";
@@ -654,7 +664,7 @@ details[open]::details-content { block-size: auto; }
   tabs.forEach(b => b.addEventListener("click", () => {
     tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
     tree.setAttribute("aria-labelledby", b.id);
-    view = b.dataset.view; apply();
+    morph(() => { view = b.dataset.view; apply(); });
   }));
   build(TREES.main);
 
@@ -663,22 +673,22 @@ details[open]::details-content { block-size: auto; }
   swaps.forEach(el => { el.dataset.gen = el.innerHTML; });
   const edges = [...document.querySelectorAll(".blk[data-ex-edge]")];
   edges.forEach(el => { el.dataset.genEdge = el.dataset.edge; });
+  document.querySelectorAll(".arch .blk, .arch .colh").forEach((el, i) => { el.style.viewTransitionName = "a" + i; });
+  box.querySelector(".pr-title").style.viewTransitionName = "pr-title";
   const modeBtns = document.querySelectorAll(".mode button");
   let mode = "main";
   function setMode(m) {
     if (m === mode) return;
     mode = m;
     modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
-    tree.classList.add("fading"); swaps.forEach(el => el.classList.add("fading"));
-    setTimeout(() => {
+    morph(() => {
       build(TREES[m]);
       box.querySelector(".cnt-add").textContent = COUNTS[m][0];
       box.querySelector(".cnt-del").textContent = COUNTS[m][1];
       swaps.forEach(el => { el.innerHTML = m === "ex" ? el.dataset.ex : el.dataset.gen; });
       edges.forEach(el => { el.dataset.edge = m === "ex" ? el.dataset.exEdge : el.dataset.genEdge; });
       markBlock(current);
-      tree.classList.remove("fading"); swaps.forEach(el => el.classList.remove("fading"));
-    }, FADE);
+    });
   }
   modeBtns.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
   const jump = document.querySelector("[data-goto-ex]");
@@ -734,7 +744,7 @@ details[open]::details-content { block-size: auto; }
   function stop() {
     timers.forEach(clearTimeout); timers = [];
     trace.classList.remove("playing");
-    trace.querySelectorAll("li.on").forEach(li => li.classList.remove("on"));
+    trace.querySelectorAll("li.on, li.done").forEach(li => li.classList.remove("on", "done"));
     xn.classList.remove("reset"); xn.querySelectorAll("i").forEach(i => { i.style.transitionDelay = ""; });
     play.textContent = "재생";
   }
@@ -743,7 +753,10 @@ details[open]::details-content { block-size: auto; }
     trace.classList.add("playing"); play.textContent = "멈춤";
     for (let s = 1; s <= 6; s++) {
       timers.push(setTimeout(() => {
-        trace.querySelectorAll("li").forEach(li => li.classList.toggle("on", li.dataset.stage === String(s)));
+        trace.querySelectorAll("li").forEach(li => {
+          li.classList.toggle("on", li.dataset.stage === String(s));
+          li.classList.toggle("done", Number(li.dataset.stage) < s);
+        });
         if (s === 5) {
           xn.classList.add("reset");
           xn.querySelectorAll("i").forEach((i, k) => { i.style.transitionDelay = reduce ? "0ms" : (k * 60) + "ms"; });
