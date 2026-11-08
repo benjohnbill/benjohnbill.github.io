@@ -23,6 +23,8 @@
   --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   color-scheme: light;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  interpolate-size: allow-keywords;
 }
 * { box-sizing: border-box; }
 ::selection { background: var(--react-soft); color: var(--fg); }
@@ -221,7 +223,51 @@ details blockquote + blockquote { margin-top: 6px; }
 .hw { background: var(--fg); color: var(--surface); border-radius: 8px; padding: 18px 20px; display: grid; gap: 8px; }
 .hw p { max-width: 70ch; }
 footer { color: var(--muted); font-size: 12.5px; }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* motion */
+.rw { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 220ms var(--ease-out), opacity 220ms var(--ease-out); }
+.rw > .row { min-height: 0; overflow: hidden; }
+.rw.gone { grid-template-rows: 0fr; opacity: 0; transition-duration: 200ms; }
+.rw.gone > .row { padding-block: 0; }
+.row { transition: background-color 220ms var(--ease-out), padding 200ms var(--ease-out); }
+.tree, .swap { transition: opacity 150ms var(--ease-out); }
+.tree.fading, .swap.fading { opacity: 0; }
+.tabs button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
+.tabs button[aria-pressed="false"]:hover { color: var(--fg); background: var(--sunken); }
+.mode button { padding: 7px 12px; font-size: 12.5px; }
+.blk { outline: 2px solid transparent; outline-offset: 3px; transition: outline-color 120ms var(--ease-out); }
+.blk.hl { outline-color: var(--fg); }
+.arch .num { cursor: pointer; border: 0; padding: 0; font-family: var(--mono); }
+.why-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.why-nav button { font: 600 12px var(--mono); border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; min-width: 30px; height: 30px; padding: 0 10px; cursor: pointer; transition: transform 160ms var(--ease-out), background-color 120ms var(--ease-out); }
+.why-nav button[aria-pressed="true"] { background: var(--fg); color: var(--surface); border-color: var(--fg); }
+.why-nav .all { margin-left: auto; font-weight: 500; }
+.why-nav button:active, .play:active { transform: scale(0.97); }
+.why.single li { display: none; }
+.why.single li.on { display: grid; animation: why-in 150ms var(--ease-out); }
+@keyframes why-in { from { opacity: 0; } }
+details::details-content { block-size: 0; overflow: hidden; transition: block-size 220ms var(--ease-out), content-visibility 220ms allow-discrete; }
+details[open]::details-content { block-size: auto; }
+.fold > summary { color: var(--fg); font-size: 16px; }
+.fold > summary h3 { display: inline; font-size: 16px; }
+.trace-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.play { font: 500 12.5px var(--mono); padding: 7px 14px; border: 1px solid var(--fg); border-radius: 6px; background: var(--surface); color: var(--fg); cursor: pointer; transition: transform 160ms var(--ease-out); }
+.lane li { transition: opacity 200ms var(--ease-out), outline-color 200ms var(--ease-out); outline: 2px solid transparent; outline-offset: 1px; }
+.trace.playing .lane li { opacity: .3; }
+.trace.playing .lane li.on { opacity: 1; outline-color: currentColor; }
+.xn { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.xn i { width: 8px; height: 8px; border-radius: 2px; background: var(--del-mark); transition: opacity 150ms var(--ease-out), transform 150ms var(--ease-out); }
+.xn em { font-style: normal; font-family: var(--mono); font-size: 11.5px; margin-left: 3px; }
+.xn.reset i { opacity: 0; transform: scale(0.8); }
+.ex-jump { font: 500 12.5px var(--mono); padding: 7px 12px; border: 1px dashed var(--muted); border-radius: 6px; background: transparent; color: var(--fg); cursor: pointer; justify-self: start; transition: transform 160ms var(--ease-out); }
+.ex-jump:active { transform: scale(0.97); }
+@media (prefers-reduced-motion: reduce) {
+  .rw, .rw.gone { transition: opacity 150ms linear; }
+  .row { transition: background-color 150ms linear; }
+  details::details-content { transition: none; }
+  .xn i { transition: opacity 150ms linear; transform: none !important; }
+  .why.single li.on { animation: none; }
+  .why-nav button:active, .play:active, .ex-jump:active { transform: none; }
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -245,8 +291,12 @@ footer { color: var(--muted); font-size: 12.5px; }
   <section aria-labelledby="h-diff">
     <div class="head">
       <h2 id="h-diff">product 레포: 대조군에서 실험군으로</h2>
-      <span class="draft">두 버전 모두 TypeScript. 파일 이름은 초안이에요</span>
+      <div class="tabs mode" role="group" aria-label="보기 전환">
+        <button type="button" data-mode="main" aria-pressed="true">일반형</button>
+        <button type="button" data-mode="ex" aria-pressed="false">예시: 나만무</button>
+      </div>
     </div>
+    <p class="draft">두 버전 모두 TypeScript. 파일 이름은 초안이에요. 이 스위치는 아래 아키텍처도 함께 바꿔요</p>
     <div class="pr" data-tree="main">
       <div class="pr-bar">
         <div class="pr-title">
@@ -272,31 +322,39 @@ footer { color: var(--muted); font-size: 12.5px; }
   <section aria-labelledby="h-arch">
     <div class="head">
       <h2 id="h-arch">같은 기능, 다른 담당</h2>
-      <span class="sub">위에서 아래로 요청이 흘러요. 번호는 아래 설명과 짝이에요</span>
+      <span class="sub">위에서 아래로 요청이 흘러요. 번호를 누르면 아래 설명이 바뀌어요</span>
     </div>
     <div class="arch">
-      <div class="colh" style="grid-row:1;grid-column:1"><h3>실험군</h3><span>우리가 만든 프레임워크 3개</span></div>
-      <div class="colh" style="grid-row:1;grid-column:2"><h3>대조군</h3><span>DB 없던 시절: CSV 파일을 서버가 직접</span></div>
+      <div class="colh" style="grid-row:1;grid-column:1"><h3>실험군</h3><span class="swap" data-ex="프레임워크 3개 + node:http">우리가 만든 프레임워크 3개</span></div>
+      <div class="colh" style="grid-row:1;grid-column:2"><h3>대조군</h3><span class="swap" data-ex="node:http + CSV 파일">DB 없던 시절: CSV 파일을 서버가 직접</span></div>
 
-      <div class="blk react down" data-edge="HTTP" style="grid-row:2;grid-column:1"><span class="ly">화면</span><span class="what"><span class="num">1</span>mini-react</span><span class="how">VNode → Diff → Patch, hooks</span></div>
-      <div class="blk down" data-edge="HTTP" style="grid-row:2;grid-column:2"><span class="ly">화면</span><span class="what">바닐라 TS</span><span class="how">innerHTML로 다시 그리기</span></div>
+      <div class="blk react down" data-edge="HTTP" data-ex-edge="POST, GET, SSE" style="grid-row:2;grid-column:1"><span class="ly">화면</span><span class="what swap" data-ex='&lt;button type="button" class="num"&gt;1&lt;/button&gt;App, RankingList, SurveyForm'><button type="button" class="num">1</button>mini-react</span><span class="how swap" data-ex="상태는 루트에만, 순위 행에 key">VNode → Diff → Patch, hooks</span></div>
+      <div class="blk down" data-edge="HTTP" data-ex-edge="POST, GET, SSE" style="grid-row:2;grid-column:2"><span class="ly">화면</span><span class="what swap" data-ex="render-ranking, render-survey">바닐라 TS</span><span class="how swap" data-ex="바뀔 때마다 innerHTML로 순위표 전체">innerHTML로 다시 그리기</span></div>
 
-      <div class="blk down" data-edge="HTTP: 캐시 확인" style="grid-row:3;grid-column:1"><span class="ly">서버</span><span class="what">product 서버</span><span class="how">같은 라우트, cache.ts와 dbms-client.ts는 요청만 보내요</span></div>
-      <div class="blk redis proc-tag down" data-edge="없으면 HTTP: SQL" style="grid-row:4;grid-column:1"><span class="ly">캐시</span><span class="what"><span class="num">2</span>mini-redis</span><span class="how">해시 테이블, 만료, 무효화</span></div>
-      <div class="blk dbms proc-tag" style="grid-row:5;grid-column:1"><span class="ly">저장</span><span class="what"><span class="num">3</span>B+ 트리 <span class="num">4</span>SQL <span class="num">5</span>스레드 풀</span><span class="how">mini-dbms: 파서 → 엔진 → 테이블 파일</span></div>
+      <div class="blk down" data-edge="HTTP: 캐시 확인" data-ex-edge="GET ranking" style="grid-row:3;grid-column:1"><span class="ly">서버</span><span class="what swap" data-ex="node:http 라우트 5개">product 서버</span><span class="how swap" data-ex="/surveys, /ranking, /preferences, /events(SSE), 정적 파일">같은 라우트, cache.ts와 dbms-client.ts는 요청만 보내요</span></div>
+      <div class="blk redis proc-tag down" data-edge="없으면 HTTP: SQL" data-ex-edge="없으면 SELECT" style="grid-row:4;grid-column:1"><span class="ly">캐시</span><span class="what swap" data-ex='&lt;button type="button" class="num"&gt;2&lt;/button&gt;ranking 키 하나'><button type="button" class="num">2</button>mini-redis</span><span class="how swap" data-ex="새 평가가 오면 무효화, 다음 조회 때 한 번만 다시 계산">해시 테이블, 만료, 무효화</span></div>
+      <div class="blk dbms proc-tag" style="grid-row:5;grid-column:1"><span class="ly">저장</span><span class="what"><button type="button" class="num">3</button>B+ 트리 <button type="button" class="num">4</button>SQL <button type="button" class="num">5</button>스레드 풀</span><span class="how swap" data-ex="people, evaluations 테이블. 평가 1건 = INSERT 1줄">mini-dbms: 파서 → 엔진 → 테이블 파일</span></div>
 
       <div class="ctl-proc">
-        <div class="blk down" data-edge="바로 파일로"><span class="ly">서버</span><span class="what">product 서버</span><span class="how">같은 라우트</span></div>
-        <div class="blk none"><span class="ly">캐시</span><span class="what">없음</span><span class="how">매 요청마다 파일을 읽어요</span></div>
-        <div class="blk"><span class="ly">저장</span><span class="what">store-file.ts + users.csv</span><span class="how">fs로 한 줄 추가, 전체 읽고 반복문으로 비교. 색인, 잠금, 질의 언어 없음</span></div>
+        <div class="blk down" data-edge="바로 파일로"><span class="ly">서버</span><span class="what swap" data-ex="node:http 라우트 5개">product 서버</span><span class="how swap" data-ex="실험군과 같은 라우트">같은 라우트</span></div>
+        <div class="blk none"><span class="ly">캐시</span><span class="what">없음</span><span class="how swap" data-ex="조회마다 순위를 다시 계산">매 요청마다 파일을 읽어요</span></div>
+        <div class="blk"><span class="ly">저장</span><span class="what swap" data-ex="people.csv, evaluations.csv">store-file.ts + users.csv</span><span class="how swap" data-ex="한 줄 추가, 조회는 전체 읽기. 잠금 없음">fs로 한 줄 추가, 전체 읽고 반복문으로 비교. 색인, 잠금, 질의 언어 없음</span></div>
       </div>
     </div>
+    <div class="why-nav" hidden>
+      <button type="button" data-n="1" aria-pressed="true">1</button>
+      <button type="button" data-n="2" aria-pressed="false">2</button>
+      <button type="button" data-n="3" aria-pressed="false">3</button>
+      <button type="button" data-n="4" aria-pressed="false">4</button>
+      <button type="button" data-n="5" aria-pressed="false">5</button>
+      <button type="button" class="all" aria-pressed="false">전체 펼치기</button>
+    </div>
     <ol class="why">
-      <li><span class="num">1</span><h3>입력 중 화면 갱신</h3><p><span class="vs">대조군은 다시 그릴 때 노드를 통째로 바꿔서 입력값과 커서가 사라져요.</span> 실험군은 이전 VNode와 비교해 바뀐 노드만 고쳐요.</p><p class="ms">측정: 교체된 노드 수, Reflow 횟수</p></li>
-      <li><span class="num">2</span><h3>같은 요청 반복</h3><p><span class="vs">대조군은 같은 요청에도 매번 파일을 처음부터 읽어요.</span> 실험군은 응답을 mini-redis에 두고, 만료되거나 데이터가 바뀌면 지워요.</p><p class="ms">측정: 캐시 사용 여부별 응답 시간</p></li>
-      <li><span class="num">3</span><h3>100만 건 중 id로 찾기</h3><p><span class="vs">대조군은 위에서부터 끝까지 훑어요.</span> 실험군은 책 뒤의 찾아보기처럼 B+ 트리 색인으로 바로 찾아가요.</p><p class="ms">측정: 인덱스 대 선형 탐색 시간</p></li>
-      <li><span class="num">4</span><h3>새 조건으로 조회</h3><p><span class="vs">대조군은 조건이 생길 때마다 서버에 반복문을 새로 짜요.</span> 실험군은 SQL 한 줄을 파서가 구조로 바꾸고 엔진이 실행해요.</p><p class="ms">측정: 조건 하나 추가에 바뀌는 코드 줄 수</p></li>
-      <li><span class="num">5</span><h3>동시에 쓰기</h3><p><span class="vs">대조군은 두 요청이 같은 파일에 동시에 쓰면 줄이 섞일 수 있어요.</span> 실험군은 스레드 풀이 요청을 나눠 받고, 엔진에서 동시 접근을 설계해요.</p><p class="ms">측정: 동시 쓰기 뒤 레코드 수 검사</p></li>
+      <li data-n="1"><span class="num">1</span><h3>입력 중 화면 갱신</h3><p><span class="vs">대조군은 다시 그릴 때 노드를 통째로 바꿔서 입력값과 커서가 사라져요.</span> 실험군은 이전 VNode와 비교해 바뀐 노드만 고쳐요.</p><p class="ms">측정: 교체된 노드 수, Reflow 횟수</p></li>
+      <li data-n="2"><span class="num">2</span><h3>같은 요청 반복</h3><p><span class="vs">대조군은 같은 요청에도 매번 파일을 처음부터 읽어요.</span> 실험군은 응답을 mini-redis에 두고, 만료되거나 데이터가 바뀌면 지워요.</p><p class="ms">측정: 캐시 사용 여부별 응답 시간</p></li>
+      <li data-n="3"><span class="num">3</span><h3>100만 건 중 id로 찾기</h3><p><span class="vs">대조군은 위에서부터 끝까지 훑어요.</span> 실험군은 책 뒤의 찾아보기처럼 B+ 트리 색인으로 바로 찾아가요.</p><p class="ms">측정: 인덱스 대 선형 탐색 시간</p></li>
+      <li data-n="4"><span class="num">4</span><h3>새 조건으로 조회</h3><p><span class="vs">대조군은 조건이 생길 때마다 서버에 반복문을 새로 짜요.</span> 실험군은 SQL 한 줄을 파서가 구조로 바꾸고 엔진이 실행해요.</p><p class="ms">측정: 조건 하나 추가에 바뀌는 코드 줄 수</p></li>
+      <li data-n="5"><span class="num">5</span><h3>동시에 쓰기</h3><p><span class="vs">대조군은 두 요청이 같은 파일에 동시에 쓰면 줄이 섞일 수 있어요.</span> 실험군은 스레드 풀이 요청을 나눠 받고, 엔진에서 동시 접근을 설계해요.</p><p class="ms">측정: 동시 쓰기 뒤 레코드 수 검사</p></li>
     </ol>
   </section>
 
@@ -457,76 +515,52 @@ footer { color: var(--muted); font-size: 12.5px; }
       <li><b>실시간 선호도</b><span>새 평가가 오면 SSE로 알림</span><span class="chips"><span class="chip c-src">node:http</span></span></li>
     </ol>
 
-    <h3 class="ex-h">예시 아키텍처</h3>
-    <div class="arch">
-      <div class="colh" style="grid-row:1;grid-column:1"><h3>실험군</h3><span>프레임워크 3개 + node:http</span></div>
-      <div class="colh" style="grid-row:1;grid-column:2"><h3>대조군</h3><span>node:http + CSV 파일</span></div>
-      <div class="blk react down" data-edge="POST, GET, SSE" style="grid-row:2;grid-column:1"><span class="ly">화면</span><span class="what">App, RankingList, SurveyForm</span><span class="how">상태는 루트에만, 순위 행에 key</span></div>
-      <div class="blk down" data-edge="POST, GET, SSE" style="grid-row:2;grid-column:2"><span class="ly">화면</span><span class="what">render-ranking, render-survey</span><span class="how">바뀔 때마다 innerHTML로 순위표 전체</span></div>
-      <div class="blk down" data-edge="GET ranking" style="grid-row:3;grid-column:1"><span class="ly">서버</span><span class="what">node:http 라우트 5개</span><span class="how">/surveys, /ranking, /preferences, /events(SSE), 정적 파일</span></div>
-      <div class="blk redis proc-tag down" data-edge="없으면 SELECT" style="grid-row:4;grid-column:1"><span class="ly">캐시</span><span class="what">ranking 키 하나</span><span class="how">새 평가가 오면 무효화, 다음 조회 때 한 번만 다시 계산</span></div>
-      <div class="blk dbms proc-tag" style="grid-row:5;grid-column:1"><span class="ly">저장</span><span class="what">people, evaluations 테이블</span><span class="how">평가 1건 = INSERT 1줄. id 조회는 B+ 트리</span></div>
-      <div class="ctl-proc">
-        <div class="blk down" data-edge="바로 파일로"><span class="ly">서버</span><span class="what">node:http 라우트 5개</span><span class="how">실험군과 같은 라우트</span></div>
-        <div class="blk none"><span class="ly">캐시</span><span class="what">없음</span><span class="how">조회마다 순위를 다시 계산</span></div>
-        <div class="blk"><span class="ly">저장</span><span class="what">people.csv, evaluations.csv</span><span class="how">한 줄 추가, 조회는 전체 읽기. 잠금 없음</span></div>
-      </div>
-    </div>
+    <button type="button" class="ex-jump" data-goto-ex>맨 위에서 예시 아키텍처와 파일 트리 보기</button>
 
-    <h3 class="ex-h">예시 파일 트리</h3>
-    <div class="pr" data-tree="ex">
-      <div class="pr-bar">
-        <div class="pr-title">
-          <span>control → with-framework</span>
-          <span class="cnt-add">+5</span><span class="cnt-del">−4</span>
-          <span class="bars" aria-hidden="true"><i class="a"></i><i class="a"></i><i class="a"></i><i class="d"></i><i class="d"></i></span>
-        </div>
-        <div class="tabs" role="tablist" aria-label="예시 트리 보기">
-          <button type="button" role="tab" id="x-diff" aria-selected="true" data-view="diff">diff</button>
-          <button type="button" role="tab" id="x-ctl" aria-selected="false" data-view="ctl">control</button>
-          <button type="button" role="tab" id="x-exp" aria-selected="false" data-view="exp">with-framework</button>
-        </div>
-      </div>
-      <div class="tree" role="tabpanel" aria-labelledby="x-diff"></div>
+    <div class="trace-head">
+      <h3 class="ex-h">평가 1건이 N명의 화면에 닿기까지</h3>
+      <button type="button" class="play" hidden>재생</button>
     </div>
-
-    <h3 class="ex-h">평가 1건이 N명의 화면에 닿기까지</h3>
     <div class="trace">
       <div class="lane">
         <h3>대조군</h3>
         <ol>
-          <li><code>POST /preferences</code> 도착</li>
-          <li><code>evaluations.csv</code> 끝에 한 줄 추가. 동시에 쓰면 줄이 섞일 수 있어요</li>
-          <li>SSE로 보고 있는 N명에게 "순위 바뀜"</li>
-          <li class="cost">N명이 각자 <code>GET /ranking</code>. 파일 전체 읽기와 점수 계산이 N번</li>
-          <li class="cost">브라우저마다 순위표 전체를 innerHTML로 다시 그림</li>
+          <li data-stage="1"><code>POST /preferences</code> 도착</li>
+          <li data-stage="2"><code>evaluations.csv</code> 끝에 한 줄 추가. 동시에 쓰면 줄이 섞일 수 있어요</li>
+          <li data-stage="4">SSE로 보고 있는 N명에게 "순위 바뀜"</li>
+          <li data-stage="5" class="cost">N명이 각자 <code>GET /ranking</code>. 파일 전체 읽기와 점수 계산이 N번<span class="xn" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><em>×N</em></span></li>
+          <li data-stage="6" class="cost">브라우저마다 순위표 전체를 innerHTML로 다시 그림</li>
         </ol>
       </div>
       <div class="lane">
         <h3>실험군</h3>
         <ol>
-          <li><code>POST /preferences</code> 도착</li>
-          <li class="gain">mini-dbms에 INSERT. 스레드 풀이 받아요</li>
-          <li class="gain">mini-redis의 ranking 키 무효화</li>
-          <li>SSE로 보고 있는 N명에게 "순위 바뀜"</li>
-          <li class="gain">첫 조회만 다시 계산해 캐시에 저장, 나머지 N−1명은 캐시에서</li>
-          <li class="gain">mini-react가 key로 Diff해서 바뀐 행만 옮김</li>
+          <li data-stage="1"><code>POST /preferences</code> 도착</li>
+          <li data-stage="2" class="gain">mini-dbms에 INSERT. 스레드 풀이 받아요</li>
+          <li data-stage="3" class="gain">mini-redis의 ranking 키 무효화</li>
+          <li data-stage="4">SSE로 보고 있는 N명에게 "순위 바뀜"</li>
+          <li data-stage="5" class="gain">첫 조회만 다시 계산해 캐시에 저장, 나머지 N−1명은 캐시에서</li>
+          <li data-stage="6" class="gain">mini-react가 key로 Diff해서 바뀐 행만 옮김</li>
         </ol>
       </div>
     </div>
 
-    <h3 class="ex-h">규모가 작다는 반론에 대한 보강</h3>
+    <details class="fold">
+    <summary><h3 class="ex-h">규모가 작다는 반론에 대한 보강</h3></summary>
     <div class="cards">
       <article class="card"><h3>점수 대신 평가 이벤트 저장</h3><p>레코드가 사람 수가 아니라 평가 횟수만큼 늘어요. 순위는 이벤트를 모아 계산해서 다시 계산하는 비용이 커져요.</p></article>
       <article class="card"><h3>읽기가 몰리는 순간</h3><p>평가 하나에 보고 있던 모두가 다시 조회해요. 캐시가 없으면 같은 계산이 N번 반복돼요.</p></article>
       <article class="card"><h3>가짜 데이터로 부하 만들기</h3><p><code>tools/seed.ts</code>와 <code>tools/load.ts</code>로 두 버전에 같은 부하를 줘요. "평가 수가 N을 넘으면 차이가 이만큼"을 그래프로 보여요.</p></article>
     </div>
+    </details>
 
-    <h3 class="ex-h">아직 열린 것</h3>
+    <details class="fold">
+    <summary><h3 class="ex-h">아직 열린 것</h3></summary>
     <div class="ask">
       <article class="card"><h3>동료를 순위로 세워도 될까요?</h3><p>익명이어도 인원이 적으면 추측할 수 있어요. 시연과 측정은 가짜 데이터로, 실제 수집은 덜 민감한 항목으로 좁히는 안이 있어요. 회의에서 함께 정해요.</p></article>
       <article class="card"><h3>점수순 정렬은 누가 하나요?</h3><p>원문 바닥에는 정렬이 없어요. mini-dbms의 ORDER BY나 mini-redis의 정렬 집합을 제품이 필요해서 넣는 추가 기능 후보로 둬요.</p></article>
     </div>
+    </details>
   </section>
 
   <footer>근거: Krafton Jungle LMS learning/1305, 1306, 1307, 1308, 1329 원문 (2026-11-09 확인) · 정리 benjohnbill</footer>
@@ -581,34 +615,145 @@ footer { color: var(--muted); font-size: 12.5px; }
       [" ", "└─ tests/functional/", "same", "두 버전 공용 시나리오"]
     ]
   };
+  const COUNTS = { main: ["+3", "−2"], ex: ["+5", "−4"] };
   const chipLabel = { react: "mini-react", redis: "mini-redis", dbms: "mini-dbms", ctl: "대조군 전용" };
-  function render(tree, rows, view) {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const FADE = reduce ? 0 : 150;
+
+  /* tree: rows stay in the DOM; a view change collapses or expands them */
+  const box = document.querySelector(".pr[data-tree]");
+  const tree = box.querySelector(".tree");
+  let view = "diff";
+  let built = [];
+  function build(rows) {
     tree.textContent = "";
-    for (const [g, path, kind, note, chip] of rows) {
-      if (view === "ctl" && kind === "add") continue;
-      if (view === "exp" && kind === "del") continue;
+    built = rows.map(([g, path, kind, note, chip]) => {
+      const rw = document.createElement("div"); rw.className = "rw";
       const row = document.createElement("div");
-      row.className = "row " + (view === "diff" ? kind : kind === "dir" ? "dir" : "same");
-      const gut = document.createElement("span"); gut.className = "g"; gut.textContent = view === "diff" ? g : " ";
+      const gut = document.createElement("span"); gut.className = "g";
       const p = document.createElement("span"); p.className = "path";
       const s = document.createElement("span"); s.textContent = path; p.append(s);
       const n = document.createElement("span"); n.className = "note";
       if (note) n.append(document.createTextNode(note));
       if (chip) { const c = document.createElement("span"); c.className = "chip c-" + chip; c.textContent = chipLabel[chip]; n.append(c); }
-      row.append(gut, p, n);
-      tree.append(row);
+      row.append(gut, p, n); rw.append(row); tree.append(rw);
+      return { rw, row, gut, g, kind };
+    });
+    apply();
+  }
+  function apply() {
+    for (const r of built) {
+      const hidden = (view === "ctl" && r.kind === "add") || (view === "exp" && r.kind === "del");
+      r.rw.classList.toggle("gone", hidden);
+      r.rw.setAttribute("aria-hidden", String(hidden));
+      r.row.className = "row " + (view === "diff" ? r.kind : r.kind === "dir" ? "dir" : "same");
+      r.gut.textContent = view === "diff" ? r.g : " ";
     }
   }
-  document.querySelectorAll(".pr[data-tree]").forEach(box => {
-    const rows = TREES[box.dataset.tree];
-    const tree = box.querySelector(".tree");
-    const tabs = box.querySelectorAll(".tabs button");
-    tabs.forEach(b => b.addEventListener("click", () => {
-      tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
-      tree.setAttribute("aria-labelledby", b.id);
-      render(tree, rows, b.dataset.view);
-    }));
-    render(tree, rows, "diff");
+  const tabs = box.querySelectorAll(".tabs button[data-view]");
+  tabs.forEach(b => b.addEventListener("click", () => {
+    tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
+    tree.setAttribute("aria-labelledby", b.id);
+    view = b.dataset.view; apply();
+  }));
+  build(TREES.main);
+
+  /* mode: general vs example, one switch for the tree and the architecture */
+  const swaps = [...document.querySelectorAll(".swap[data-ex]")];
+  swaps.forEach(el => { el.dataset.gen = el.innerHTML; });
+  const edges = [...document.querySelectorAll(".blk[data-ex-edge]")];
+  edges.forEach(el => { el.dataset.genEdge = el.dataset.edge; });
+  const modeBtns = document.querySelectorAll(".mode button");
+  let mode = "main";
+  function setMode(m) {
+    if (m === mode) return;
+    mode = m;
+    modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+    tree.classList.add("fading"); swaps.forEach(el => el.classList.add("fading"));
+    setTimeout(() => {
+      build(TREES[m]);
+      box.querySelector(".cnt-add").textContent = COUNTS[m][0];
+      box.querySelector(".cnt-del").textContent = COUNTS[m][1];
+      swaps.forEach(el => { el.innerHTML = m === "ex" ? el.dataset.ex : el.dataset.gen; });
+      edges.forEach(el => { el.dataset.edge = m === "ex" ? el.dataset.exEdge : el.dataset.genEdge; });
+      markBlock(current);
+      tree.classList.remove("fading"); swaps.forEach(el => el.classList.remove("fading"));
+    }, FADE);
+  }
+  modeBtns.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+  const jump = document.querySelector("[data-goto-ex]");
+  if (jump) jump.addEventListener("click", () => {
+    setMode("ex");
+    document.getElementById("h-diff").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
   });
+
+  /* numbered explanations: one at a time, with an expand-all escape */
+  const why = document.querySelector(".why");
+  const nav = document.querySelector(".why-nav");
+  const navBtns = nav.querySelectorAll("button[data-n]");
+  const allBtn = nav.querySelector(".all");
+  const arch = document.querySelector(".arch");
+  let current = 1;
+  function markBlock(n) {
+    arch.querySelectorAll(".blk.hl").forEach(b => b.classList.remove("hl"));
+    if (why.classList.contains("single")) {
+      const num = [...arch.querySelectorAll(".num")].find(x => x.textContent.trim() === String(n));
+      if (num) num.closest(".blk").classList.add("hl");
+    }
+  }
+  function select(n) {
+    current = n;
+    why.classList.add("single");
+    allBtn.setAttribute("aria-pressed", "false"); allBtn.textContent = "전체 펼치기";
+    why.querySelectorAll("li").forEach(li => li.classList.toggle("on", li.dataset.n === String(n)));
+    navBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.n === String(n))));
+    markBlock(n);
+  }
+  navBtns.forEach(b => b.addEventListener("click", () => select(Number(b.dataset.n))));
+  allBtn.addEventListener("click", () => {
+    if (why.classList.contains("single")) {
+      why.classList.remove("single");
+      allBtn.setAttribute("aria-pressed", "true"); allBtn.textContent = "하나씩 보기";
+      navBtns.forEach(b => b.setAttribute("aria-pressed", "false"));
+      markBlock(current);
+    } else select(current);
+  });
+  arch.addEventListener("click", e => {
+    const num = e.target.closest(".num");
+    if (num) select(Number(num.textContent.trim()));
+  });
+  nav.hidden = false;
+  select(1);
+
+  /* trace playback: highlights matching stages in both lanes */
+  const trace = document.querySelector(".trace");
+  const play = document.querySelector(".play");
+  const xn = trace.querySelector(".xn");
+  const STEP = 700;
+  let timers = [];
+  function stop() {
+    timers.forEach(clearTimeout); timers = [];
+    trace.classList.remove("playing");
+    trace.querySelectorAll("li.on").forEach(li => li.classList.remove("on"));
+    xn.classList.remove("reset"); xn.querySelectorAll("i").forEach(i => { i.style.transitionDelay = ""; });
+    play.textContent = "재생";
+  }
+  function start() {
+    stop();
+    trace.classList.add("playing"); play.textContent = "멈춤";
+    for (let s = 1; s <= 6; s++) {
+      timers.push(setTimeout(() => {
+        trace.querySelectorAll("li").forEach(li => li.classList.toggle("on", li.dataset.stage === String(s)));
+        if (s === 5) {
+          xn.classList.add("reset");
+          xn.querySelectorAll("i").forEach((i, k) => { i.style.transitionDelay = reduce ? "0ms" : (k * 60) + "ms"; });
+          requestAnimationFrame(() => requestAnimationFrame(() => xn.classList.remove("reset")));
+        }
+      }, (s - 1) * STEP));
+    }
+    timers.push(setTimeout(stop, 6 * STEP + 900));
+  }
+  play.addEventListener("click", () => (trace.classList.contains("playing") ? stop() : start()));
+  play.hidden = false;
 })();
 </script>
