@@ -22,24 +22,7 @@
   --display: "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #11151b; --surface: #181d25; --sunken: #1f252f; --fg: #e3e7ed; --muted: #9ba5b5; --line: #2c3440;
-    --add-bg: #15301e; --add-fg: #8fdca5; --add-mark: #4cc271;
-    --del-bg: #3a1a1c; --del-fg: #f2a3a6; --del-mark: #e56a70;
-    --react: #93a8f5; --react-soft: #1f2846; --redis: #f0ad62; --redis-soft: #3a2a17;
-    --dbms: #6fd2cb; --dbms-soft: #133431; --focus: #93a8f5; --warn: #f0a774; --warn-soft: #34251a;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #11151b; --surface: #181d25; --sunken: #1f252f; --fg: #e3e7ed; --muted: #9ba5b5; --line: #2c3440;
-  --add-bg: #15301e; --add-fg: #8fdca5; --add-mark: #4cc271;
-  --del-bg: #3a1a1c; --del-fg: #f2a3a6; --del-mark: #e56a70;
-  --react: #93a8f5; --react-soft: #1f2846; --redis: #f0ad62; --redis-soft: #3a2a17;
-  --dbms: #6fd2cb; --dbms-soft: #133431; --focus: #93a8f5; --warn: #f0a774; --warn-soft: #34251a;
-  color-scheme: dark;
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 ::selection { background: var(--react-soft); color: var(--fg); }
@@ -144,6 +127,26 @@ header { display: grid; gap: 14px; }
   .blk .what { font-size: 13px; }
 }
 
+/* example section */
+.ex { border-top: 1px dashed var(--line); padding-top: 40px; }
+.ex-badge { font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px dashed var(--muted); color: var(--muted); vertical-align: 4px; margin-left: 6px; }
+.ex-h { font-size: 16px; margin-top: 14px; }
+.flow { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; counter-reset: f; }
+.flow li { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; font-size: 13px; color: var(--muted); }
+.flow li b { font-family: var(--display); font-size: 15px; color: var(--fg); }
+.flow li:not(:last-child)::after { content: ""; position: absolute; right: -9px; top: 50%; width: 8px; height: 8px; border-top: 1.5px solid var(--muted); border-right: 1.5px solid var(--muted); transform: translateY(-50%) rotate(45deg); }
+.flow .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+@media (max-width: 720px) { .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); } .flow li::after { display: none; } }
+.card p { font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+.trace { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .trace { grid-template-columns: 1fr; } }
+.lane { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; }
+.lane ol { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; font-size: 13.5px; line-height: 1.5; }
+.lane li { padding: 4px 8px; border-radius: 4px; }
+.lane li::marker { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.lane li.cost { background: var(--del-bg); color: var(--del-fg); }
+.lane li.gain { background: var(--add-bg); color: var(--add-fg); }
+
 /* timeline */
 .track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: relative; }
 .track::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 2px; background: var(--line); }
@@ -244,7 +247,7 @@ footer { color: var(--muted); font-size: 12.5px; }
       <h2 id="h-diff">product 레포: 대조군에서 실험군으로</h2>
       <span class="draft">두 버전 모두 TypeScript. 파일 이름은 초안이에요</span>
     </div>
-    <div class="pr">
+    <div class="pr" data-tree="main">
       <div class="pr-bar">
         <div class="pr-title">
           <span>control → with-framework</span>
@@ -440,30 +443,146 @@ footer { color: var(--muted); font-size: 12.5px; }
     </div>
   </section>
 
+  <section aria-labelledby="h-ex" class="ex">
+    <div class="head">
+      <h2 id="h-ex">나만무 팀 판독기 <span class="ex-badge">예시</span></h2>
+      <span class="sub">위 구도를 제품 하나에 대 본 초안이에요. 확정안이 아니에요</span>
+    </div>
+    <p>나만무 팀을 짤 때 쓰는 사이트예요. 설문과 동료 평가를 모아 점수로 만들고, 익명 순위와 선호도를 실시간으로 보여 줘요.</p>
+
+    <ol class="flow">
+      <li><b>수집</b><span>설문, 동료 평가 폼</span><span class="chips"><span class="chip c-react">mini-react</span></span></li>
+      <li><b>점수화</b><span>평가 이벤트를 쌓고 점수 계산</span><span class="chips"><span class="chip c-dbms">mini-dbms</span></span></li>
+      <li><b>익명 순위</b><span>계산한 순위를 캐시, key로 행 이동</span><span class="chips"><span class="chip c-redis">mini-redis</span><span class="chip c-react">mini-react</span></span></li>
+      <li><b>실시간 선호도</b><span>새 평가가 오면 SSE로 알림</span><span class="chips"><span class="chip c-src">node:http</span></span></li>
+    </ol>
+
+    <h3 class="ex-h">예시 아키텍처</h3>
+    <div class="arch">
+      <div class="colh" style="grid-row:1;grid-column:1"><h3>실험군</h3><span>프레임워크 3개 + node:http</span></div>
+      <div class="colh" style="grid-row:1;grid-column:2"><h3>대조군</h3><span>node:http + CSV 파일</span></div>
+      <div class="blk react down" data-edge="POST, GET, SSE" style="grid-row:2;grid-column:1"><span class="ly">화면</span><span class="what">App, RankingList, SurveyForm</span><span class="how">상태는 루트에만, 순위 행에 key</span></div>
+      <div class="blk down" data-edge="POST, GET, SSE" style="grid-row:2;grid-column:2"><span class="ly">화면</span><span class="what">render-ranking, render-survey</span><span class="how">바뀔 때마다 innerHTML로 순위표 전체</span></div>
+      <div class="blk down" data-edge="GET ranking" style="grid-row:3;grid-column:1"><span class="ly">서버</span><span class="what">node:http 라우트 5개</span><span class="how">/surveys, /ranking, /preferences, /events(SSE), 정적 파일</span></div>
+      <div class="blk redis proc-tag down" data-edge="없으면 SELECT" style="grid-row:4;grid-column:1"><span class="ly">캐시</span><span class="what">ranking 키 하나</span><span class="how">새 평가가 오면 무효화, 다음 조회 때 한 번만 다시 계산</span></div>
+      <div class="blk dbms proc-tag" style="grid-row:5;grid-column:1"><span class="ly">저장</span><span class="what">people, evaluations 테이블</span><span class="how">평가 1건 = INSERT 1줄. id 조회는 B+ 트리</span></div>
+      <div class="ctl-proc">
+        <div class="blk down" data-edge="바로 파일로"><span class="ly">서버</span><span class="what">node:http 라우트 5개</span><span class="how">실험군과 같은 라우트</span></div>
+        <div class="blk none"><span class="ly">캐시</span><span class="what">없음</span><span class="how">조회마다 순위를 다시 계산</span></div>
+        <div class="blk"><span class="ly">저장</span><span class="what">people.csv, evaluations.csv</span><span class="how">한 줄 추가, 조회는 전체 읽기. 잠금 없음</span></div>
+      </div>
+    </div>
+
+    <h3 class="ex-h">예시 파일 트리</h3>
+    <div class="pr" data-tree="ex">
+      <div class="pr-bar">
+        <div class="pr-title">
+          <span>control → with-framework</span>
+          <span class="cnt-add">+5</span><span class="cnt-del">−4</span>
+          <span class="bars" aria-hidden="true"><i class="a"></i><i class="a"></i><i class="a"></i><i class="d"></i><i class="d"></i></span>
+        </div>
+        <div class="tabs" role="tablist" aria-label="예시 트리 보기">
+          <button type="button" role="tab" id="x-diff" aria-selected="true" data-view="diff">diff</button>
+          <button type="button" role="tab" id="x-ctl" aria-selected="false" data-view="ctl">control</button>
+          <button type="button" role="tab" id="x-exp" aria-selected="false" data-view="exp">with-framework</button>
+        </div>
+      </div>
+      <div class="tree" role="tabpanel" aria-labelledby="x-diff"></div>
+    </div>
+
+    <h3 class="ex-h">평가 1건이 N명의 화면에 닿기까지</h3>
+    <div class="trace">
+      <div class="lane">
+        <h3>대조군</h3>
+        <ol>
+          <li><code>POST /preferences</code> 도착</li>
+          <li><code>evaluations.csv</code> 끝에 한 줄 추가. 동시에 쓰면 줄이 섞일 수 있어요</li>
+          <li>SSE로 보고 있는 N명에게 "순위 바뀜"</li>
+          <li class="cost">N명이 각자 <code>GET /ranking</code>. 파일 전체 읽기와 점수 계산이 N번</li>
+          <li class="cost">브라우저마다 순위표 전체를 innerHTML로 다시 그림</li>
+        </ol>
+      </div>
+      <div class="lane">
+        <h3>실험군</h3>
+        <ol>
+          <li><code>POST /preferences</code> 도착</li>
+          <li class="gain">mini-dbms에 INSERT. 스레드 풀이 받아요</li>
+          <li class="gain">mini-redis의 ranking 키 무효화</li>
+          <li>SSE로 보고 있는 N명에게 "순위 바뀜"</li>
+          <li class="gain">첫 조회만 다시 계산해 캐시에 저장, 나머지 N−1명은 캐시에서</li>
+          <li class="gain">mini-react가 key로 Diff해서 바뀐 행만 옮김</li>
+        </ol>
+      </div>
+    </div>
+
+    <h3 class="ex-h">규모가 작다는 반론에 대한 보강</h3>
+    <div class="cards">
+      <article class="card"><h3>점수 대신 평가 이벤트 저장</h3><p>레코드가 사람 수가 아니라 평가 횟수만큼 늘어요. 순위는 이벤트를 모아 계산해서 다시 계산하는 비용이 커져요.</p></article>
+      <article class="card"><h3>읽기가 몰리는 순간</h3><p>평가 하나에 보고 있던 모두가 다시 조회해요. 캐시가 없으면 같은 계산이 N번 반복돼요.</p></article>
+      <article class="card"><h3>가짜 데이터로 부하 만들기</h3><p><code>tools/seed.ts</code>와 <code>tools/load.ts</code>로 두 버전에 같은 부하를 줘요. "평가 수가 N을 넘으면 차이가 이만큼"을 그래프로 보여요.</p></article>
+    </div>
+
+    <h3 class="ex-h">아직 열린 것</h3>
+    <div class="ask">
+      <article class="card"><h3>동료를 순위로 세워도 될까요?</h3><p>익명이어도 인원이 적으면 추측할 수 있어요. 시연과 측정은 가짜 데이터로, 실제 수집은 덜 민감한 항목으로 좁히는 안이 있어요. 회의에서 함께 정해요.</p></article>
+      <article class="card"><h3>점수순 정렬은 누가 하나요?</h3><p>원문 바닥에는 정렬이 없어요. mini-dbms의 ORDER BY나 mini-redis의 정렬 집합을 제품이 필요해서 넣는 추가 기능 후보로 둬요.</p></article>
+    </div>
+  </section>
+
   <footer>근거: Krafton Jungle LMS learning/1305, 1306, 1307, 1308, 1329 원문 (2026-11-09 확인) · 정리 benjohnbill</footer>
 </main>
 
 <script>
 (() => {
   // [gutter, path, kind, note, chip]
-  const rows = [
-    [" ", "product/", "dir"],
-    [" ", "├─ web/", "dir"],
-    ["−", "│  ├─ render.ts", "del", "손으로 DOM 고치기", "ctl"],
-    ["+", "│  ├─ App.ts", "add", "컴포넌트와 useState", "react"],
-    [" ", "│  └─ index.html", "same"],
-    [" ", "├─ server/", "dir"],
-    [" ", "│  ├─ routes.ts", "same", "같은 API 형식"],
-    ["−", "│  ├─ store-file.ts", "del", "텍스트 파일 전체 읽기", "ctl"],
-    ["+", "│  ├─ dbms-client.ts", "add", "SQL, B+ 트리", "dbms"],
-    ["+", "│  └─ cache.ts", "add", "만료, 무효화", "redis"],
-    [" ", "├─ shared/", "dir"],
-    [" ", "│  └─ types.ts", "same", "데이터와 API 타입, 두 버전 공용"],
-    [" ", "└─ tests/functional/", "same", "두 버전 공용"]
-  ];
+  const TREES = {
+    main: [
+      [" ", "product/", "dir"],
+      [" ", "├─ web/", "dir"],
+      ["−", "│  ├─ render.ts", "del", "손으로 DOM 고치기", "ctl"],
+      ["+", "│  ├─ App.ts", "add", "컴포넌트와 useState", "react"],
+      [" ", "│  └─ index.html", "same"],
+      [" ", "├─ server/", "dir"],
+      [" ", "│  ├─ routes.ts", "same", "같은 API 형식"],
+      ["−", "│  ├─ store-file.ts", "del", "텍스트 파일 전체 읽기", "ctl"],
+      ["+", "│  ├─ dbms-client.ts", "add", "SQL, B+ 트리", "dbms"],
+      ["+", "│  └─ cache.ts", "add", "만료, 무효화", "redis"],
+      [" ", "├─ shared/", "dir"],
+      [" ", "│  └─ types.ts", "same", "데이터와 API 타입, 두 버전 공용"],
+      [" ", "└─ tests/functional/", "same", "두 버전 공용"]
+    ],
+    ex: [
+      [" ", "product/", "dir"],
+      [" ", "├─ web/", "dir"],
+      [" ", "│  ├─ index.html", "same"],
+      [" ", "│  ├─ api.ts", "same", "fetch, EventSource"],
+      ["−", "│  ├─ render-ranking.ts", "del", "순위표 전체 innerHTML", "ctl"],
+      ["−", "│  ├─ render-survey.ts", "del", "폼 DOM 직접 조작", "ctl"],
+      ["+", "│  ├─ App.ts", "add", "루트 상태: 순위, 폼", "react"],
+      ["+", "│  ├─ RankingList.ts", "add", "key 붙은 행, props만", "react"],
+      ["+", "│  └─ SurveyForm.ts", "add", "props만 받는 자식", "react"],
+      [" ", "├─ server/", "dir"],
+      [" ", "│  ├─ main.ts", "same", "node:http, switch 라우팅"],
+      [" ", "│  ├─ routes/", "dir"],
+      [" ", "│  │  ├─ surveys.ts", "same", "POST /surveys"],
+      [" ", "│  │  ├─ ranking.ts", "same", "GET /ranking"],
+      [" ", "│  │  ├─ preferences.ts", "same", "POST /preferences"],
+      [" ", "│  │  └─ events.ts", "same", "GET /events, SSE"],
+      [" ", "│  ├─ scoring.ts", "same", "평가 이벤트 → 점수"],
+      [" ", "│  └─ store/", "dir"],
+      ["−", "│     ├─ csv-store.ts", "del", "한 줄 추가, 전체 스캔", "ctl"],
+      ["−", "│     ├─ evaluations.csv", "del", "데이터 파일", "ctl"],
+      ["+", "│     ├─ dbms-client.ts", "add", "INSERT, SELECT", "dbms"],
+      ["+", "│     └─ ranking-cache.ts", "add", "ranking 키, 무효화", "redis"],
+      [" ", "├─ shared/types.ts", "same", "Person, Evaluation, RankingRow"],
+      [" ", "├─ tools/", "dir"],
+      [" ", "│  ├─ seed.ts", "same", "가짜 평가 대량 생성"],
+      [" ", "│  └─ load.ts", "same", "동시 제출과 조회"],
+      [" ", "└─ tests/functional/", "same", "두 버전 공용 시나리오"]
+    ]
+  };
   const chipLabel = { react: "mini-react", redis: "mini-redis", dbms: "mini-dbms", ctl: "대조군 전용" };
-  const tree = document.getElementById("tree");
-  function render(view) {
+  function render(tree, rows, view) {
     tree.textContent = "";
     for (const [g, path, kind, note, chip] of rows) {
       if (view === "ctl" && kind === "add") continue;
@@ -480,12 +599,16 @@ footer { color: var(--muted); font-size: 12.5px; }
       tree.append(row);
     }
   }
-  const tabs = document.querySelectorAll(".tabs button");
-  tabs.forEach(b => b.addEventListener("click", () => {
-    tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
-    tree.setAttribute("aria-labelledby", b.id);
-    render(b.dataset.view);
-  }));
-  render("diff");
+  document.querySelectorAll(".pr[data-tree]").forEach(box => {
+    const rows = TREES[box.dataset.tree];
+    const tree = box.querySelector(".tree");
+    const tabs = box.querySelectorAll(".tabs button");
+    tabs.forEach(b => b.addEventListener("click", () => {
+      tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
+      tree.setAttribute("aria-labelledby", b.id);
+      render(tree, rows, b.dataset.view);
+    }));
+    render(tree, rows, "diff");
+  });
 })();
 </script>
