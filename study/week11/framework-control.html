@@ -110,6 +110,40 @@ header { display: grid; gap: 14px; }
   .lib + .lib { border-left: 0; border-top: 1px solid var(--line); }
 }
 
+/* architecture: two aligned stacks; the control's server box spans three layers to show everything living in one process */
+.arch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto repeat(4, auto); column-gap: 14px; row-gap: 26px; }
+.arch .colh { display: grid; gap: 2px; padding-bottom: 2px; }
+.arch .colh h3 { font-size: 15px; }
+.arch .colh span { font-size: 12.5px; color: var(--muted); }
+.blk { position: relative; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 10px 12px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.blk .ly { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.blk .what { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.blk .how { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+.blk.react { border-color: var(--react); background: var(--react-soft); }
+.blk.redis { border-color: var(--redis); background: var(--redis-soft); }
+.blk.dbms { border-color: var(--dbms); background: var(--dbms-soft); }
+.blk.react .what { color: var(--react); } .blk.redis .what { color: var(--redis); } .blk.dbms .what { color: var(--dbms); }
+.blk.proc-tag::before { content: "별도 프로세스"; position: absolute; top: -9px; right: 10px; font-family: var(--mono); font-size: 11.5px; padding: 0 6px; background: var(--bg); color: var(--muted); }
+.blk.down::after { content: attr(data-edge); position: absolute; left: 22px; bottom: -26px; height: 26px; border-left: 1.5px solid var(--muted); padding-left: 8px; display: flex; align-items: center; font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+.ctl-proc { grid-row: 3 / 6; grid-column: 2; display: grid; grid-template-rows: subgrid; row-gap: 26px; border: 1.5px solid var(--muted); border-radius: 10px; padding: 18px 10px 10px; position: relative; background: var(--sunken); }
+.ctl-proc::before { content: "product 서버 한 프로세스"; position: absolute; top: -10px; left: 10px; font-family: var(--mono); font-size: 11px; padding: 0 6px; background: var(--bg); color: var(--fg); }
+.blk.none { border-style: dashed; background: transparent; }
+.blk.none .what { color: var(--muted); font-weight: 500; }
+.arch .num { width: 19px; height: 19px; font-size: 11.5px; }
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px 22px; margin: 0; padding: 0; list-style: none; }
+.why li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 4px 10px; align-items: start; padding-block: 10px; border-top: 1px solid var(--line); }
+.why li .num { margin-top: 2px; }
+.why h3 { font-size: 14.5px; }
+.why p { grid-column: 2; font-size: 13.5px; line-height: 1.55; }
+.why .vs { color: var(--muted); }
+.why .ms { font-family: var(--mono); font-size: 11.5px; color: var(--add-fg); }
+@media (max-width: 560px) {
+  .arch { column-gap: 8px; }
+  .blk { padding: 8px 9px; }
+  .ctl-proc { padding: 18px 6px 6px; }
+  .blk .what { font-size: 13px; }
+}
+
 /* timeline */
 .track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); position: relative; }
 .track::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 2px; background: var(--line); }
@@ -230,6 +264,37 @@ footer { color: var(--muted); font-size: 12.5px; }
         <div class="lib"><span class="chip c-dbms"><svg class="i"><use href="#i-http"/></svg>mini-dbms</span><span class="how">product 서버가 HTTP로 불러요</span></div>
       </div>
     </div>
+  </section>
+
+  <section aria-labelledby="h-arch">
+    <div class="head">
+      <h2 id="h-arch">같은 기능, 다른 담당</h2>
+      <span class="sub">위에서 아래로 요청이 흘러요. 번호는 아래 설명과 짝이에요</span>
+    </div>
+    <div class="arch">
+      <div class="colh" style="grid-row:1;grid-column:1"><h3>실험군</h3><span>우리가 만든 프레임워크 3개</span></div>
+      <div class="colh" style="grid-row:1;grid-column:2"><h3>대조군</h3><span>DB 없던 시절: CSV 파일을 서버가 직접</span></div>
+
+      <div class="blk react down" data-edge="HTTP" style="grid-row:2;grid-column:1"><span class="ly">화면</span><span class="what"><span class="num">1</span>mini-react</span><span class="how">VNode → Diff → Patch, hooks</span></div>
+      <div class="blk down" data-edge="HTTP" style="grid-row:2;grid-column:2"><span class="ly">화면</span><span class="what">바닐라 JS</span><span class="how">innerHTML로 다시 그리기</span></div>
+
+      <div class="blk down" data-edge="HTTP: 캐시 확인" style="grid-row:3;grid-column:1"><span class="ly">서버</span><span class="what">product 서버</span><span class="how">같은 라우트, cache.ts와 dbms-client.ts는 요청만 보내요</span></div>
+      <div class="blk redis proc-tag down" data-edge="없으면 HTTP: SQL" style="grid-row:4;grid-column:1"><span class="ly">캐시</span><span class="what"><span class="num">2</span>mini-redis</span><span class="how">해시 테이블, 만료, 무효화</span></div>
+      <div class="blk dbms proc-tag" style="grid-row:5;grid-column:1"><span class="ly">저장</span><span class="what"><span class="num">3</span>B+ 트리 <span class="num">4</span>SQL <span class="num">5</span>스레드 풀</span><span class="how">mini-dbms: 파서 → 엔진 → 테이블 파일</span></div>
+
+      <div class="ctl-proc">
+        <div class="blk down" data-edge="바로 파일로"><span class="ly">서버</span><span class="what">product 서버</span><span class="how">같은 라우트</span></div>
+        <div class="blk none"><span class="ly">캐시</span><span class="what">없음</span><span class="how">매 요청마다 파일을 읽어요</span></div>
+        <div class="blk"><span class="ly">저장</span><span class="what">store-file.js + users.csv</span><span class="how">fs로 한 줄 추가, 전체 읽고 반복문으로 비교. 색인, 잠금, 질의 언어 없음</span></div>
+      </div>
+    </div>
+    <ol class="why">
+      <li><span class="num">1</span><h3>입력 중 화면 갱신</h3><p><span class="vs">대조군은 다시 그릴 때 노드를 통째로 바꿔서 입력값과 커서가 사라져요.</span> 실험군은 이전 VNode와 비교해 바뀐 노드만 고쳐요.</p><p class="ms">측정: 교체된 노드 수, Reflow 횟수</p></li>
+      <li><span class="num">2</span><h3>같은 요청 반복</h3><p><span class="vs">대조군은 같은 요청에도 매번 파일을 처음부터 읽어요.</span> 실험군은 응답을 mini-redis에 두고, 만료되거나 데이터가 바뀌면 지워요.</p><p class="ms">측정: 캐시 사용 여부별 응답 시간</p></li>
+      <li><span class="num">3</span><h3>100만 건 중 id로 찾기</h3><p><span class="vs">대조군은 위에서부터 끝까지 훑어요.</span> 실험군은 책 뒤의 찾아보기처럼 B+ 트리 색인으로 바로 찾아가요.</p><p class="ms">측정: 인덱스 대 선형 탐색 시간</p></li>
+      <li><span class="num">4</span><h3>새 조건으로 조회</h3><p><span class="vs">대조군은 조건이 생길 때마다 서버에 반복문을 새로 짜요.</span> 실험군은 SQL 한 줄을 파서가 구조로 바꾸고 엔진이 실행해요.</p><p class="ms">측정: 조건 하나 추가에 바뀌는 코드 줄 수</p></li>
+      <li><span class="num">5</span><h3>동시에 쓰기</h3><p><span class="vs">대조군은 두 요청이 같은 파일에 동시에 쓰면 줄이 섞일 수 있어요.</span> 실험군은 스레드 풀이 요청을 나눠 받고, 엔진에서 동시 접근을 설계해요.</p><p class="ms">측정: 동시 쓰기 뒤 레코드 수 검사</p></li>
+    </ol>
   </section>
 
   <section aria-labelledby="h-time">
