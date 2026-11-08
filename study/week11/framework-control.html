@@ -70,7 +70,10 @@ header { display: grid; gap: 14px; }
 .bars i { width: 8px; height: 8px; border-radius: 1px; background: var(--line); }
 .bars i.a { background: var(--add-mark); } .bars i.d { background: var(--del-mark); }
 .tabs { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
-.tabs button { font: 500 12px var(--mono); padding: 6px 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.tabs button { position: relative; isolation: isolate; font: 500 12px var(--mono); padding: 6px 10px; border: 0; background: transparent; color: var(--muted); cursor: pointer; transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 160ms var(--ease-out); }
+.tabs button:active { transform: scale(0.97); transition-duration: 100ms; }
+.tabs .ind { position: absolute; inset: 0; z-index: -1; background: var(--fg); pointer-events: none; }
+.tabs.has-ind button[aria-selected="true"], .tabs.has-ind button[aria-pressed="true"] { background: transparent; }
 .tabs button + button { border-left: 1px solid var(--line); }
 .tabs button[aria-selected="true"] { background: var(--fg); color: var(--surface); }
 .tabs button:hover:not([aria-selected="true"]) { color: var(--fg); background: var(--sunken); }
@@ -216,7 +219,7 @@ table.matrix { border-collapse: collapse; width: 100%; font-size: 13.5px; }
 details { font-size: 13px; }
 summary { cursor: pointer; color: var(--muted); font-size: 12.5px; list-style: none; display: inline-flex; align-items: center; gap: 6px; }
 summary::-webkit-details-marker { display: none; }
-summary::before { content: ""; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform .2s; }
+summary::before { content: ""; width: 0; height: 0; border-left: 5px solid currentColor; border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform 200ms var(--ease-out); }
 details[open] summary::before { transform: rotate(90deg); }
 details blockquote { margin: 8px 0 0; padding: 8px 10px; background: var(--sunken); border-radius: 6px; color: var(--fg); line-height: 1.55; }
 details blockquote + blockquote { margin-top: 6px; }
@@ -230,8 +233,10 @@ footer { color: var(--muted); font-size: 12.5px; }
 /* View Transitions: rows and blocks slide to their new place (transform), contents crossfade with a 2px blur */
 :root { view-transition-name: none; }
 ::view-transition-group(*) { animation-duration: 260ms; animation-timing-function: var(--ease-out); }
-::view-transition-old(*) { animation: 160ms var(--ease-out) both vt-out; }
-::view-transition-new(*) { animation: 220ms var(--ease-out) 40ms both vt-in; }
+::view-transition-old(*) { animation: 160ms var(--ease-out) both vt-fade-out; }
+::view-transition-new(*) { animation: 220ms var(--ease-out) 40ms both vt-fade-in; }
+::view-transition-old(*.blur) { animation-name: vt-out; }
+::view-transition-new(*.blur) { animation-name: vt-in; }
 @keyframes vt-out { to { opacity: 0; filter: blur(2px); } }
 @keyframes vt-in { from { opacity: 0; filter: blur(2px); } }
 .tabs button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
@@ -266,8 +271,9 @@ details[open]::details-content { block-size: auto; opacity: 1; }
 .ex-jump:active { transform: scale(0.97); transition-duration: 100ms; }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*) { animation-duration: 0s; }
-  ::view-transition-old(*) { animation: 150ms linear both vt-fade-out; }
-  ::view-transition-new(*) { animation: 150ms linear both vt-fade-in; }
+  ::view-transition-old(*), ::view-transition-old(*.blur) { animation: 150ms linear both vt-fade-out; }
+  ::view-transition-new(*), ::view-transition-new(*.blur) { animation: 150ms linear both vt-fade-in; }
+  .tabs button:active { transform: none; }
   details::details-content { transition: opacity 150ms linear, content-visibility 150ms allow-discrete; }
   .xn i { transition: opacity 150ms linear; transform: none !important; }
   .why.single li.on { transform: none; transition: opacity 150ms linear; }
@@ -624,8 +630,24 @@ details[open]::details-content { block-size: auto; opacity: 1; }
   const chipLabel = { react: "mini-react", redis: "mini-redis", dbms: "mini-dbms", ctl: "대조군 전용" };
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   /* one DOM update, animated by the browser when View Transitions exist; instant otherwise */
+  let running = null, pending = null;
   function morph(update) {
-    if (document.startViewTransition) document.startViewTransition(update); else update();
+    if (!document.startViewTransition) { update(); return; }
+    if (running) { pending = update; return; }   /* finish the current move, then run only the latest request */
+    running = document.startViewTransition(update);
+    running.finished.finally(() => {
+      running = null;
+      if (pending) { const next = pending; pending = null; morph(next); }
+    });
+  }
+  /* sliding selected marker for a tab group */
+  function addIndicator(group, i, selected) {
+    const ind = document.createElement("span");
+    ind.className = "ind"; ind.style.viewTransitionName = "ind" + i;
+    group.style.viewTransitionName = "tabs" + i;
+    group.classList.add("has-ind");
+    selected.append(ind);
+    return ind;
   }
   const vtIds = {};
 
@@ -661,10 +683,14 @@ details[open]::details-content { block-size: auto; opacity: 1; }
     }
   }
   const tabs = box.querySelectorAll(".tabs button[data-view]");
+  const viewInd = addIndicator(box.querySelector(".tabs"), 0, box.querySelector('.tabs button[aria-selected="true"]'));
   tabs.forEach(b => b.addEventListener("click", () => {
-    tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
-    tree.setAttribute("aria-labelledby", b.id);
-    morph(() => { view = b.dataset.view; apply(); });
+    morph(() => {
+      tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
+      tree.setAttribute("aria-labelledby", b.id);
+      b.append(viewInd);
+      view = b.dataset.view; apply();
+    });
   }));
   build(TREES.main);
 
@@ -675,13 +701,16 @@ details[open]::details-content { block-size: auto; opacity: 1; }
   edges.forEach(el => { el.dataset.genEdge = el.dataset.edge; });
   document.querySelectorAll(".arch .blk, .arch .colh").forEach((el, i) => { el.style.viewTransitionName = "a" + i; });
   box.querySelector(".pr-title").style.viewTransitionName = "pr-title";
+  box.querySelector(".pr-title").style.viewTransitionClass = "blur";
+  document.querySelectorAll(".arch .blk, .arch .colh").forEach(el => { el.style.viewTransitionClass = "blur"; });
   const modeBtns = document.querySelectorAll(".mode button");
   let mode = "main";
   function setMode(m) {
     if (m === mode) return;
     mode = m;
-    modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
     morph(() => {
+      modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+      [...modeBtns].find(b => b.dataset.mode === m).append(modeInd);
       build(TREES[m]);
       box.querySelector(".cnt-add").textContent = COUNTS[m][0];
       box.querySelector(".cnt-del").textContent = COUNTS[m][1];
@@ -690,11 +719,17 @@ details[open]::details-content { block-size: auto; opacity: 1; }
       markBlock(current);
     });
   }
+  const modeInd = addIndicator(document.querySelector(".mode"), 1, document.querySelector('.mode button[aria-pressed="true"]'));
   modeBtns.forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
   const jump = document.querySelector("[data-goto-ex]");
   if (jump) jump.addEventListener("click", () => {
-    setMode("ex");
-    document.getElementById("h-diff").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    const target = document.getElementById("h-diff");
+    if (reduce) { target.scrollIntoView({ block: "start" }); setMode("ex"); return; }
+    let fired = false;
+    const go = () => { if (fired) return; fired = true; window.removeEventListener("scrollend", go); setMode("ex"); };
+    window.addEventListener("scrollend", go);
+    setTimeout(go, 600);                  /* browsers without scrollend, or no scroll needed */
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   /* numbered explanations: one at a time, with an expand-all escape */
