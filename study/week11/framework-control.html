@@ -79,7 +79,7 @@ header { display: grid; gap: 14px; }
 .tabs button + button { border-left: 1px solid var(--line); }
 .tabs button[aria-selected="true"] { background: var(--fg); color: var(--surface); }
 .tabs button:hover:not([aria-selected="true"]) { color: var(--fg); background: var(--sunken); }
-.tree { font-family: var(--mono); font-size: 13px; line-height: 1.5; padding: 6px 0; }
+.tree { font-family: var(--mono); font-size: 13px; line-height: 1.5; padding: 6px 0; overflow: hidden; }
 .row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 0 10px; padding: 3px 14px 3px 0; transition: background-color 220ms var(--ease-out); }
 .row .g { text-align: center; color: var(--muted); user-select: none; }
 .row .path { white-space: pre; overflow: hidden; text-overflow: ellipsis; }
@@ -234,11 +234,10 @@ footer { color: var(--muted); font-size: 12.5px; }
 .rw.gone { display: none; }
 /* View Transitions: rows and blocks slide to their new place (transform), contents crossfade with a 2px blur */
 :root { view-transition-name: none; }
-::view-transition-group(*) { animation-duration: 260ms; animation-timing-function: var(--ease-out); }
-::view-transition-old(*) { animation: 160ms var(--ease-out) both vt-fade-out; }
-::view-transition-new(*) { animation: 220ms var(--ease-out) 40ms both vt-fade-in; }
-::view-transition-old(*.blur) { animation-name: vt-out; }
-::view-transition-new(*.blur) { animation-name: vt-in; }
+::view-transition-group(*) { animation-duration: 240ms; animation-timing-function: var(--ease-out); }
+/* same duration, no delay: old + new stay at full opacity together, so nothing dims mid-way */
+::view-transition-old(*) { animation: 240ms var(--ease-out) both vt-out; }
+::view-transition-new(*) { animation: 240ms var(--ease-out) both vt-in; }
 @keyframes vt-out { to { opacity: 0; filter: blur(2px); } }
 @keyframes vt-in { from { opacity: 0; filter: blur(2px); } }
 .tabs button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
@@ -273,8 +272,8 @@ details[open]::details-content { block-size: auto; opacity: 1; }
 .ex-jump:active { transform: scale(0.97); transition-duration: 100ms; }
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*) { animation-duration: 0s; }
-  ::view-transition-old(*), ::view-transition-old(*.blur) { animation: 150ms linear both vt-fade-out; }
-  ::view-transition-new(*), ::view-transition-new(*.blur) { animation: 150ms linear both vt-fade-in; }
+  ::view-transition-old(*) { animation: 150ms linear both vt-fade-out; }
+  ::view-transition-new(*) { animation: 150ms linear both vt-fade-in; }
   .tabs button:active { transform: none; }
   .tabs .ind { transition: none; }
   details::details-content { transition: opacity 150ms linear, content-visibility 150ms allow-discrete; }
@@ -659,7 +658,31 @@ details[open]::details-content { block-size: auto; opacity: 1; }
     if (window.ResizeObserver) new ResizeObserver(() => place(on, true)).observe(group);
     return { move: btn => place(btn, false) };
   }
-  const vtIds = {};
+  /* FLIP for tree rows: measure, change, then slide each row from where it was (transform + opacity only) */
+  const EASE = "cubic-bezier(0.23, 1, 0.32, 1)";
+  function flip(update) {
+    const visible = built.filter(r => !r.rw.classList.contains("gone"));
+    const before = new Map(visible.map(r => [r.key, r.rw.getBoundingClientRect().top]));
+    const oldH = tree.getBoundingClientRect().height;
+    update();
+    tree.getAnimations().forEach(a => a.cancel());
+    built.forEach(r => r.rw.getAnimations().forEach(a => a.cancel()));
+    const newH = tree.getBoundingClientRect().height;
+    if (!reduce && Math.abs(oldH - newH) > 1) {
+      tree.animate([{ height: oldH + "px" }, { height: newH + "px" }], { duration: 240, easing: EASE });
+    }
+    for (const r of built) {
+      if (r.rw.classList.contains("gone")) continue;
+      const was = before.get(r.key);
+      if (was === undefined) {
+        r.rw.animate(reduce ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: "translateY(-4px)" }, { opacity: 1, transform: "none" }],
+          { duration: reduce ? 150 : 200, delay: reduce ? 0 : 60, easing: EASE, fill: "backwards" });
+      } else if (!reduce) {
+        const dy = was - r.rw.getBoundingClientRect().top;
+        if (Math.abs(dy) > 0.5) r.rw.animate([{ transform: `translateY(${dy}px)` }, { transform: "none" }], { duration: 240, easing: EASE });
+      }
+    }
+  }
 
   /* tree: rows stay in the DOM; a view change collapses or expands them */
   const box = document.querySelector(".pr[data-tree]");
@@ -670,7 +693,6 @@ details[open]::details-content { block-size: auto; opacity: 1; }
     tree.textContent = "";
     built = rows.map(([g, path, kind, note, chip]) => {
       const rw = document.createElement("div"); rw.className = "rw";
-      rw.style.viewTransitionName = "r" + (vtIds[path] ??= Object.keys(vtIds).length);
       const row = document.createElement("div");
       const gut = document.createElement("span"); gut.className = "g";
       const p = document.createElement("span"); p.className = "path";
@@ -679,7 +701,7 @@ details[open]::details-content { block-size: auto; opacity: 1; }
       if (note) n.append(document.createTextNode(note));
       if (chip) { const c = document.createElement("span"); c.className = "chip c-" + chip; c.textContent = chipLabel[chip]; n.append(c); }
       row.append(gut, p, n); rw.append(row); tree.append(rw);
-      return { rw, row, gut, g, kind };
+      return { rw, row, gut, g, kind, key: path };
     });
     apply();
   }
@@ -698,7 +720,7 @@ details[open]::details-content { block-size: auto; opacity: 1; }
     tabs.forEach(t => t.setAttribute("aria-selected", String(t === b)));
     tree.setAttribute("aria-labelledby", b.id);
     viewInd.move(b);
-    morph(() => { view = b.dataset.view; apply(); });
+    flip(() => { view = b.dataset.view; apply(); });
   }));
   build(TREES.main);
 
@@ -708,9 +730,6 @@ details[open]::details-content { block-size: auto; opacity: 1; }
   const edges = [...document.querySelectorAll(".blk[data-ex-edge]")];
   edges.forEach(el => { el.dataset.genEdge = el.dataset.edge; });
   document.querySelectorAll(".arch .blk, .arch .colh").forEach((el, i) => { el.style.viewTransitionName = "a" + i; });
-  box.querySelector(".pr-title").style.viewTransitionName = "pr-title";
-  box.querySelector(".pr-title").style.viewTransitionClass = "blur";
-  document.querySelectorAll(".arch .blk, .arch .colh").forEach(el => { el.style.viewTransitionClass = "blur"; });
   const modeBtns = document.querySelectorAll(".mode button");
   let mode = "main";
   function setMode(m) {
@@ -718,10 +737,12 @@ details[open]::details-content { block-size: auto; opacity: 1; }
     mode = m;
     modeBtns.forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
     modeInd.move([...modeBtns].find(b => b.dataset.mode === m));
-    morph(() => {
+    flip(() => {
       build(TREES[m]);
       box.querySelector(".cnt-add").textContent = COUNTS[m][0];
       box.querySelector(".cnt-del").textContent = COUNTS[m][1];
+    });
+    morph(() => {
       swaps.forEach(el => { el.innerHTML = m === "ex" ? el.dataset.ex : el.dataset.gen; });
       edges.forEach(el => { el.dataset.edge = m === "ex" ? el.dataset.exEdge : el.dataset.genEdge; });
       markBlock(current);
