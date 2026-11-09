@@ -78,6 +78,28 @@ a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
 .decks a.card .m{margin-top:auto; padding-top:2px}
 .decks a.card{transition:transform .2s var(--eo), border-color .15s ease}
 .decks a.card.in{transition:opacity .28s var(--eo), transform .28s var(--eo), border-color .15s ease}
+/* 프로젝트 모음: 머리는 카드와 같은 줄 모양이고, 몸은 grid 행을 0fr과 1fr 사이로 옮겨 접는다 */
+.hub-head{all:unset; box-sizing:border-box; display:grid; grid-template-columns:62px minmax(0,1fr); gap:3px 10px; width:100%; padding:15px 0 16px; border-bottom:1px solid var(--line)}
+.hub-head::before{content:"모음"; padding-top:8px; font-family:var(--font-code); font-size:12px; line-height:1.5; color:var(--muted)}
+.hub-head > *{display:block; grid-column:-2 / -1; min-width:0; transform-origin:left center; transition:transform .14s ease-out, color .15s ease}
+.hub-head .t{font-size:18px; line-height:1.45; letter-spacing:-0.01em}
+.hub-head .t::before{content:""; display:inline-block; width:8px; height:8px; margin-right:9px; vertical-align:2px; background:var(--tc)}
+.hub-head .d{font-size:15px; line-height:1.65; color:var(--ink-2)}
+.hub-head .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
+.hub.js .hub-head{cursor:pointer}
+.hub.js .hub-head:active > *{transform:scale(.995)}
+.hub.js .hub-head:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
+.hub.js .hub-head .t::after{content:"▾"; display:inline-block; margin-left:8px; font-family:var(--font-code); font-size:14px; font-weight:400; color:var(--muted); transition:transform .2s var(--eo), color .15s ease}
+.hub.js .hub-head[aria-expanded="true"] .t::after{transform:rotate(180deg)}
+.hub-body{display:grid; grid-template-rows:1fr; transition:grid-template-rows .28s var(--eo), visibility 0s}
+.hub.shut .hub-body{grid-template-rows:0fr; visibility:hidden; transition:grid-template-rows .28s var(--eo), visibility 0s .28s}
+.hub-in{min-height:0; overflow:hidden; margin-left:72px}
+.phase{padding-left:18px; border-left:1px solid var(--line)}
+.ph{margin:0; padding:16px 0 2px; font:400 12.5px/1.5 var(--font-code); color:var(--ink-2)}
+.ph-empty{padding:8px 0 16px; font-size:14.5px; color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){
+  .hub.opening .ph,.hub.opening a.card,.hub.opening .ph-empty{animation:toc-in .32s var(--eo) both; animation-delay:calc(var(--i, 0) * 30ms)}
+}
 .rt{display:flex; flex-direction:column}
 .rr{display:grid; grid-template-columns:62px 190px 170px minmax(0,1fr); gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px; align-items:baseline; color:inherit; text-decoration:none}
 a.rr:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
@@ -126,6 +148,8 @@ a.rr:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
   .toc-extra:hover .toc-arrow{transform:translateX(4px)}
   a.card:hover .t::after{transform:translateX(4px); color:var(--ink)}
   a.card:hover .d{color:var(--ink)}
+  .hub.js .hub-head:hover .d{color:var(--ink)}
+  .hub.js .hub-head:hover .t::after{color:var(--ink)}
   #skills a.card:hover .d,.decks a.card:hover .d{color:var(--ink-2)}
   #skills a.card:hover .t{text-decoration:underline; text-underline-offset:3px}
   a.rr:hover .rn{text-decoration:underline; text-underline-offset:3px}
@@ -165,6 +189,10 @@ a.rr:active{transform:scale(.995)}
   .wrap{padding:36px 16px 50px}
   a.card{grid-template-columns:minmax(0,1fr)}
   a.card::before{padding-top:0}
+  .hub-head{grid-template-columns:minmax(0,1fr)}
+  .hub-head::before{padding-top:0}
+  .hub-in{margin-left:0}
+  .phase{padding-left:12px}
   #skills a.card{grid-template-columns:minmax(0,1fr); gap:1px}
   .cards.decks{grid-template-columns:minmax(0,1fr)}
 }
@@ -386,26 +414,51 @@ a.card .d code{white-space:nowrap}
     <h2 class="dh"><a class="wk-repo" href="https://github.com/users/benjohnbill/projects/7">11~12주차 · 미니 React, Redis, DBMS</a></h2>
   </div>
   <div class="cards">
-    <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/lab/phase1-test-design/phase1-test-map.html" href="https://benjohnbill.github.io/study/week11/phase1-test-map.html">
-      <div class="t dh">미니 React Phase 1 테스트 지도</div>
-      <div class="d">단위·통합·기능의 13개 테스트 대상과 57개 검증 갈래. 대상의 책임에서 검증할 성질이 파생되는 과정을 선택형 도식으로 정리한 설계 자료.</div>
-      <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 · mini-react · 테스트 설계</span></div>
-    </a>
-    <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-test-map.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-test-map.html">
-      <div class="t dh">mini-react Phase 1 테스트 지도 · 구현 연결</div>
-      <div class="d">13개 테스트 대상과 57개 검증 갈래마다 Lark의 기존 사례, 실제로 추가한 테스트 ID와 통과 수, 그 갈래의 결정을 이어 보여 줍니다. 대상과 갈래마다 링크가 있어 단위별로 공유할 수 있습니다.</div>
-      <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
-    </a>
-    <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-decisions.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-decisions.html">
-      <div class="t dh">mini-react Phase 1 결정 요약</div>
-      <div class="d">Patch 형식과 path 기준, StateHistory, 검증 페이지를 구현하며 정한 결정을 근거와 함께 모았습니다. 독립 리뷰에서 찾은 결함과 수정, 실제 브라우저 확인 결과, 팀 테스트 시트와 다른 점도 함께 적었습니다.</div>
-      <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
-    </a>
-    <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-code-reading.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-code-reading.html">
-      <div class="t dh">mini-react 코드 읽기</div>
-      <div class="d">src의 함수를 줄 단위로 읽으며 각 줄이 뜻하는 것과 그 줄을 지키는 테스트를 이었습니다. 첫 절은 DOM 노드의 필드가 VNode의 type, props, children으로 옮겨지는 대응 그림과 createDomFromVNode입니다.</div>
-      <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 코드 읽기</span></div>
-    </a>
+    <div class="hub" id="hub-mini-react">
+      <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-mini-react-body">
+        <span class="t dh">mini-react</span>
+        <span class="d">Virtual DOM을 만들고 비교하고 고치는 흐름부터 hooks까지, 단계마다 남긴 노트를 모았습니다.</span>
+        <span class="m">week11-12 / mini-react</span>
+      </button>
+      <div class="hub-body" id="hub-mini-react-body">
+        <div class="hub-in">
+          <div class="phase">
+            <h3 class="ph">공통</h3>
+            <div class="cards">
+              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-code-reading.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-code-reading.html">
+                <div class="t dh">mini-react 코드 읽기</div>
+                <div class="d">src의 함수를 줄 단위로 읽으며 각 줄이 뜻하는 것과 그 줄을 지키는 테스트를 이었습니다. 첫 절은 DOM 노드의 필드가 VNode의 type, props, children으로 옮겨지는 대응 그림과 createDomFromVNode입니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 코드 읽기</span></div>
+              </a>
+            </div>
+          </div>
+          <div class="phase">
+            <h3 class="ph">Phase 1 · VNode, Diff, Patch, StateHistory</h3>
+            <div class="cards">
+              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/lab/phase1-test-design/phase1-test-map.html" href="https://benjohnbill.github.io/study/week11/phase1-test-map.html">
+                <div class="t dh">미니 React Phase 1 테스트 지도</div>
+                <div class="d">단위·통합·기능의 13개 테스트 대상과 57개 검증 갈래. 대상의 책임에서 검증할 성질이 파생되는 과정을 선택형 도식으로 정리한 설계 자료.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 · mini-react · 테스트 설계</span></div>
+              </a>
+              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-test-map.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-test-map.html">
+                <div class="t dh">mini-react Phase 1 테스트 지도 · 구현 연결</div>
+                <div class="d">13개 테스트 대상과 57개 검증 갈래마다 Lark의 기존 사례, 실제로 추가한 테스트 ID와 통과 수, 그 갈래의 결정을 이어 보여 줍니다. 대상과 갈래마다 링크가 있어 단위별로 공유할 수 있습니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
+              </a>
+              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-decisions.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-decisions.html">
+                <div class="t dh">mini-react Phase 1 결정 요약</div>
+                <div class="d">Patch 형식과 path 기준, StateHistory, 검증 페이지를 구현하며 정한 결정을 근거와 함께 모았습니다. 독립 리뷰에서 찾은 결함과 수정, 실제 브라우저 확인 결과, 팀 테스트 시트와 다른 점도 함께 적었습니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
+              </a>
+            </div>
+          </div>
+          <div class="phase">
+            <h3 class="ph">Phase 2 · FunctionComponent, hooks</h3>
+            <p class="ph-empty">아직 없음</p>
+          </div>
+        </div>
+      </div>
+    </div>
     <a class="card" data-week="11" data-topic="웹" data-kind="deck" data-src="week11-12/lab/meeting-1110/plan.html" href="https://benjohnbill.github.io/study/week11/framework-control.html">
       <div class="t dh">같은 제품을 두 번 만들기</div>
       <div class="d">미니 React, Redis, DBMS를 라이브러리로 쓰는 제품 하나와, 셋 없이 만든 대조군을 같은 기능 테스트로 비교하자는 팀 회의 제안입니다. 대조군에서 실험군으로 바뀌는 파일을 PR diff처럼 보여 주고, 원문 요구사항과 제품 기능의 빈칸, 테스트 지도, 결정 카드와 반론을 한 화면에 둡니다.</div>
@@ -573,6 +626,34 @@ a.card .d code{white-space:nowrap}
   wrap.classList.toggle('no-enter', returning);
   let view = 'week', sections = [], active = '', lock = 0, arriving = null;
 
+  // 프로젝트 모음은 처음에 접어 둔다. 이 탭에서 연 모음은 노트를 읽고 돌아와도 열린 채로 둔다
+  const HUB_KEY = 'study-hub-open';
+  let openHubs = [];
+  try { openHubs = JSON.parse(sessionStorage.getItem(HUB_KEY)) || []; } catch (e) {}
+  document.querySelectorAll('.hub').forEach(hub => {
+    const head = hub.querySelector('.hub-head');
+    let timer = 0;
+    const set = (open, animate) => {
+      head.setAttribute('aria-expanded', open);
+      hub.classList.toggle('shut', !open);
+      hub.classList.remove('opening');
+      if (!open || !animate || calm()) return;
+      hub.querySelectorAll('.ph, a.card, .ph-empty').forEach((e, i) => e.style.setProperty('--i', Math.min(i, 3)));
+      void hub.offsetWidth;
+      hub.classList.add('opening');
+      clearTimeout(timer);
+      timer = setTimeout(() => hub.classList.remove('opening'), 500);
+    };
+    hub.classList.add('js');
+    set(openHubs.includes(hub.id), false);
+    head.addEventListener('click', () => {
+      const open = head.getAttribute('aria-expanded') !== 'true';
+      set(open, true);
+      openHubs = open ? [...new Set([...openHubs, hub.id])] : openHubs.filter(id => id !== hub.id);
+      try { sessionStorage.setItem(HUB_KEY, JSON.stringify(openHubs)); } catch (e) {}
+    });
+  });
+
   function placeTabLine() {
     const cur = side.querySelector('.tabs button.on');
     tabLine.style.width = `${cur.offsetWidth}px`;
@@ -628,7 +709,8 @@ a.card .d code{white-space:nowrap}
     toc.classList.toggle('open', open);
   }
 
-  const REVEAL = '.gh, a.card, .rr';
+  // 모음 안의 카드는 모음을 열 때 따로 들어온다
+  const REVEAL = '.gh, a.card:not(.hub a.card), .hub-head, .rr';
   const reveals = calm() ? null : new IntersectionObserver(entries => {
     let n = 0;
     entries.forEach(e => {
