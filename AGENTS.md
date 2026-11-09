@@ -36,6 +36,18 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   card". Cards must stay in the HTML, because `jungle-deck` `publish.py` and
   `jungle-week-init` read that markup; the script only adds the sidebar, the
   repository table, and clones for the `주제` and `유형` views.
+- **Project hubs.** A week group can hold one hub (`<div class="hub">`)
+  for each project, labeled `모음`. Make a hub when a project gets its second
+  note. A hub has a `<button class="hub-head">` and a body with one
+  `<div class="phase">` for each phase (`공통`, `Phase 1`, …). Each phase has an
+  `<h3 class="ph">` and a `.cards` block. The cards in a hub are normal cards:
+  the same attributes, the same shape, and the same `data-src`. Put a new
+  page of that project in its phase's `.cards` block, not directly in the
+  week's `.cards`. A card that belongs to no single project (for example a team
+  meeting deck) stays outside the hubs. The script starts each hub collapsed.
+  A hub that the reader opened stays open in that tab (`sessionStorage`). The
+  `주제` and `유형` views show the hub cards as normal rows. Without JavaScript,
+  the hubs show open. Reference: `#hub-mini-react` in `index.html`.
 - **Skill cards.** The `자동화 스킬` group (`id="skills"`) sits below `#list`,
   outside it. The script shows the group only in the `유형` view. Without
   JavaScript it shows below the weeks. Its cards link to skill repositories,
