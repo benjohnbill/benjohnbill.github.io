@@ -34,7 +34,7 @@ td code{overflow-wrap:anywhere}
   .map .h, .map .a, .map .brace{display:none}
   .map .r.m{margin-bottom:6px}
   .map .r.m>.vn::before{content:"→ "; color:var(--s3)}
-  .map .r.m>.vn{white-space:normal; padding-left:1.2em}
+  .map .r.m>.vn{white-space:normal; padding-left:calc(var(--i) + 1ch)}
   table,tbody,tr,td{display:block; width:auto}
   thead{display:none}
   table{border:none}
@@ -73,21 +73,21 @@ export type VNode =
 <div class="map" role="figure" aria-label="DOM 필드와 VNode 슬롯의 대응">
 <div class="r h"><span>DOM</span><span></span><span>VNode</span></div>
 <div class="r"><span>&lt;ul&gt;  (Element)</span><span class="a"></span><span class="vn brace">{</span></div>
-<div class="r m"><span>  .localName  = "ul"</span><span class="a">──→</span><span class="vn">  type: "ul",</span></div>
-<div class="r m"><span>  .attributes = [class="list"]</span><span class="a">──→</span><span class="vn">  props: { class: "list" },</span></div>
-<div class="r m"><span>  .childNodes = [&lt;li&gt;, &lt;li&gt;]</span><span class="a">──→</span><span class="vn">  children: [</span></div>
+<div class="r m" style="--i:2ch"><span>  .localName  = "ul"</span><span class="a">──→</span><span class="vn">  type: "ul",</span></div>
+<div class="r m" style="--i:2ch"><span>  .attributes = [class="list"]</span><span class="a">──→</span><span class="vn">  props: { class: "list" },</span></div>
+<div class="r m" style="--i:2ch"><span>  .childNodes = [&lt;li&gt;, &lt;li&gt;]</span><span class="a">──→</span><span class="vn">  children: [</span></div>
 <div class="r"><span>    &lt;li&gt;  (Element)</span><span class="a"></span><span class="vn brace">    {</span></div>
-<div class="r m"><span>      .localName  = "li"</span><span class="a">──→</span><span class="vn">      type: "li",</span></div>
-<div class="r m"><span>      .attributes = [id="a"]</span><span class="a">──→</span><span class="vn">      props: { id: "a" },</span></div>
-<div class="r m"><span>      .childNodes = [Text]</span><span class="a">──→</span><span class="vn">      children: [</span></div>
-<div class="r m"><span>        Text  .data = "milk"</span><span class="a">──→</span><span class="vn">        "milk"</span></div>
+<div class="r m" style="--i:6ch"><span>      .localName  = "li"</span><span class="a">──→</span><span class="vn">      type: "li",</span></div>
+<div class="r m" style="--i:6ch"><span>      .attributes = [id="a"]</span><span class="a">──→</span><span class="vn">      props: { id: "a" },</span></div>
+<div class="r m" style="--i:6ch"><span>      .childNodes = [Text]</span><span class="a">──→</span><span class="vn">      children: [</span></div>
+<div class="r m" style="--i:8ch"><span>        Text  .data = "milk"</span><span class="a">──→</span><span class="vn">        "milk"</span></div>
 <div class="r"><span></span><span class="a"></span><span class="vn brace">      ]</span></div>
 <div class="r"><span></span><span class="a"></span><span class="vn brace">    },</span></div>
 <div class="r"><span>    &lt;li&gt;  (Element)</span><span class="a"></span><span class="vn brace">    {</span></div>
-<div class="r m"><span>      .localName  = "li"</span><span class="a">──→</span><span class="vn">      type: "li",</span></div>
-<div class="r m"><span>      .attributes = []</span><span class="a">──→</span><span class="vn">      props: {},</span></div>
-<div class="r m"><span>      .childNodes = [Text]</span><span class="a">──→</span><span class="vn">      children: [</span></div>
-<div class="r m"><span>        Text  .data = "egg"</span><span class="a">──→</span><span class="vn">        "egg"</span></div>
+<div class="r m" style="--i:6ch"><span>      .localName  = "li"</span><span class="a">──→</span><span class="vn">      type: "li",</span></div>
+<div class="r m" style="--i:6ch"><span>      .attributes = []</span><span class="a">──→</span><span class="vn">      props: {},</span></div>
+<div class="r m" style="--i:6ch"><span>      .childNodes = [Text]</span><span class="a">──→</span><span class="vn">      children: [</span></div>
+<div class="r m" style="--i:8ch"><span>        Text  .data = "egg"</span><span class="a">──→</span><span class="vn">        "egg"</span></div>
 <div class="r"><span></span><span class="a"></span><span class="vn brace">      ]</span></div>
 <div class="r"><span></span><span class="a"></span><span class="vn brace">    }</span></div>
 <div class="r"><span></span><span class="a"></span><span class="vn brace">  ]</span></div>
