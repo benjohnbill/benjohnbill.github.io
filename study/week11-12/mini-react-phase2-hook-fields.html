@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Reference · FunctionComponent 필드와 전역 변수</title>
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+:root {
+  /* the lesson scripts use these names; they point at site tokens */
+  --rule: var(--line);
+  --paper: var(--bg);
+  --hi: var(--s4-soft);
+  --mono: var(--font-code);
+  --read: var(--s2);
+  --write: var(--s1);
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; display: flex; flex-direction: column; }
+.wrap > * { min-width: 0; }
+.home { margin-bottom: 1rem; }
+h1 { font-family: var(--font-head); font-size: 1.9rem; font-weight: 700; margin: 0 0 .3rem; line-height: 1.35; }
+h2 { font-family: var(--font-head); font-size: 1.25rem; font-weight: 700; margin: 2.4rem 0 .6rem; border-bottom: 1px solid var(--line); padding-bottom: .2rem; }
+.sub { color: var(--muted); margin: 0 0 1.5rem; }
+pre { background: var(--surface-2); padding: .9rem 1rem; overflow-x: auto; border-radius: 3px; line-height: 1.5; font-size: 14px; }
+pre code { background: none; padding: 0; }
+.tag { display: inline-block; font: 600 .75rem var(--font-code); padding: .05rem .45rem; border-radius: 3px; border: 1px solid var(--line); }
+.tag.read { color: var(--s2); background: var(--s2-soft); border-color: var(--s2-rail); }
+.tag.write { color: var(--s1); background: var(--s1-soft); border-color: var(--s1-rail); }
+.tag.render { color: var(--muted); background: var(--surface-2); }
+.callout { border: 1px solid var(--s2-rail); border-radius: 3px; padding: .5rem 1rem; margin: 1rem 0; }
+.callout.write { border-color: var(--s1-rail); }
+table { border-collapse: collapse; width: 100%; margin: .8rem 0; font-size: .95rem; }
+th, td { border-bottom: 1px solid var(--line); padding: .35rem .5rem; text-align: left; vertical-align: top; }
+th { font-weight: 600; }
+.ask { margin-top: 2.5rem; padding: .8rem 1rem; border: 1px dashed var(--line); color: var(--muted); }
+nav.links { margin-top: 1.5rem; font-size: .95rem; }
+@media print { .wrap { max-width: none; padding: 0; } .stepper .controls, .quiz button { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>
+<h1>FunctionComponent 필드와 전역 변수</h1>
+<p class="sub">누가 쓰고, 언제 바뀌고, 누가 읽나 · 용어는 <code>mini-react/GLOSSARY.md</code>를 따른다</p>
+
+<h2>인스턴스 필드 (인스턴스마다 하나씩)</h2>
+<table>
+  <tr><th>필드</th><th>담는 것</th><th>쓰는 곳</th><th>읽는 곳</th></tr>
+  <tr><td><code>component</code></td><td>감싼 함수형 컴포넌트 (루트 <code>App</code>)</td><td>생성자, 한 번</td><td><code>mount()</code>, <code>update()</code></td></tr>
+  <tr><td><code>hooks</code></td><td>상태값. 호출 순서 = 칸 번호</td><td><span class="tag read">READ</span> 첫 렌더링의 초깃값 · <span class="tag write">WRITE</span> setter</td><td><span class="tag read">READ</span> <code>useState</code></td></tr>
+  <tr><td><code>currentView</code></td><td>마지막으로 그린 <code>View</code></td><td><code>mount()</code> 끝, <code>update()</code>의 patch 뒤</td><td><code>update()</code>의 <code>diffViews</code></td></tr>
+</table>
+<p class="sub">이름은 grill Q1에서 <code>currentView</code>로 정했다(ADR <code>root-instance-keeps-container-and-current-view</code>).</p>
+
+<h2>전역 변수 (모듈에 하나)</h2>
+<table>
+  <tr><th>변수</th><th>뜻</th><th>쓰는 곳</th><th>읽는 곳</th></tr>
+  <tr><td><code>currentComponent</code></td><td>지금 렌더링 중인 인스턴스</td><td><code>mount()</code>, <code>update()</code> 시작</td><td><code>useState</code> (READ만)</td></tr>
+  <tr><td><code>hookIndex</code></td><td>이번 렌더링에서 몇 번째 Hook 호출인가</td><td>렌더링 시작에 0, 호출마다 +1</td><td><code>useState</code> (READ만)</td></tr>
+</table>
+
+<h2>setter가 기억하는 것</h2>
+<pre>setCount  ──remembers──>  (instance A, slot 0)
+click → A.hooks[0] = new value → A.update()</pre>
+
+<h2>한 사이클 (트리)</h2>
+<pre>FunctionComponent A (instance)
+├─ fields
+│  ├─ component = App       &lt;- what to run each render
+│  ├─ hooks = [ ... ]       &lt;- values that must survive between runs
+│  ├─ container             &lt;- where to draw
+│  └─ currentView              &lt;- what to diff against next time
+│
+├─ mount()  (first render)
+│  ├─ currentComponent = A  &lt;- so useState knows whose hooks
+│  ├─ hookIndex = 0         &lt;- count calls from slot 0
+│  ├─ App()
+│  │  └─ useState(0)                         <span class="tag read">READ</span>
+│  │     ├─ slot = hookIndex++  (0)
+│  │     ├─ hooks[0] empty -&gt; store 0
+│  │     ├─ make setCount, remembering (A, 0)  &lt;- used later on click
+│  │     └─ return [0, setCount]
+│  ├─ App returns View
+│  ├─ createDomFromVNode -&gt; container
+│  └─ currentView = View
+│
+└─ click -&gt; setCount(1)                       <span class="tag write">WRITE</span>
+   ├─ A.hooks[0] = 1        &lt;- uses remembered (A, 0)
+   └─ A.update()            &lt;- uses remembered A
+      ├─ currentComponent = A
+      ├─ hookIndex = 0
+      ├─ App()
+      │  └─ useState(0) -&gt; hooks[0] is 1 -&gt; count = 1
+      ├─ App returns new View
+      ├─ diffViews(currentView, new View) -&gt; Patch[]
+      ├─ applyPatchesToDom(container, Patch[])
+      └─ currentView = new View
+</pre>
+
+<h2>깨지는 경우</h2>
+<div class="callout write"><code>if</code> 안에서 <code>useState</code>를 부르면 호출 순서가 렌더링마다 달라진다. 뒤쪽 Hook이 앞쪽 칸의 값을 받는다. (<a href="https://react.dev/reference/rules/rules-of-hooks">Rules of Hooks</a>)</div>
+
+<nav class="links"><a href="mini-react-phase2-state-lesson.html">레슨 0001</a></nav>
+</div>
+</body>
+</html>
