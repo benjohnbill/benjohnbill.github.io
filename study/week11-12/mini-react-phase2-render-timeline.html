@@ -37,6 +37,10 @@ th { font-weight: 600; }
 .ask { margin-top: 2.5rem; padding: .8rem 1rem; border: 1px dashed var(--line); color: var(--muted); }
 nav.links { margin-top: 1.5rem; font-size: .95rem; }
 @media print { .wrap { max-width: none; padding: 0; } .stepper .controls, .quiz button { display: none; } }
+/* phones: table cells may break long code names; a scrolling pre gets a cue line before it */
+th, td { overflow-wrap: anywhere; }
+.scroll-hint { font-size: .85rem; margin: .6rem 0 -.4rem; }
+@media (min-width: 640px) { .scroll-hint { display: none; } }
 </style>
 <script>
 // Reusable state stepper.
@@ -47,16 +51,18 @@ nav.links { margin-top: 1.5rem; font-size: .95rem; }
 function mountStepper(root, spec) {
   const css = `
     .stepper { border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.2rem; margin: 1rem 0; background: transparent; }
-    .stepper .head { display: flex; gap: .6rem; align-items: center; }
+    .stepper .head { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
     .stepper .title { font-weight: 600; }
     .stepper .count { margin-left: auto; color: var(--muted); font: .85rem var(--mono); }
     .stepper pre { margin: .6rem 0; }
     .stepper .note { margin: .4rem 0 .8rem; }
-    .stepper .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .stepper .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+    .stepper .grid > * { min-width: 0; }
     .stepper .box h4 { margin: 0 0 .3rem; font-size: .85rem; color: var(--muted); font-weight: 600; }
     .stepper .row { display: flex; justify-content: space-between; gap: 1rem; padding: .15rem .4rem; border-radius: 3px; font: .9rem var(--mono); }
+    .stepper .row span { min-width: 0; overflow-wrap: anywhere; }
     .stepper .row.changed { background: var(--hi); }
-    .stepper .controls { display: flex; gap: .5rem; margin-top: 1rem; }
+    .stepper .controls { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
     .stepper button { font: inherit; padding: .3rem .9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 4px; cursor: pointer; }
     .stepper button:disabled { opacity: .4; cursor: default; }
     .stepper .predict { border: 1px dashed var(--read); border-radius: 4px; padding: .5rem .8rem; margin: .4rem 0 .8rem; }
@@ -227,6 +233,7 @@ function mountQuiz(root, items) {
 <p>React 문서도 같은 구조를 설명한다: "Internally, React holds an array of state pairs for every component. It also maintains the current pair index, which is set to <code>0</code> before rendering." (<a href="https://react.dev/learn/state-a-components-memory">react.dev, State: A Component's Memory</a>, deep dive "How does React know which state to return?")</p>
 
 <h2>예제</h2>
+<p class="scroll-hint" data-scroll-hint>옆으로 밀어 보기 →</p>
 <pre>const A = new FunctionComponent(() =&gt; {
   const [count, setCount] = useState(0);    // A의 Hook 0
   const [name] = useState("x");              // A의 Hook 1

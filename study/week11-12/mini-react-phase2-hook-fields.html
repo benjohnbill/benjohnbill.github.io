@@ -37,6 +37,10 @@ th { font-weight: 600; }
 .ask { margin-top: 2.5rem; padding: .8rem 1rem; border: 1px dashed var(--line); color: var(--muted); }
 nav.links { margin-top: 1.5rem; font-size: .95rem; }
 @media print { .wrap { max-width: none; padding: 0; } .stepper .controls, .quiz button { display: none; } }
+/* phones: table cells may break long code names; a scrolling pre gets a cue line before it */
+th, td { overflow-wrap: anywhere; }
+.scroll-hint { font-size: .85rem; margin: .6rem 0 -.4rem; }
+@media (min-width: 640px) { .scroll-hint { display: none; } }
 </style>
 </head>
 <body>
@@ -65,10 +69,12 @@ nav.links { margin-top: 1.5rem; font-size: .95rem; }
 <div class="callout"><strong>왜 전역인가:</strong> <code>useState(0)</code>는 인스턴스도 칸 번호도 받지 않는다. 그래서 "지금 누구의 몇 번째 Hook인가"를 모듈 변수에서 읽는다. 렌더링은 한 번에 하나라 두 변수는 지금 렌더링 중인 것 하나만 가리키면 된다. 사는 기간이 사는 곳을 정한다: 렌더링 사이에도 남는 <code>hooks</code>는 인스턴스, 렌더링 한 번만 쓰는 두 변수는 모듈. 시간표: <a href="mini-react-phase2-render-timeline.html">레슨 0002</a>.</div>
 
 <h2>setter가 기억하는 것</h2>
+<p class="scroll-hint" data-scroll-hint>옆으로 밀어 보기 →</p>
 <pre>setCount  ──remembers──>  (instance A, slot 0)
 click → A.hooks[0] = new value → A.update()</pre>
 
 <h2>한 사이클 (트리)</h2>
+<p class="scroll-hint" data-scroll-hint>옆으로 밀어 보기 →</p>
 <pre>FunctionComponent A (instance)
 ├─ fields
 │  ├─ rootComponent = App   &lt;- what to run each render
