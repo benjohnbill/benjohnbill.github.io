@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>0002 · 렌더링 시간표: 왜 hookIndex는 전역이고 hooks는 인스턴스에 있나</title>
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+:root {
+  /* the lesson scripts use these names; they point at site tokens */
+  --rule: var(--line);
+  --paper: var(--bg);
+  --hi: var(--s4-soft);
+  --mono: var(--font-code);
+  --read: var(--s2);
+  --write: var(--s1);
+  --read-soft: var(--s2-soft);
+  --write-soft: var(--s1-soft);
+}
+.wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; display: flex; flex-direction: column; }
+.wrap > * { min-width: 0; }
+.home { margin-bottom: 1rem; }
+h1 { font-family: var(--font-head); font-size: 1.9rem; font-weight: 700; margin: 0 0 .3rem; line-height: 1.35; }
+h2 { font-family: var(--font-head); font-size: 1.25rem; font-weight: 700; margin: 2.4rem 0 .6rem; border-bottom: 1px solid var(--line); padding-bottom: .2rem; }
+.sub { color: var(--muted); margin: 0 0 1.5rem; }
+pre { background: var(--surface-2); padding: .9rem 1rem; overflow-x: auto; border-radius: 3px; line-height: 1.5; font-size: 14px; }
+pre code { background: none; padding: 0; }
+.tag { display: inline-block; font: 600 .75rem var(--font-code); padding: .05rem .45rem; border-radius: 3px; border: 1px solid var(--line); }
+.tag.read { color: var(--s2); background: var(--s2-soft); border-color: var(--s2-rail); }
+.tag.write { color: var(--s1); background: var(--s1-soft); border-color: var(--s1-rail); }
+.tag.render { color: var(--muted); background: var(--surface-2); }
+.callout { border: 1px solid var(--s2-rail); border-radius: 3px; padding: .5rem 1rem; margin: 1rem 0; }
+.callout.write { border-color: var(--s1-rail); }
+table { border-collapse: collapse; width: 100%; margin: .8rem 0; font-size: .95rem; }
+th, td { border-bottom: 1px solid var(--line); padding: .35rem .5rem; text-align: left; vertical-align: top; }
+th { font-weight: 600; }
+.ask { margin-top: 2.5rem; padding: .8rem 1rem; border: 1px dashed var(--line); color: var(--muted); }
+nav.links { margin-top: 1.5rem; font-size: .95rem; }
+@media print { .wrap { max-width: none; padding: 0; } .stepper .controls, .quiz button { display: none; } }
+</style>
+<script>
+// Reusable state stepper.
+// mountStepper(root, { fields: [{key, label, scope}], steps: [{phase, title, code, note, state, predict}] })
+// Each step's `state` holds every field value as a string. Changed fields are highlighted.
+// Optional `predict: { key, q, options: [..] }` hides that field as "?" until the learner picks.
+// The right option is the step's own state[key].
+function mountStepper(root, spec) {
+  const css = `
+    .stepper { border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.2rem; margin: 1rem 0; background: transparent; }
+    .stepper .head { display: flex; gap: .6rem; align-items: center; }
+    .stepper .title { font-weight: 600; }
+    .stepper .count { margin-left: auto; color: var(--muted); font: .85rem var(--mono); }
+    .stepper pre { margin: .6rem 0; }
+    .stepper .note { margin: .4rem 0 .8rem; }
+    .stepper .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .stepper .box h4 { margin: 0 0 .3rem; font-size: .85rem; color: var(--muted); font-weight: 600; }
+    .stepper .row { display: flex; justify-content: space-between; gap: 1rem; padding: .15rem .4rem; border-radius: 3px; font: .9rem var(--mono); }
+    .stepper .row.changed { background: var(--hi); }
+    .stepper .controls { display: flex; gap: .5rem; margin-top: 1rem; }
+    .stepper button { font: inherit; padding: .3rem .9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 4px; cursor: pointer; }
+    .stepper button:disabled { opacity: .4; cursor: default; }
+    .stepper .predict { border: 1px dashed var(--read); border-radius: 4px; padding: .5rem .8rem; margin: .4rem 0 .8rem; }
+    .stepper .predict .opts { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .4rem; }
+    .stepper .predict .opts button { font-family: var(--mono); }
+    .stepper .predict .fb { margin-top: .4rem; font-weight: 600; }
+    .stepper .predict .fb.ok { color: var(--read); }
+    .stepper .predict .fb.no { color: var(--write); }
+    .stepper .row.hidden span:last-child { color: var(--read); font-weight: 700; }
+  `;
+  if (!document.getElementById("stepper-css")) {
+    const s = document.createElement("style");
+    s.id = "stepper-css";
+    s.textContent = css;
+    document.head.append(s);
+  }
+  let i = 0;
+  const picked = {};
+  root.classList.add("stepper");
+  const scopes = [...new Set(spec.fields.map((f) => f.scope))];
+  function render() {
+    const step = spec.steps[i];
+    const prev = i > 0 ? spec.steps[i - 1].state : null;
+    const p = step.predict;
+    const waiting = p && picked[i] === undefined;
+    const boxes = scopes
+      .map((scope) => {
+        const rows = spec.fields
+          .filter((f) => f.scope === scope)
+          .map((f) => {
+            const hide = waiting && f.key === p.key;
+            const v = hide ? "?" : step.state[f.key];
+            const changed = !hide && prev && prev[f.key] !== step.state[f.key];
+            const cls = `row${changed ? " changed" : ""}${hide ? " hidden" : ""}`;
+            return `<div class="${cls}"><span>${f.label}</span><span>${v}</span></div>`;
+          })
+          .join("");
+        return `<div class="box"><h4>${scope}</h4>${rows}</div>`;
+      })
+      .join("");
+    let predictHtml = "";
+    if (p) {
+      const answer = step.state[p.key];
+      const opts = p.options
+        .map((o) => `<button data-pick="${o}" ${waiting ? "" : "disabled"}>${o}</button>`)
+        .join("");
+      const fb = waiting
+        ? ""
+        : picked[i] === answer
+          ? `<div class="fb ok">맞았어요: ${answer}</div>`
+          : `<div class="fb no">고른 값 ${picked[i]} · 실제 값 ${answer}</div>`;
+      predictHtml = `<div class="predict"><div>예측: ${p.q}</div><div class="opts">${opts}</div>${fb}</div>`;
+    }
+    root.innerHTML = `
+      <div class="head">
+        <span class="tag ${step.phase.toLowerCase()}">${step.phase}</span>
+        <span class="title">${step.title}</span>
+        <span class="count">${i + 1} / ${spec.steps.length}</span>
+      </div>
+      ${step.code ? `<pre>${step.code}</pre>` : ""}
+      ${predictHtml}
+      ${waiting ? "" : `<div class="note">${step.note}</div>`}
+      <div class="grid">${boxes}</div>
+      <div class="controls">
+        <button data-d="-1" ${i === 0 ? "disabled" : ""}>← 이전</button>
+        <button data-d="1" ${i === spec.steps.length - 1 ? "disabled" : ""}>다음 →</button>
+        <button data-d="0">처음으로</button>
+      </div>`;
+    root.querySelectorAll("button[data-pick]").forEach((b) =>
+      b.addEventListener("click", () => {
+        picked[i] = b.dataset.pick;
+        render();
+      }),
+    );
+    root.querySelectorAll("button[data-d]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const d = Number(b.dataset.d);
+        i = d === 0 ? 0 : i + d;
+        render();
+      }),
+    );
+  }
+  render();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight" && i < spec.steps.length - 1) { i++; render(); }
+    if (e.key === "ArrowLeft" && i > 0) { i--; render(); }
+  });
+}
+</script>
+<script>
+// Reusable quiz with immediate feedback.
+// mountQuiz(root, [{ q, options: [..], answer: index, why }])
+function mountQuiz(root, items) {
+  if (!document.getElementById("quiz-css")) {
+    const s = document.createElement("style");
+    s.id = "quiz-css";
+    s.textContent = `
+      .quiz .item { margin: 1.2rem 0; }
+      .quiz .q { font-weight: 600; margin-bottom: .4rem; }
+      .quiz button { display: block; width: 100%; text-align: left; font: inherit; margin: .25rem 0; padding: .4rem .8rem; border: 1px solid var(--rule); background: transparent; border-radius: 4px; cursor: pointer; }
+      .quiz button.right { border-color: var(--read); background: var(--read-soft, #e8f3f6); }
+      .quiz button.wrong { border-color: var(--write); background: var(--write-soft, #fbf1ee); }
+      .quiz .why { color: var(--muted); font-size: .95rem; margin-top: .3rem; }
+      .quiz .score { font-weight: 600; margin-top: 1rem; }
+    `;
+    document.head.append(s);
+  }
+  root.classList.add("quiz");
+  let done = 0;
+  let right = 0;
+  const score = document.createElement("div");
+  score.className = "score";
+  items.forEach((it, n) => {
+    const box = document.createElement("div");
+    box.className = "item";
+    box.innerHTML = `<div class="q">${n + 1}. ${it.q}</div>`;
+    const why = document.createElement("div");
+    why.className = "why";
+    it.options.forEach((opt, k) => {
+      const b = document.createElement("button");
+      b.innerHTML = opt;
+      b.addEventListener("click", () => {
+        if (box.dataset.done) return;
+        box.dataset.done = "1";
+        done++;
+        if (k === it.answer) right++;
+        b.classList.add(k === it.answer ? "right" : "wrong");
+        box.querySelectorAll("button")[it.answer].classList.add("right");
+        why.innerHTML = it.why;
+        if (done === items.length) score.textContent = `${items.length}문제 중 ${right}개 맞음`;
+      });
+      box.append(b);
+    });
+    box.append(why);
+    root.append(box);
+  });
+  root.append(score);
+}
+</script>
+</head>
+<body>
+<div class="wrap">
+<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>
+
+<h1>렌더링 시간표: 왜 <code>hookIndex</code>는 전역이고 <code>hooks</code>는 인스턴스에 있나</h1>
+<p class="sub">레슨 0002 · mini-react Phase 2 · 몫 2 (Rendering) · 약 10분 · 목표: 발표에서 "왜 전역인가"를 한 문장으로 말하기</p>
+
+<h2>뿌리: 본문은 렌더링마다 처음부터 다시 실행된다</h2>
+<p><code>update()</code>는 Root Component 본문을 처음부터 다시 실행해 새 View와 새 클릭 함수를 만든다 (팀 ADR <code>render/render-reruns-root-component-from-top</code>, 테스트 F8). 몫 2의 다른 결정은 거의 다 이 한 문장에서 나온다.</p>
+<table>
+  <tr><th>본문이 매번 처음부터 다시 실행되니까</th><th>그래서 생긴 장치</th></tr>
+  <tr><td>지역 변수는 렌더링이 끝나면 사라진다</td><td>State는 본문 밖, 인스턴스의 <code>hooks</code> 칸에 둔다 (<code>useState</code>)</td></tr>
+  <tr><td>본문 밖의 칸을 매번 다시 찾아야 한다</td><td>호출 순서로 칸을 찾는다 (<code>hookIndex</code>, 아래 시간표)</td></tr>
+  <tr><td>클릭 함수가 렌더링마다 새로 생긴다</td><td><code>actions</code> 표를 렌더링마다 통째로 갈아 끼운다 (L98, L113)</td></tr>
+  <tr><td>클릭 함수는 자기를 만든 렌더링의 값을 기억한다</td><td>렌더링이 <code>Error</code>로 끝나면 옛 값을 가진 클릭 함수가 남는다 (ADR의 CAUTION, 테스트 F116)</td></tr>
+</table>
+<p>React 문서는 같은 생각을 "State as a Snapshot"이라고 부른다: "Its props, event handlers, and local variables were all calculated using its state at the time of the render." (<a href="https://react.dev/learn/state-as-a-snapshot">react.dev, State as a Snapshot</a>). 우리 코드의 클릭 함수가 그 "event handlers"다.</p>
+
+<h2>한 문장 먼저</h2>
+<div class="callout"><strong>사는 기간이 사는 곳을 정한다.</strong> 렌더링과 렌더링 사이에도 남아야 하는 값은 인스턴스에, 렌더링 한 번 동안만 쓰는 값은 모듈 변수에 둔다.</div>
+<table>
+  <tr><th>값</th><th>살아야 하는 기간</th><th>사는 곳</th><th>코드</th></tr>
+  <tr><td><code>hooks</code></td><td>렌더링 사이에도 계속 (State를 담으니까)</td><td>인스턴스 필드</td><td><code>function-component.ts:39</code></td></tr>
+  <tr><td><code>currentComponent</code></td><td>렌더링 한 번 (L100에서 채우고 L116에서 비움)</td><td>모듈 변수</td><td><code>:35</code></td></tr>
+  <tr><td><code>hookIndex</code></td><td>렌더링 한 번 (L101에서 매번 0부터)</td><td>모듈 변수</td><td><code>:36</code></td></tr>
+</table>
+<p>왜 굳이 전역인가? 개발자는 <code>useState(0)</code>라고만 쓴다. 인스턴스도, 칸 번호도 넘기지 않는다. 그래서 <code>useState</code>는 "지금 누구의 몇 번째 Hook인가"를 <strong>인자가 아닌 곳</strong>에서 알아내야 하고, 그 통로가 두 모듈 변수다. 렌더링은 한 번에 하나뿐이라 두 변수는 "지금 렌더링 중인 것" 하나만 가리키면 된다.</p>
+<p>React 문서도 같은 구조를 설명한다: "Internally, React holds an array of state pairs for every component. It also maintains the current pair index, which is set to <code>0</code> before rendering." (<a href="https://react.dev/learn/state-a-components-memory">react.dev, State: A Component's Memory</a>, deep dive "How does React know which state to return?")</p>
+
+<h2>예제</h2>
+<pre>const A = new FunctionComponent(() =&gt; {
+  const [count, setCount] = useState(0);    // A의 Hook 0
+  const [name] = useState("x");              // A의 Hook 1
+  ...
+});
+const B = new FunctionComponent(() =&gt; {
+  const [size] = useState(5);                // B의 Hook 0
+  ...
+});
+A.mount(left);
+B.mount(right);
+// 그다음 A의 버튼을 한 번 클릭 → setCount(1)</pre>
+
+<h2>시간표 (0 → 12)</h2>
+<p>왼쪽 상자는 모듈 변수, 오른쪽 상자는 인스턴스 필드다. 노란 줄은 방금 바뀐 값이다. 예측 칸이 나오면 먼저 고르고 넘어가자. 키보드 ← → 로도 움직인다.</p>
+<div id="timeline"></div>
+
+<h2>되짚기</h2>
+<div id="quiz"></div>
+
+<h2>자기 말로 한 문장</h2>
+<div class="callout write">에이전트에게 이 문장을 채워 보내자: "<code>hookIndex</code>는 ______ 때문에 전역이고, <code>hooks</code>는 ______ 때문에 인스턴스에 있다." 문장이 맞으면 이 레슨은 통과다.</div>
+
+<h2>더 읽을 것</h2>
+<ul>
+  <li><strong>주 자료:</strong> <a href="https://react.dev/learn/state-a-components-memory">react.dev, State: A Component's Memory</a>의 deep dive "How does React know which state to return?". 짧은 예시에서 <code>componentHooks</code>와 <code>currentHookIndex</code>가 파일 맨 위의 변수이고, 렌더링 직전에 <code>currentHookIndex = 0</code>으로 돌린다. 우리 L101과 같은 일이다.</li>
+  <li><a href="https://pomb.us/build-your-own-react/">Rodrigo Pombo, Build your own React</a>, Step VIII "Hooks": "We need to initialize some global variables before calling the function component so we can use them inside of the <code>useState</code> function." 그리고 hooks 배열은 컴포넌트마다(fiber에) 둔다.</li>
+  <li>팀 ADR: <code>docs/adr/render/hook-cells-are-found-by-call-order.md</code>, <code>docs/adr/render/render-cursor-in-module-cells-in-instance.md</code></li>
+</ul>
+
+<nav class="links">
+  이전: <a href="mini-react-phase2-state-lesson.html">0001 · 인스턴스 필드는 READ와 WRITE에서 어떻게 바뀌나</a> ·
+  참고: <a href="mini-react-phase2-hook-fields.html">필드와 전역 변수 한눈에 보기 (reference)</a>
+</nav>
+
+<div class="ask">막히는 단계가 있으면 단계 번호와 함께 에이전트에게 물어보자. 예: "#9에서 왜 currentComponent가 A야?"</div>
+
+<script>
+const S = (cc, hi, a, b, ret) => ({ cc, hi, a, b, ret });
+mountStepper(document.getElementById("timeline"), {
+  fields: [
+    { key: "cc", label: "currentComponent", scope: "모듈 변수 · 렌더링 한 번 동안" },
+    { key: "hi", label: "hookIndex", scope: "모듈 변수 · 렌더링 한 번 동안" },
+    { key: "a", label: "A.hooks", scope: "인스턴스 필드 · 렌더링 사이에도" },
+    { key: "b", label: "B.hooks", scope: "인스턴스 필드 · 렌더링 사이에도" },
+    { key: "ret", label: "useState가 돌려준 값", scope: "이번 호출" },
+  ],
+  steps: [
+    { phase: "RENDER", title: "#0 시작", code: "",
+      note: "아직 아무 렌더링도 없다. 두 인스턴스의 <code>hooks</code>는 빈 배열이다.",
+      state: { cc: "undefined", hi: "0", a: "[]", b: "[]", ret: "–" } },
+    { phase: "RENDER", title: "#1 A.mount() → renderedView() 시작",
+      code: "100     currentComponent = this;   // this = A\n101     hookIndex = 0;",
+      note: "렌더링을 시작하면서 \"지금은 A, 0번부터\"로 맞춘다.",
+      state: { cc: "A", hi: "0", a: "[]", b: "[]", ret: "–" } },
+    { phase: "READ", title: "#2 A 본문의 useState(0)",
+      code: "122   const component = getCurrentComponent();        // A\n123   const cell = component.hooks[hookIndex] ??     // A.hooks[0]은 비어 있음\n125     createStateCell(component, 0);                // 초깃값 0으로 칸을 만듦\n126   component.hooks[hookIndex] = cell;\n127   hookIndex++;",
+      note: "칸이 비어 있으니 초깃값 0으로 칸을 만든다. 그다음 번호를 1로 올린다.",
+      state: { cc: "A", hi: "1", a: "[0]", b: "[]", ret: "0" } },
+    { phase: "READ", title: "#3 A 본문의 useState(\"x\")",
+      code: "123   component.hooks[hookIndex]   // A.hooks[1]은 비어 있음 → \"x\"로 만듦\n127   hookIndex++;",
+      note: "두 번째 Hook은 1번 칸을 쓴다. 번호는 2가 된다.",
+      state: { cc: "A", hi: "2", a: "[0, \"x\"]", b: "[]", ret: "\"x\"" } },
+    { phase: "RENDER", title: "#4 렌더링 끝",
+      code: "115     } finally {\n116       currentComponent = undefined;\n117     }",
+      note: "<code>currentComponent</code>는 비운다. <code>hookIndex</code>는 비우지 않아서 2가 남는다. 이게 문제가 될까? 다음 단계에서 확인하자.",
+      state: { cc: "undefined", hi: "2", a: "[0, \"x\"]", b: "[]", ret: "–" } },
+    { phase: "RENDER", title: "#5 B.mount() → renderedView() 시작",
+      code: "100     currentComponent = this;   // this = B\n101     hookIndex = 0;",
+      predict: { key: "hi", q: "B의 렌더링이 시작된 직후 hookIndex는?", options: ["2", "0", "1"] },
+      note: "L101이 0으로 돌린다. #4에 남은 2는 여기서 덮인다. 그래서 남아 있어도 상관없다.",
+      state: { cc: "B", hi: "0", a: "[0, \"x\"]", b: "[]", ret: "–" } },
+    { phase: "READ", title: "#6 B 본문의 useState(5)",
+      code: "123   component.hooks[hookIndex]   // component = B, B.hooks[0]은 비어 있음 → 5로 만듦\n127   hookIndex++;",
+      note: "B도 0번 칸을 쓴다. 하지만 <code>A.hooks[0]</code>이 아니라 <code>B.hooks[0]</code>이다. 번호는 같아도 배열이 다르다.",
+      state: { cc: "B", hi: "1", a: "[0, \"x\"]", b: "[5]", ret: "5" } },
+    { phase: "RENDER", title: "#7 렌더링 끝",
+      code: "116       currentComponent = undefined;",
+      note: "다시 아무도 렌더링하지 않는 상태다.",
+      state: { cc: "undefined", hi: "1", a: "[0, \"x\"]", b: "[5]", ret: "–" } },
+    { phase: "WRITE", title: "#8 A의 버튼 클릭 → setCount(1)",
+      code: "144       const newValue = createValueFromNextValue(1, cell.value);\n148       cell.value = newValue;    // 만들 때 기억한 칸 = A.hooks[0]\n149       component.update();       // 만들 때 기억한 인스턴스 = A",
+      note: "setter는 모듈 변수를 보지 않는다. 칸을 만들 때 기억해 둔 칸과 인스턴스를 쓴다 (레슨 0001의 WRITE).",
+      state: { cc: "undefined", hi: "1", a: "[1, \"x\"]", b: "[5]", ret: "–" } },
+    { phase: "RENDER", title: "#9 A.update() → renderedView() 시작",
+      code: " 67     const newView = this.renderedView();\n100     currentComponent = this;\n101     hookIndex = 0;",
+      predict: { key: "cc", q: "이번 렌더링에서 currentComponent는?", options: ["undefined", "B", "A"] },
+      note: "<code>update()</code>를 부른 것이 A라서 <code>this</code>는 A다. 마지막에 렌더링한 B와는 상관없다.",
+      state: { cc: "A", hi: "0", a: "[1, \"x\"]", b: "[5]", ret: "–" } },
+    { phase: "READ", title: "#10 A 본문의 useState(0) (두 번째 렌더링)",
+      code: "123   const cell = component.hooks[hookIndex] ??   // A.hooks[0]에 칸이 있음 → 그대로 씀\n125     createStateCell(...);                       // 실행되지 않음\n128   return [cell.value, cell.setter];",
+      predict: { key: "ret", q: "이번 useState(0)가 돌려주는 값은?", options: ["0", "undefined", "1"] },
+      note: "칸이 이미 있으니 인자 0은 쓰이지 않는다. 0은 칸 번호가 아니라 <strong>처음 한 번만 쓰는 초깃값</strong>이다.",
+      state: { cc: "A", hi: "1", a: "[1, \"x\"]", b: "[5]", ret: "1" } },
+    { phase: "READ", title: "#11 A 본문의 useState(\"x\")",
+      code: "123   component.hooks[hookIndex]   // A.hooks[1] → \"x\"",
+      note: "같은 순서로 불렀으니 같은 칸을 다시 찾는다. 순서가 바뀌면 칸도 바뀐다 (ADR <code>hook-cells-are-found-by-call-order</code>).",
+      state: { cc: "A", hi: "2", a: "[1, \"x\"]", b: "[5]", ret: "\"x\"" } },
+    { phase: "RENDER", title: "#12 렌더링 끝",
+      code: "116       currentComponent = undefined;",
+      note: "오른쪽 상자는 처음부터 끝까지 남아 있고 서로 섞이지 않았다. 왼쪽 상자는 렌더링마다 다시 맞췄다. 이 차이가 레슨의 한 문장이다.",
+      state: { cc: "undefined", hi: "2", a: "[1, \"x\"]", b: "[5]", ret: "–" } },
+  ],
+});
+
+mountQuiz(document.getElementById("quiz"), [
+  { q: "#4에서 렌더링이 끝났는데 <code>hookIndex</code>에 2가 남는다. 문제가 되지 않는 이유는?",
+    options: ["다음 렌더링 시작에서 0으로", "이번 렌더링 끝에서 0으로", "인스턴스마다 따로 세기 때문"],
+    answer: 0,
+    why: "L116은 <code>currentComponent</code>만 비운다. 0으로 돌리는 건 다음 렌더링의 L101이다 (#5)." },
+  { q: "<code>useState(0)</code>가 <code>A.hooks[0]</code>을 찾을 때 쓰는 값은?",
+    options: ["initialValue와 A.hooks.length 값", "currentComponent와 hookIndex 값", "setter의 component와 cell"],
+    answer: 1,
+    why: "<code>currentComponent</code>로 배열을, <code>hookIndex</code>로 칸을 찾는다. setter가 기억한 값을 쓰는 건 클릭 때(#8)다." },
+  { q: "<code>useState</code>는 인스턴스를 인자로 받지 않는데 어떻게 A를 찾나?",
+    options: ["useState가 FunctionComponent의 메서드로 정의된다", "A.hooks가 모듈 전역 배열이다", "L100이 currentComponent를 A로 둔다"],
+    answer: 2,
+    why: "L100이 렌더링을 시작할 때 <code>currentComponent = this</code>로 둔다. <code>hooks</code>는 전역이 아니라 인스턴스 필드다." },
+  { q: "<code>hookIndex</code>를 인스턴스 필드(<code>this.hookIndex</code>)로 옮기면?",
+    options: ["currentComponent도 더는 필요 없어진다", "동작은 같지만 currentComponent는 남는다", "A.hooks와 B.hooks 칸이 섞인다"],
+    answer: 1,
+    why: "번호는 인스턴스에 둬도 된다. 하지만 <code>useState</code>가 그 인스턴스를 찾으려면 여전히 <code>currentComponent</code>가 필요하다." },
+]);
+</script>
+</div>
+</body>
+</html>

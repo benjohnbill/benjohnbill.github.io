@@ -13,6 +13,8 @@
   --mono: var(--font-code);
   --read: var(--s2);
   --write: var(--s1);
+  --read-soft: var(--s2-soft);
+  --write-soft: var(--s1-soft);
 }
 .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; display: flex; flex-direction: column; }
 .wrap > * { min-width: 0; }
@@ -37,8 +39,10 @@ nav.links { margin-top: 1.5rem; font-size: .95rem; }
 </style>
 <script>
 // Reusable state stepper.
-// mountStepper(root, { fields: [{key, label, scope}], steps: [{phase, title, code, note, state}] })
+// mountStepper(root, { fields: [{key, label, scope}], steps: [{phase, title, code, note, state, predict}] })
 // Each step's `state` holds every field value as a string. Changed fields are highlighted.
+// Optional `predict: { key, q, options: [..] }` hides that field as "?" until the learner picks.
+// The right option is the step's own state[key].
 function mountStepper(root, spec) {
   const css = `
     .stepper { border: 1px solid var(--rule); border-radius: 6px; padding: 1rem 1.2rem; margin: 1rem 0; background: transparent; }
@@ -54,6 +58,13 @@ function mountStepper(root, spec) {
     .stepper .controls { display: flex; gap: .5rem; margin-top: 1rem; }
     .stepper button { font: inherit; padding: .3rem .9rem; border: 1px solid var(--rule); background: var(--paper); border-radius: 4px; cursor: pointer; }
     .stepper button:disabled { opacity: .4; cursor: default; }
+    .stepper .predict { border: 1px dashed var(--read); border-radius: 4px; padding: .5rem .8rem; margin: .4rem 0 .8rem; }
+    .stepper .predict .opts { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .4rem; }
+    .stepper .predict .opts button { font-family: var(--mono); }
+    .stepper .predict .fb { margin-top: .4rem; font-weight: 600; }
+    .stepper .predict .fb.ok { color: var(--read); }
+    .stepper .predict .fb.no { color: var(--write); }
+    .stepper .row.hidden span:last-child { color: var(--read); font-weight: 700; }
   `;
   if (!document.getElementById("stepper-css")) {
     const s = document.createElement("style");
@@ -62,24 +73,42 @@ function mountStepper(root, spec) {
     document.head.append(s);
   }
   let i = 0;
+  const picked = {};
   root.classList.add("stepper");
   const scopes = [...new Set(spec.fields.map((f) => f.scope))];
   function render() {
     const step = spec.steps[i];
     const prev = i > 0 ? spec.steps[i - 1].state : null;
+    const p = step.predict;
+    const waiting = p && picked[i] === undefined;
     const boxes = scopes
       .map((scope) => {
         const rows = spec.fields
           .filter((f) => f.scope === scope)
           .map((f) => {
-            const v = step.state[f.key];
-            const changed = prev && prev[f.key] !== v;
-            return `<div class="row${changed ? " changed" : ""}"><span>${f.label}</span><span>${v}</span></div>`;
+            const hide = waiting && f.key === p.key;
+            const v = hide ? "?" : step.state[f.key];
+            const changed = !hide && prev && prev[f.key] !== step.state[f.key];
+            const cls = `row${changed ? " changed" : ""}${hide ? " hidden" : ""}`;
+            return `<div class="${cls}"><span>${f.label}</span><span>${v}</span></div>`;
           })
           .join("");
         return `<div class="box"><h4>${scope}</h4>${rows}</div>`;
       })
       .join("");
+    let predictHtml = "";
+    if (p) {
+      const answer = step.state[p.key];
+      const opts = p.options
+        .map((o) => `<button data-pick="${o}" ${waiting ? "" : "disabled"}>${o}</button>`)
+        .join("");
+      const fb = waiting
+        ? ""
+        : picked[i] === answer
+          ? `<div class="fb ok">맞았어요: ${answer}</div>`
+          : `<div class="fb no">고른 값 ${picked[i]} · 실제 값 ${answer}</div>`;
+      predictHtml = `<div class="predict"><div>예측: ${p.q}</div><div class="opts">${opts}</div>${fb}</div>`;
+    }
     root.innerHTML = `
       <div class="head">
         <span class="tag ${step.phase.toLowerCase()}">${step.phase}</span>
@@ -87,14 +116,21 @@ function mountStepper(root, spec) {
         <span class="count">${i + 1} / ${spec.steps.length}</span>
       </div>
       ${step.code ? `<pre>${step.code}</pre>` : ""}
-      <div class="note">${step.note}</div>
+      ${predictHtml}
+      ${waiting ? "" : `<div class="note">${step.note}</div>`}
       <div class="grid">${boxes}</div>
       <div class="controls">
         <button data-d="-1" ${i === 0 ? "disabled" : ""}>← 이전</button>
         <button data-d="1" ${i === spec.steps.length - 1 ? "disabled" : ""}>다음 →</button>
         <button data-d="0">처음으로</button>
       </div>`;
-    root.querySelectorAll("button").forEach((b) =>
+    root.querySelectorAll("button[data-pick]").forEach((b) =>
+      b.addEventListener("click", () => {
+        picked[i] = b.dataset.pick;
+        render();
+      }),
+    );
+    root.querySelectorAll("button[data-d]").forEach((b) =>
       b.addEventListener("click", () => {
         const d = Number(b.dataset.d);
         i = d === 0 ? 0 : i + d;
@@ -108,7 +144,8 @@ function mountStepper(root, spec) {
     if (e.key === "ArrowLeft" && i > 0) { i--; render(); }
   });
 }
-
+</script>
+<script>
 // Reusable quiz with immediate feedback.
 // mountQuiz(root, [{ q, options: [..], answer: index, why }])
 function mountQuiz(root, items) {
@@ -119,8 +156,8 @@ function mountQuiz(root, items) {
       .quiz .item { margin: 1.2rem 0; }
       .quiz .q { font-weight: 600; margin-bottom: .4rem; }
       .quiz button { display: block; width: 100%; text-align: left; font: inherit; margin: .25rem 0; padding: .4rem .8rem; border: 1px solid var(--rule); background: transparent; border-radius: 4px; cursor: pointer; }
-      .quiz button.right { border-color: var(--read); background: var(--s2-soft); }
-      .quiz button.wrong { border-color: var(--write); background: var(--s1-soft); }
+      .quiz button.right { border-color: var(--read); background: var(--read-soft, #e8f3f6); }
+      .quiz button.wrong { border-color: var(--write); background: var(--write-soft, #fbf1ee); }
       .quiz .why { color: var(--muted); font-size: .95rem; margin-top: .3rem; }
       .quiz .score { font-weight: 600; margin-top: 1rem; }
     `;
@@ -157,7 +194,6 @@ function mountQuiz(root, items) {
   });
   root.append(score);
 }
-
 </script>
 </head>
 <body>
@@ -239,7 +275,7 @@ A.mount();</pre>
 <h2>원문 읽기</h2>
 <p><a href="https://react.dev/learn/state-a-components-memory">react.dev · State: A Component's Memory</a>의 deep dive "How does React know which state to return?"를 읽자. 핵심 문장: "Hooks rely on a stable call order on every render of the same component." 그 절의 짧은 구현이 이 레슨의 <code>hookIndex</code>와 같은 구조다.</p>
 
-<nav class="links">참고: <a href="mini-react-phase2-hook-fields.html">필드 한눈에 보기 (reference)</a></nav>
+<nav class="links">참고: <a href="mini-react-phase2-hook-fields.html">필드 한눈에 보기 (reference)</a> · 다음: <a href="mini-react-phase2-render-timeline.html">0002 · 렌더링 시간표</a></nav>
 
 <div class="ask">막히는 단계가 있으면 단계 번호와 함께 에이전트에게 물어보자. 예: "7번에서 왜 hooks가 안 바뀌어?"</div>
 

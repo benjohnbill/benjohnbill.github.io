@@ -13,6 +13,8 @@
   --mono: var(--font-code);
   --read: var(--s2);
   --write: var(--s1);
+  --read-soft: var(--s2-soft);
+  --write-soft: var(--s1-soft);
 }
 .wrap { max-width: 920px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; display: flex; flex-direction: column; }
 .wrap > * { min-width: 0; }
@@ -45,18 +47,21 @@ nav.links { margin-top: 1.5rem; font-size: .95rem; }
 <h2>인스턴스 필드 (인스턴스마다 하나씩)</h2>
 <table>
   <tr><th>필드</th><th>담는 것</th><th>쓰는 곳</th><th>읽는 곳</th></tr>
-  <tr><td><code>component</code></td><td>감싼 함수형 컴포넌트 (루트 <code>App</code>)</td><td>생성자, 한 번</td><td><code>mount()</code>, <code>update()</code></td></tr>
+  <tr><td><code>rootComponent</code></td><td>감싼 Root Component (예: <code>App</code>)</td><td>생성자, 한 번 (L45)</td><td><code>renderedView()</code> (L103)</td></tr>
   <tr><td><code>hooks</code></td><td>상태값. 호출 순서 = 칸 번호</td><td><span class="tag read">READ</span> 첫 렌더링의 초깃값 · <span class="tag write">WRITE</span> setter</td><td><span class="tag read">READ</span> <code>useState</code></td></tr>
-  <tr><td><code>currentView</code></td><td>마지막으로 그린 <code>View</code></td><td><code>mount()</code> 끝, <code>update()</code>의 patch 뒤</td><td><code>update()</code>의 <code>diffViews</code></td></tr>
+  <tr><td><code>container</code></td><td>그려 넣는 DOM 요소</td><td><code>mount()</code>, 렌더링이 성공한 뒤 한 번</td><td><code>update()</code>의 <code>applyPatchesToDom</code></td></tr>
+  <tr><td><code>currentView</code></td><td>마지막으로 그린 <code>View</code>. DOM과는 다른 값이다</td><td><code>mount()</code>의 렌더링 직후, <code>update()</code>의 patch 뒤</td><td><code>update()</code>의 <code>diffViews</code></td></tr>
+  <tr><td><code>actions</code></td><td>이름 → 클릭 함수 표</td><td><code>renderedView()</code>가 성공했을 때 통째로 교체 (L113)</td><td>클릭 리스너 (L57)</td></tr>
 </table>
 <p class="sub">이름은 grill Q1에서 <code>currentView</code>로 정했다(ADR <code>root-instance-keeps-container-and-current-view</code>).</p>
 
 <h2>전역 변수 (모듈에 하나)</h2>
 <table>
-  <tr><th>변수</th><th>뜻</th><th>쓰는 곳</th><th>읽는 곳</th></tr>
-  <tr><td><code>currentComponent</code></td><td>지금 렌더링 중인 인스턴스</td><td><code>mount()</code>, <code>update()</code> 시작</td><td><code>useState</code> (READ만)</td></tr>
-  <tr><td><code>hookIndex</code></td><td>이번 렌더링에서 몇 번째 Hook 호출인가</td><td>렌더링 시작에 0, 호출마다 +1</td><td><code>useState</code> (READ만)</td></tr>
+  <tr><th>변수</th><th>뜻</th><th>사는 기간</th><th>쓰는 곳</th><th>읽는 곳</th></tr>
+  <tr><td><code>currentComponent</code></td><td>지금 렌더링 중인 인스턴스</td><td>렌더링 한 번</td><td><code>renderedView()</code> 시작에 채움 (L100), 끝에 비움 (L116)</td><td><code>useState</code> (READ만)</td></tr>
+  <tr><td><code>hookIndex</code></td><td>이번 렌더링에서 몇 번째 Hook 호출인가</td><td>렌더링 한 번</td><td>렌더링 시작에 0 (L101), 호출마다 +1. 끝에 비우지 않는다</td><td><code>useState</code> (READ만)</td></tr>
 </table>
+<div class="callout"><strong>왜 전역인가:</strong> <code>useState(0)</code>는 인스턴스도 칸 번호도 받지 않는다. 그래서 "지금 누구의 몇 번째 Hook인가"를 모듈 변수에서 읽는다. 렌더링은 한 번에 하나라 두 변수는 지금 렌더링 중인 것 하나만 가리키면 된다. 사는 기간이 사는 곳을 정한다: 렌더링 사이에도 남는 <code>hooks</code>는 인스턴스, 렌더링 한 번만 쓰는 두 변수는 모듈. 시간표: <a href="mini-react-phase2-render-timeline.html">레슨 0002</a>.</div>
 
 <h2>setter가 기억하는 것</h2>
 <pre>setCount  ──remembers──>  (instance A, slot 0)
@@ -65,7 +70,7 @@ click → A.hooks[0] = new value → A.update()</pre>
 <h2>한 사이클 (트리)</h2>
 <pre>FunctionComponent A (instance)
 ├─ fields
-│  ├─ component = App       &lt;- what to run each render
+│  ├─ rootComponent = App   &lt;- what to run each render
 │  ├─ hooks = [ ... ]       &lt;- values that must survive between runs
 │  ├─ container             &lt;- where to draw
 │  └─ currentView              &lt;- what to diff against next time
@@ -99,7 +104,7 @@ click → A.hooks[0] = new value → A.update()</pre>
 <h2>깨지는 경우</h2>
 <div class="callout write"><code>if</code> 안에서 <code>useState</code>를 부르면 호출 순서가 렌더링마다 달라진다. 뒤쪽 Hook이 앞쪽 칸의 값을 받는다. (<a href="https://react.dev/reference/rules/rules-of-hooks">Rules of Hooks</a>)</div>
 
-<nav class="links"><a href="mini-react-phase2-state-lesson.html">레슨 0001</a></nav>
+<nav class="links"><a href="mini-react-phase2-state-lesson.html">레슨 0001</a> · <a href="mini-react-phase2-render-timeline.html">레슨 0002</a></nav>
 </div>
 </body>
 </html>
