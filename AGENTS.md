@@ -28,8 +28,11 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
 - **Cards.** One `<a class="card">` per page in `index.html`, inside its
   week's group, with `data-week`, `data-topic` (exactly one: 알고리즘,
   시스템, C언어; a new topic also needs a title-color rule), `data-kind`
-  (`note`, `deck`, `repo`), `data-src`, and an absolute `href`. CSS makes each
-  card a row, and the visible type label comes from `data-kind`, not `.b`.
+  (`note`, `deck`, `repo`, `lesson`), `data-src`, and an absolute `href`. CSS
+  makes each card a row, and the visible type label comes from `data-kind`, not
+  `.b`. `lesson` (label 레슨) marks a page made by the `/teach` skill: a lesson
+  or its reference page. Its original is under `weekNN/lab/teach/publish/`,
+  built by `publish/build.py` there.
   A team deck also has `data-scope="team"`. A deck without it counts as
   personal in the `유형` view.
   Card shape: `skills/jungle-deck/reference/local-template.md`, "Built-in

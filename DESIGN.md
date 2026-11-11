@@ -71,6 +71,10 @@ var(--line)`, no fill; fill one level in only; no shadow, no large radius.
 
 Telegraphic, noun-ending Korean. Not 해요체, not 평서체.
 
+Exception: a `lesson` card's page (made by `/teach`) keeps sentence voice
+(평서체), because a lesson explains step by step. The card label `레슨` tells the
+reader the voice differs (user decided 2026-11-11).
+
 | Place | Shape | Sample |
 |---|---|---|
 | h1 | The question or situation, as a noun phrase | `exit(1)을 받아 줄 OS가 없을 때` |
