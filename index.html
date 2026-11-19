@@ -483,6 +483,44 @@ a.card .d code{white-space:nowrap}
     </a>
   </div>
 </div>
+<div class="group">
+  <div class="gh">
+    <h2 class="dh"><a class="wk-repo" href="https://github.com/benjohnbill/mini-webserver">13주차 · 웹 서버 만들기</a></h2>
+  </div>
+  <div class="cards">
+    <div class="hub" id="hub-week13-lab">
+      <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-week13-lab-body">
+        <span class="t dh">lab</span>
+        <span class="d">CSAPP 11장을 읽는 대신 명령과 작은 C 코드로 웹 서버의 기초를 직접 겪으며 남긴 기록을 모았습니다.</span>
+        <span class="m">week13 / lab</span>
+      </button>
+      <div class="hub-body" id="hub-week13-lab-body">
+        <div class="hub-in">
+          <div class="phase">
+            <h3 class="ph">T1 · CLI</h3>
+            <div class="cards">
+              <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t1-cli-probes.html" href="https://benjohnbill.github.io/study/week13/t1-cli-probes.html">
+                <div class="t dh">CSAPP 11장 대신 손으로 따라간 요청 하나</div>
+                <div class="d">curl, telnet, nc, strace로 요청 하나를 DNS부터 시스템콜까지 따라간 다섯 프로브입니다. 프로브마다 다시 돌려 볼 명령과 한두 줄 설명, 그리고 직접 본 결과를 적었습니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · T1 CLI</span></div>
+              </a>
+              <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/strace-syscalls.html" href="https://benjohnbill.github.io/study/week13/strace-syscalls.html">
+                <div class="t dh">서버가 커널에 부탁하는 순서</div>
+                <div class="d">nc -l을 strace로 보며 socket, bind, listen 다음 accept에서 멈추는 장면을 기록했습니다. listen 소켓과 연결 소켓의 fd 표, 같은 포트의 두 소켓, curl 쪽의 DNS 조회와 connect까지 실제 출력에 해설을 붙였습니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · 05 strace</span></div>
+              </a>
+              <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/address-map.html" href="https://benjohnbill.github.io/study/week13/address-map.html">
+                <div class="t dh">IP는 컴퓨터 번호도, 사이트 번호도 아님</div>
+                <div class="d">내 PC에서 조회한 값으로 인터페이스와 IP, 이름과 IP, Host 줄이 어떻게 이어지는지 그렸습니다. 공인 IP가 없는 이유인 NAT와, NAT와 프록시의 차이도 정리했습니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · 주소와 NAT</span></div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 <div class="group" id="skills">
