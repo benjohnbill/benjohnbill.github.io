@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fault 주소 → page</title>
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+/* type scale follows DESIGN.md §1 (root 19px, major third headings) */
+html { font-size: 19px; }
+body { font-size: 1rem; }
+.lead { font-size: 1.1rem; line-height: 1.75; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; display: flex; flex-direction: column; }
+h1 { font-family: var(--font-head); font-size: 1.95rem; line-height: 1.25; margin: 12px 0 4px; }
+h2 { font-family: var(--font-head); font-size: 1.56rem; line-height: 1.35; margin: 56px 0 10px; }
+.sub { color: var(--ink-2); margin: 0 0 16px; }
+p { margin: 8px 0 0; }
+
+/* diagram frame: outer box = line only (box rule 1); a diagram may scroll sideways on a phone */
+.fig { margin: 16px 0 0; border: 1px solid var(--line); border-radius: 4px; padding: 12px; overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 820px; height: auto; color: var(--ink); font-family: var(--font-code); font-size: 13px; }
+
+/* color marks meaning only: --s2 = the SPT's own links (spt_elem), --s1 = gone before Hunk 1 */
+.box { fill: none; stroke: var(--line); stroke-width: 1.2; }
+.box-strong { fill: none; stroke: var(--ink-2); stroke-width: 1.4; }
+.elem { fill: var(--s2-soft); stroke: var(--s2); stroke-width: 1.4; }
+.gone { fill: none; stroke: var(--s1); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.ptr { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+.link { stroke: var(--s2); stroke-width: 1.8; fill: none; }
+.t-title { font-weight: 600; fill: currentColor; }
+.t { fill: currentColor; }
+.t-muted { fill: var(--muted); font-size: 12px; }
+.t-acc { fill: var(--s2); font-weight: 600; }
+.t-gone { fill: var(--s1); }
+.dot { fill: var(--muted); }
+.head-muted { fill: var(--muted); }
+.head-acc { fill: var(--s2); }
+.cell { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
+.dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; }
+.head-gone { fill: var(--s1); }
+.wrong { stroke: var(--s1); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.dim { opacity: .4; }
+.fig figcaption { margin: 10px 0 0; color: var(--ink-2); font-size: .85rem; }
+
+/* section 4: macro listing and step table; fill one level in only (box rule 2) */
+pre.code { margin: 16px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.code code { background: none; padding: 0; font-size: 1em; }
+table.eval { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.eval th, table.eval td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.eval th { font-family: var(--font-code); font-weight: 600; }
+table.eval td code { overflow-wrap: anywhere; }
+table.eval tr.moves td { background: var(--s2-soft); }
+/* phone: one row = one block (step, expression, then value · type side by side) */
+@media (max-width: 600px) {
+  table.eval thead { display: none; }
+  table.eval tr { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; border-bottom: 1px solid var(--line); }
+  table.eval tr.moves { background: var(--s2-soft); }
+  table.eval td { border-bottom: none; padding: 4px 10px; }
+  table.eval td:nth-child(1), table.eval td:nth-child(2) { grid-column: 1 / -1; }
+  table.eval td:nth-child(1) { padding-top: 8px; font-weight: 600; }
+  table.eval td:nth-child(4) { padding-bottom: 8px; }
+}
+
+/* section 6: experiment numbers stay a plain grid at every width */
+table.exp { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.exp th, table.exp td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+table.exp th:first-child, table.exp td:first-child { text-align: left; }
+table.exp th { font-family: var(--font-code); font-weight: 600; }
+table.exp td { font-family: var(--font-code); }
+table.exp td.bad { color: var(--s1); font-weight: 600; }
+table.exp tr.moves td { background: var(--s2-soft); }
+/* section 7: lifelines; thick bar = struct alive, thin bar + band = link alive (fill one level in, box rule 2), dashed = later stage, red dashed = leak */
+.life-fig svg { min-width: 900px; }
+.col { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.life { stroke: var(--ink-2); stroke-width: 6; stroke-linecap: round; }
+.life-future { stroke: var(--muted); stroke-width: 4; stroke-dasharray: 8 6; }
+.life-leak { stroke: var(--s1); stroke-width: 6; stroke-dasharray: 8 6; }
+.born { fill: var(--ink); }
+.tick { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
+.dead { stroke: var(--ink); stroke-width: 2.4; fill: none; }
+.zone { fill: var(--surface-2); }
+.bar { stroke: currentColor; stroke-width: 3; }
+.bar-future { stroke: var(--muted); stroke-width: 2.5; stroke-dasharray: 6 5; }
+.rung { stroke: currentColor; stroke-width: 1.4; fill: none; }
+.head { fill: currentColor; }
+.num { fill: var(--muted); font-weight: 600; }
+table.life-tab td:first-child { white-space: nowrap; }
+@media (max-width: 600px) { table.life-tab td { grid-column: 1 / -1; } }
+/* section 2-2 begin */
+/* section 2-2: --s3 (the version hue, DESIGN.md section 2) marks a value that differs between ① parent and ② child */
+h3 { font-family: var(--font-head); font-size: 1.25rem; line-height: 1.4; margin: 28px 0 0; }
+.pc-fig svg { min-width: 900px; }
+.hl { fill: var(--s3-soft); stroke: var(--s3); stroke-width: 1; }
+.t-hl { fill: var(--s3); font-weight: 600; }
+.t-hl-s { fill: var(--s3); font-weight: 600; font-size: 12px; }
+.gap { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+table.copy { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.copy th, table.copy td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.copy th { font-family: var(--font-code); font-weight: 600; }
+table.copy td code { overflow-wrap: anywhere; }
+/* section 2-2 end */
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>
+
+<h1>fault 주소 → page</h1>
+<p class="sub">VM 개념 시각화 노트 (3/5)</p>
+<p>필드 순서 = week09 <code>include/vm/vm.h</code> · hash 값 = <code>lab/spt-probe</code> 실행 결과 · 청록 = SPT가 엮는 고리 · 빨강 점선 = Hunk 1 이전에 없던 것</p>
+<p class="sub"><a href="vm-fork-spt.html">← fork와 SPT</a> · <a href="vm-page-frame.html">page와 frame →</a></p>
+
+<h2 id="find">3. fault 주소에서 page 찾기</h2>
+<p class="lead">내리기 → 해시 → 서랍 고르기 → 비교 → <code>hash_entry</code>. PML4는 보지 않음</p>
+<div class="fig">
+<svg viewBox="0 0 1000 240" role="img" aria-label="0x401234를 page 경계 0x401000으로 내리고, 해시 값의 아래 비트로 1번 서랍을 고르고, 그 list를 page_less로 비교해 찾은 elem에서 24바이트를 빼 struct page 포인터를 얻는다.">
+  <defs>
+    <marker id="bGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+  </defs>
+  <rect x="20" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="125" y="58" text-anchor="middle" class="t-title">fault 주소</text>
+  <text x="125" y="80" text-anchor="middle" class="t-acc">0x401234</text>
+  <rect x="270" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="375" y="58" text-anchor="middle" class="t-title">pg_round_down</text>
+  <text x="375" y="80" text-anchor="middle" class="t-acc">0x401000</text>
+  <rect x="520" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="625" y="58" text-anchor="middle" class="t-title">page_hash(key)</text>
+  <text x="625" y="80" text-anchor="middle" class="t">…c1b35c0495</text>
+  <rect x="770" y="30" width="210" height="70" rx="4" class="box"/>
+  <text x="875" y="58" text-anchor="middle" class="t-title">&amp; (bucket_cnt−1)</text>
+  <text x="875" y="80" text-anchor="middle" class="t">…0101 &amp; 11 = 1</text>
+  <line x1="230" y1="65" x2="268" y2="65" class="ptr" marker-end="url(#bGrey)"/>
+  <line x1="480" y1="65" x2="518" y2="65" class="ptr" marker-end="url(#bGrey)"/>
+  <line x1="730" y1="65" x2="768" y2="65" class="ptr" marker-end="url(#bGrey)"/>
+  <text x="625" y="118" text-anchor="middle" class="t-muted">key = 스택의 가짜 page, va만 채움</text>
+  <path d="M875 100 L 875 135 L 125 135 L 125 148" class="ptr" marker-end="url(#bGrey)"/>
+  <rect x="20" y="150" width="300" height="70" rx="4" class="box"/>
+  <text x="170" y="178" text-anchor="middle" class="t-title">buckets[1] 훑기</text>
+  <text x="170" y="200" text-anchor="middle" class="t">page_less로 va 비교 (probe: 8번)</text>
+  <rect x="360" y="150" width="290" height="70" rx="4" class="elem"/>
+  <text x="505" y="178" text-anchor="middle" class="t-title">찾은 spt_elem</text>
+  <text x="505" y="200" text-anchor="middle" class="t-acc">hash_entry: 주소 − 24바이트</text>
+  <rect x="690" y="150" width="290" height="70" rx="4" class="box-strong"/>
+  <text x="835" y="178" text-anchor="middle" class="t-title">struct page *</text>
+  <text x="835" y="200" text-anchor="middle" class="t">va = 0x401000 → 내용은 어디?</text>
+  <line x1="320" y1="185" x2="358" y2="185" class="ptr" marker-end="url(#bGrey)"/>
+  <line x1="650" y1="185" x2="688" y2="185" class="ptr" marker-end="url(#bGrey)"/>
+</svg>
+</div>
+<p>내리기 생략 → 키 <code>0x401234</code>는 어느 서랍에도 없음 → <code>NULL</code> (<code>make run EXTRA=-DNO_ROUND</code>). probe의 page에는 <code>operations</code>가 없어서 24 대신 16</p>
+
+<h2>4. hash_entry: 고리에서 page로 거슬러 오르기</h2>
+<p class="lead">고리 주소 <code>e</code> − 24 → page 시작. 숫자가 바뀌는 곳은 빼기 한 번</p>
+<div class="fig">
+<svg viewBox="0 0 1000 230" role="img" aria-label="struct page 메모리 띠: +0 operations, +8 va, +16 frame, +24 spt_elem의 prev, +32 next, +40 union. 고리 주소 e는 0x8004201018, 즉 +24를 가리킨다. 거기서 offsetof 24바이트를 빼면 page 시작 0x8004201000이 나온다.">
+  <defs>
+    <marker id="dGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+    <marker id="dAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-acc"/></marker>
+  </defs>
+  <text x="60" y="22" class="t-title">결과: (struct page *) 0x8004201000</text>
+  <line x1="60" y1="30" x2="60" y2="58" class="ptr" marker-end="url(#dGrey)"/>
+  <text x="450" y="22" class="t-acc">입력: e = 0x8004201018 (hash_elem *)</text>
+  <line x1="450" y1="30" x2="450" y2="58" class="link" marker-end="url(#dAcc)"/>
+  <rect x="60" y="60" width="130" height="60" class="cell"/>
+  <text x="125" y="86" text-anchor="middle" class="t">operations</text>
+  <text x="125" y="106" text-anchor="middle" class="t-muted">+0</text>
+  <rect x="190" y="60" width="130" height="60" class="cell"/>
+  <text x="255" y="86" text-anchor="middle" class="t">va</text>
+  <text x="255" y="106" text-anchor="middle" class="t-muted">+8</text>
+  <rect x="320" y="60" width="130" height="60" class="cell"/>
+  <text x="385" y="86" text-anchor="middle" class="t">frame</text>
+  <text x="385" y="106" text-anchor="middle" class="t-muted">+16</text>
+  <rect x="450" y="60" width="130" height="60" class="elem"/>
+  <text x="515" y="86" text-anchor="middle" class="t-acc">prev</text>
+  <text x="515" y="106" text-anchor="middle" class="t-muted">+24</text>
+  <rect x="580" y="60" width="130" height="60" class="elem"/>
+  <text x="645" y="86" text-anchor="middle" class="t-acc">next</text>
+  <text x="645" y="106" text-anchor="middle" class="t-muted">+32</text>
+  <rect x="710" y="60" width="230" height="60" class="cell"/>
+  <text x="825" y="86" text-anchor="middle" class="t">union 타입별 정보</text>
+  <text x="825" y="106" text-anchor="middle" class="t-muted">+40</text>
+  <line x1="450" y1="134" x2="710" y2="134" class="link"/>
+  <line x1="450" y1="128" x2="450" y2="140" class="link"/>
+  <line x1="710" y1="128" x2="710" y2="140" class="link"/>
+  <text x="580" y="158" text-anchor="middle" class="t-acc">spt_elem = hash_elem { list_elem {prev, next} }</text>
+  <line x1="60" y1="120" x2="60" y2="200" class="dash"/>
+  <line x1="450" y1="140" x2="450" y2="200" class="dash"/>
+  <line x1="448" y1="200" x2="64" y2="200" class="ptr" marker-end="url(#dGrey)"/>
+  <text x="255" y="192" text-anchor="middle" class="t">− 24 (0x18) 바이트</text>
+  <text x="466" y="204" class="t-muted">= offsetof(struct page, spt_elem.list_elem)</text>
+</svg>
+</div>
+<pre class="code"><code>/* include/lib/kernel/hash.h:38-40 */
+#define hash_entry(HASH_ELEM, STRUCT, MEMBER) \
+    ((STRUCT *)((uint8_t *)&amp;(HASH_ELEM)-&gt;list_elem - \
+                offsetof(STRUCT, MEMBER.list_elem)))
+
+/* hash_entry(e, struct page, spt_elem): 전처리기가 글자만 바꿔 끼운 모양 */
+((struct page *)((uint8_t *)&amp;(e)-&gt;list_elem - offsetof(struct page, spt_elem.list_elem)))</code></pre>
+<table class="eval">
+<thead><tr><th>단계</th><th>식</th><th>값</th><th>타입</th></tr></thead>
+<tbody>
+<tr><td>① 고리 주소</td><td><code>(e)</code></td><td><code>0x8004201018</code></td><td><code>struct hash_elem *</code></td></tr>
+<tr><td>② 고리 안 칸, 읽지 않음</td><td><code>(e)-&gt;list_elem</code></td><td>—</td><td><code>struct list_elem</code></td></tr>
+<tr><td>③ 그 칸의 주소 = 첫 멤버라 +0</td><td><code>&amp;(e)-&gt;list_elem</code></td><td><code>0x8004201018</code></td><td><code>struct list_elem *</code></td></tr>
+<tr><td>④ 단위만 1바이트로</td><td><code>(uint8_t *)…</code></td><td><code>0x8004201018</code></td><td><code>uint8_t *</code></td></tr>
+<tr><td>⑤ 컴파일 때 상수 24 + 0</td><td><code>offsetof(struct page, spt_elem.list_elem)</code></td><td><code>24</code></td><td><code>size_t</code></td></tr>
+<tr class="moves"><td>⑥ 빼기: 1바이트 × 24칸 뒤로</td><td>④ − ⑤</td><td><code>0x8004201000</code></td><td><code>uint8_t *</code></td></tr>
+<tr><td>⑦ 같은 숫자를 page로 보기</td><td><code>(struct page *)…</code></td><td><code>0x8004201000</code></td><td><code>struct page *</code></td></tr>
+</tbody>
+</table>
+<p>숫자가 바뀌는 곳 = ⑥ 하나 · 나머지 = 같은 숫자를 보는 타입만 바뀜 · ②③ = <code>&amp;</code> 안의 <code>-&gt;</code>라 메모리 안 읽음. <code>(uint8_t *)</code> 없이 빼면 24 × 16바이트 뒤로</p>
+<p><code>lab/hash-probe</code> = <code>hash_elem {next}</code> 하나에 <code>operations·frame</code> 없음 → 거리 8. <code>&amp;(E)-&gt;next − offsetof(STRUCT, MEMBER.next)</code> 꼴도 같은 주소: 안쪽 거리 0이 양쪽에서 상쇄 · <code>E</code>에 <code>next</code> 없으면 컴파일 에러</p>
+
+<h2>5. buckets 칸과 next 사슬</h2>
+<p class="lead"><code>lab/hash-probe</code> 모양: <code>hash_elem {next}</code> · <code>page {va, spt_elem}</code> · <code>BUCKET_CNT 4</code>. <code>0x405000</code> 찾기 = <code>find_bucket</code> → 1, 그 서랍만 훑기</p>
+<figure class="fig">
+<svg viewBox="0 0 1000 400" role="img" aria-label="struct hash 안의 buckets 배열은 포인터 4칸뿐이고, 각 칸은 배열 밖 힙에 있는 page 사슬의 첫 원소를 가리킨다. 1번 서랍: 0x401000, 0x405000, 0x407000, NULL. 0x405000을 찾을 때 i는 1번 칸에서 시작해 0x401000을 비교하고 next로 0x405000에 가서 찾는다. 0번, 2번, 3번 서랍은 보지 않는다. i->next가 0번 칸에서 1번 칸으로 가는 것이 아니다. 배열 칸은 사슬의 입구일 뿐, next는 같은 서랍의 다음 page로 간다.">
+  <defs>
+    <marker id="eGrey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-muted"/></marker>
+    <marker id="eAcc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-acc"/></marker>
+    <marker id="eRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-gone"/></marker>
+  </defs>
+  <text x="350" y="44" class="t-muted">page: 힙, 배열 밖 · 칸 = va │ spt_elem.next</text>
+  <!-- struct hash: 포인터 4칸만 -->
+  <rect x="110" y="30" width="170" height="356" rx="4" class="box-strong"/>
+  <text x="122" y="52" class="t-title">struct hash</text>
+  <text x="122" y="70" class="t-muted">buckets[4] = 포인터만</text>
+  <rect x="130" y="90" width="130" height="70" class="box"/><text x="142" y="130" class="t-muted">[0] 안 봄</text><circle cx="248" cy="125" r="4" class="dot"/>
+  <rect x="130" y="160" width="130" height="70" class="box"/><text x="142" y="200" class="t-acc">[1] idx=1</text><circle cx="248" cy="195" r="4" class="head-acc"/>
+  <rect x="130" y="230" width="130" height="70" class="box"/><text x="142" y="270" class="t-muted">[2] 안 봄</text><circle cx="248" cy="265" r="4" class="dot"/>
+  <rect x="130" y="300" width="130" height="70" class="box"/><text x="142" y="340" class="t-muted">[3] 안 봄</text><circle cx="248" cy="335" r="4" class="dot"/>
+  <!-- 틀린 모델: [0] → [1] -->
+  <path d="M128 125 C 70 125, 70 195, 126 195" class="wrong" marker-end="url(#eRed)"/>
+  <text x="78" y="154" text-anchor="end" class="t-gone">✗ i-&gt;next</text>
+  <text x="78" y="172" text-anchor="end" class="t-gone">아님</text>
+  <!-- 서랍 0 -->
+  <g class="dim">
+    <line x1="252" y1="125" x2="348" y2="125" class="ptr" marker-end="url(#eGrey)"/><text x="314" y="117" text-anchor="middle" class="t-muted">첫 원소</text>
+    <rect x="350" y="103" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="130" class="t">0x403000</text>
+    <rect x="432" y="111" width="50" height="28" rx="3" class="elem"/><text x="438" y="130" class="t-acc">next</text>
+    <line x1="482" y1="125" x2="548" y2="125" class="ptr" marker-end="url(#eGrey)"/><text x="515" y="117" text-anchor="middle" class="t-muted">next</text>
+    <rect x="550" y="103" width="140" height="44" rx="3" class="box-strong"/><text x="560" y="130" class="t">0x406000</text>
+    <rect x="632" y="111" width="50" height="28" rx="3" class="elem"/><text x="638" y="130" class="t-acc">next</text>
+    <line x1="682" y1="125" x2="718" y2="125" class="ptr" marker-end="url(#eGrey)"/><text x="722" y="130" class="t-muted">NULL</text>
+  </g>
+  <!-- 서랍 1: find가 걷는 길 -->
+  <line x1="252" y1="195" x2="348" y2="195" class="link" marker-end="url(#eAcc)"/><text x="314" y="187" text-anchor="middle" class="t-acc">첫 원소</text>
+  <rect x="350" y="173" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="200" class="t">0x401000</text>
+  <rect x="432" y="181" width="50" height="28" rx="3" class="elem"/><text x="438" y="200" class="t-acc">next</text>
+  <line x1="482" y1="195" x2="548" y2="195" class="link" marker-end="url(#eAcc)"/><text x="515" y="187" text-anchor="middle" class="t-acc">next</text>
+  <rect x="550" y="173" width="140" height="44" rx="3" class="box-strong"/><text x="560" y="200" class="t">0x405000</text>
+  <rect x="632" y="181" width="50" height="28" rx="3" class="elem"/><text x="638" y="200" class="t-acc">next</text>
+  <line x1="682" y1="195" x2="748" y2="195" class="ptr" marker-end="url(#eGrey)"/><text x="715" y="187" text-anchor="middle" class="t-muted">next</text>
+  <rect x="750" y="173" width="140" height="44" rx="3" class="box"/><text x="760" y="200" class="t-muted">0x407000</text>
+  <rect x="832" y="181" width="50" height="28" rx="3" class="elem"/><text x="838" y="200" class="t-acc">next</text>
+  <line x1="882" y1="195" x2="918" y2="195" class="ptr" marker-end="url(#eGrey)"/><text x="922" y="200" class="t-muted">NULL</text>
+  <text x="420" y="237" text-anchor="middle" class="t-muted">① va 다름 → next</text>
+  <text x="620" y="237" text-anchor="middle" class="t-acc">② va 같음 → 반환</text>
+  <text x="820" y="237" text-anchor="middle" class="t-muted">안 봄</text>
+  <!-- 서랍 2 -->
+  <g class="dim">
+    <line x1="252" y1="265" x2="348" y2="265" class="ptr" marker-end="url(#eGrey)"/><text x="314" y="257" text-anchor="middle" class="t-muted">첫 원소</text>
+    <rect x="350" y="243" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="270" class="t">0x400000</text>
+    <rect x="432" y="251" width="50" height="28" rx="3" class="elem"/><text x="438" y="270" class="t-acc">next</text>
+    <line x1="482" y1="265" x2="518" y2="265" class="ptr" marker-end="url(#eGrey)"/><text x="522" y="270" class="t-muted">NULL</text>
+  </g>
+  <!-- 서랍 3 -->
+  <g class="dim">
+    <line x1="252" y1="335" x2="348" y2="335" class="ptr" marker-end="url(#eGrey)"/><text x="314" y="327" text-anchor="middle" class="t-muted">첫 원소</text>
+    <rect x="350" y="313" width="140" height="44" rx="3" class="box-strong"/><text x="360" y="340" class="t">0x402000</text>
+    <rect x="432" y="321" width="50" height="28" rx="3" class="elem"/><text x="438" y="340" class="t-acc">next</text>
+    <line x1="482" y1="335" x2="548" y2="335" class="ptr" marker-end="url(#eGrey)"/><text x="515" y="327" text-anchor="middle" class="t-muted">next</text>
+    <rect x="550" y="313" width="140" height="44" rx="3" class="box-strong"/><text x="560" y="340" class="t">0x404000</text>
+    <rect x="632" y="321" width="50" height="28" rx="3" class="elem"/><text x="638" y="340" class="t-acc">next</text>
+    <line x1="682" y1="335" x2="718" y2="335" class="ptr" marker-end="url(#eGrey)"/><text x="722" y="340" class="t-muted">NULL</text>
+  </g>
+</svg>
+<figcaption>배열 칸은 사슬의 입구일 뿐, next는 같은 서랍의 다음 page로 간다</figcaption>
+</figure>
+<table class="eval">
+<thead><tr><th>이름</th><th>가리키는 것</th><th>움직이면</th></tr></thead>
+<tbody>
+<tr><td><code>idx</code></td><td>몇 번 서랍 (buckets 칸 번호)</td><td>find_elem 동안 고정</td></tr>
+<tr class="moves"><td><code>i</code></td><td>지금 보는 page의 고리 (<code>spt_elem</code>)</td><td><code>i = i-&gt;next</code></td></tr>
+<tr><td><code>i-&gt;next</code></td><td>같은 서랍 다음 page의 고리</td><td><code>NULL</code> = 서랍 끝 → <code>return NULL</code></td></tr>
+</tbody>
+</table>
+<p>배열 칸 → page 길만 있음 · page → 배열 칸 길 없음 → <code>i</code>는 한 번 사슬에 들어가면 옆 서랍으로 못 감. 같은 서랍 = 해시 아래 2비트가 같은 page들 (충돌)</p>
+
+<h2>6. 직접 짠 프로브와 실험</h2>
+<p class="lead"><code>hash.c</code>의 뼈대만 떼어 호스트 C 한 파일로 따라친 것. 코드: <a href="hash_probe.c">hash_probe.c</a> (<a href="https://github.com/benjohnbill/benjohnbill.github.io/blob/main/study/week09/hash_probe.c">GitHub에서 보기</a>) · 빌드 <code>gcc -Wall -o hash_probe hash_probe.c &amp;&amp; ./hash_probe</code></p>
+<table class="eval">
+<thead><tr><th>hunk</th><th>프로브</th><th>Pintos</th><th>직접 쓰나</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>struct hash</code> · typedef 두 개</td><td><code>include/lib/kernel/hash.h</code></td><td>이미 있음</td></tr>
+<tr class="moves"><td>2</td><td><code>struct page</code> + 고리 · <code>hash_entry</code></td><td><code>spt_elem</code> 한 줄 · <code>hash_entry</code>는 <code>hash.h</code></td><td>고리만 씀</td></tr>
+<tr class="moves"><td>3</td><td><code>page_hashing</code> · <code>page_less</code></td><td><code>vm/vm.c</code>에 거의 그대로 · 차이 = <code>aux</code> 인자, <code>void *va</code></td><td>씀</td></tr>
+<tr><td>4</td><td><code>find_index</code> · <code>find_elem</code></td><td><code>hash.c</code> 안 static</td><td>이미 있음</td></tr>
+<tr><td>5</td><td><code>hash_align</code> · <code>find_same_hash</code></td><td><code>hash_insert</code> · <code>hash_find</code></td><td>부르기만</td></tr>
+<tr class="moves"><td>6</td><td><code>main</code>: 넣기 · 중복 · 찾기</td><td><code>spt_insert_page</code> · <code>spt_find_page</code> 모양</td><td>씀</td></tr>
+</tbody>
+</table>
+<p>실험: 연속 page 8개(<code>0x400000</code>–<code>0x407000</code>)를 넣고 8개를 전부 찾을 때 <code>less</code>가 불린 총 횟수</p>
+<table class="exp">
+<thead><tr><th>page_hash</th><th>서랍 1</th><th>서랍 4</th><th>서랍 8</th></tr></thead>
+<tbody>
+<tr><td><code>hash_bytes(&amp;va, 8)</code></td><td>72</td><td class="bad">72</td><td>—</td></tr>
+<tr class="moves"><td><code>va &gt;&gt; 12</code></td><td>72</td><td>24</td><td>16</td></tr>
+</tbody>
+</table>
+<p>서랍 번호 = 해시의 아래 비트만 (<code>&amp; (BUCKET_CNT − 1)</code>) · FNV(곱하기·XOR)의 아래 k비트 = 입력 바이트들의 아래 k비트로만 정해짐 · page 정렬 주소의 바이트는 아래 비트가 0 → 8개 전부 한 서랍. 앞서 세운 가정 "FNV가 모든 비트를 섞어 고르게 퍼진다"는 틀림</p>
+<p>정확성은 무관: 한 서랍에 몰려도 <code>va</code> 비교로 정확히 찾음 → 테스트는 통과, 속도만 달라짐. <code>page_hash</code> 입력 선택 = INDEX D3</p>
+
+<p class="sub"><a href="vm-fork-spt.html">← fork와 SPT</a> · <a href="vm-page-frame.html">page와 frame →</a></p>
+</div>
+</body>
+</html>

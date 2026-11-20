@@ -435,11 +435,46 @@ a.card .d code{white-space:nowrap}
     <h2 class="dh"><a class="wk-repo" href="https://github.com/Pintos-W9-10-T6-VM/Pintos-W9-10-T6-VM">9~10주차 · PintOS(3) [Virtual Memory]</a></h2>
   </div>
   <div class="cards">
-    <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/spt-hash-page-map.html" href="https://benjohnbill.github.io/study/week09/spt-hash-page-map.html">
-      <div class="t dh">fault 난 주소에서 struct page까지</div>
-      <div class="d">SPT, Pintos hash, <code>struct page</code>가 엮이는 모양을 probe 값으로 따라갑니다.</div>
-      <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · SPT 연결도</span></div>
-    </a>
+    <div class="hub" id="hub-vm">
+      <button type="button" class="hub-head" data-topic="시스템" aria-expanded="true" aria-controls="hub-vm-body">
+        <span class="t dh">VM 개념 시각화 노트</span>
+        <span class="d">Pintos VM의 SPT, fork, fault, frame, mmap을 그림으로 정리한 노트입니다.</span>
+        <span class="m">week9 / pintos-vm</span>
+      </button>
+      <div class="hub-body" id="hub-vm-body">
+        <div class="hub-in">
+          <div class="phase">
+            <div class="cards">
+              <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/vm-spt-structure.html" href="https://benjohnbill.github.io/study/week09/vm-spt-structure.html">
+                <div class="t dh">SPT 구조</div>
+                <div class="d">SPT, hash, <code>struct page</code>가 엮이는 모양과 <code>spt_elem</code>이 없을 때를 비교합니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · SPT 연결도</span></div>
+              </a>
+              <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/vm-fork-spt.html" href="https://benjohnbill.github.io/study/week09/vm-fork-spt.html">
+                <div class="t dh">fork와 SPT</div>
+                <div class="d">fork 직후 부모 spt와 자식 spt가 메모리에 놓이는 모양을 봅니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · fork</span></div>
+              </a>
+              <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/vm-fault-to-page.html" href="https://benjohnbill.github.io/study/week09/vm-fault-to-page.html">
+                <div class="t dh">fault 주소 → page</div>
+                <div class="d">fault 주소 <code>0x401234</code>에서 page를 찾는 길을 probe 값으로 따라갑니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · hash 탐색</span></div>
+              </a>
+              <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/vm-page-frame.html" href="https://benjohnbill.github.io/study/week09/vm-page-frame.html">
+                <div class="t dh">page와 frame</div>
+                <div class="d">page와 frame의 두 연결이 언제 생기고 언제 사라지는지 봅니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · frame</span></div>
+              </a>
+              <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/vm-mmap.html" href="https://benjohnbill.github.io/study/week09/vm-mmap.html">
+                <div class="t dh">mmap</div>
+                <div class="d">파일 바이트가 디스크에서 사용자 va에 보이기까지를 따라갑니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · mmap</span></div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <a class="card" data-week="9" data-topic="시스템" data-kind="deck" data-scope="team" data-src="week09/study/team6/team6.html" href="https://benjohnbill.github.io/study/week09/team6.html">
       <div class="t dh">PintOS 3~4주차 [VM] · 6팀 발표</div>
       <div class="d">140개 테스트 통과, <code>munmap</code> 설계, Lazy loading 이후 버그를 다룬 6팀 발표입니다.</div>

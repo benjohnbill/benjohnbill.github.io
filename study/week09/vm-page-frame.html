@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>page와 frame</title>
+<link rel="stylesheet" href="https://benjohnbill.github.io/assets/site.css">
+<style>
+/* type scale follows DESIGN.md §1 (root 19px, major third headings) */
+html { font-size: 19px; }
+body { font-size: 1rem; }
+.lead { font-size: 1.1rem; line-height: 1.75; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; display: flex; flex-direction: column; }
+h1 { font-family: var(--font-head); font-size: 1.95rem; line-height: 1.25; margin: 12px 0 4px; }
+h2 { font-family: var(--font-head); font-size: 1.56rem; line-height: 1.35; margin: 56px 0 10px; }
+.sub { color: var(--ink-2); margin: 0 0 16px; }
+p { margin: 8px 0 0; }
+
+/* diagram frame: outer box = line only (box rule 1); a diagram may scroll sideways on a phone */
+.fig { margin: 16px 0 0; border: 1px solid var(--line); border-radius: 4px; padding: 12px; overflow-x: auto; }
+svg { display: block; width: 100%; min-width: 820px; height: auto; color: var(--ink); font-family: var(--font-code); font-size: 13px; }
+
+/* color marks meaning only: --s2 = the SPT's own links (spt_elem), --s1 = gone before Hunk 1 */
+.box { fill: none; stroke: var(--line); stroke-width: 1.2; }
+.box-strong { fill: none; stroke: var(--ink-2); stroke-width: 1.4; }
+.elem { fill: var(--s2-soft); stroke: var(--s2); stroke-width: 1.4; }
+.gone { fill: none; stroke: var(--s1); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.ptr { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+.link { stroke: var(--s2); stroke-width: 1.8; fill: none; }
+.t-title { font-weight: 600; fill: currentColor; }
+.t { fill: currentColor; }
+.t-muted { fill: var(--muted); font-size: 12px; }
+.t-acc { fill: var(--s2); font-weight: 600; }
+.t-gone { fill: var(--s1); }
+.dot { fill: var(--muted); }
+.head-muted { fill: var(--muted); }
+.head-acc { fill: var(--s2); }
+.cell { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
+.dash { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; }
+.head-gone { fill: var(--s1); }
+.wrong { stroke: var(--s1); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+.dim { opacity: .4; }
+.fig figcaption { margin: 10px 0 0; color: var(--ink-2); font-size: .85rem; }
+
+/* section 4: macro listing and step table; fill one level in only (box rule 2) */
+pre.code { margin: 16px 0 0; padding: 12px 14px; border: 1px solid var(--line); border-radius: 4px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+pre.code code { background: none; padding: 0; font-size: 1em; }
+table.eval { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.eval th, table.eval td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.eval th { font-family: var(--font-code); font-weight: 600; }
+table.eval td code { overflow-wrap: anywhere; }
+table.eval tr.moves td { background: var(--s2-soft); }
+/* phone: one row = one block (step, expression, then value · type side by side) */
+@media (max-width: 600px) {
+  table.eval thead { display: none; }
+  table.eval tr { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; border-bottom: 1px solid var(--line); }
+  table.eval tr.moves { background: var(--s2-soft); }
+  table.eval td { border-bottom: none; padding: 4px 10px; }
+  table.eval td:nth-child(1), table.eval td:nth-child(2) { grid-column: 1 / -1; }
+  table.eval td:nth-child(1) { padding-top: 8px; font-weight: 600; }
+  table.eval td:nth-child(4) { padding-bottom: 8px; }
+}
+
+/* section 6: experiment numbers stay a plain grid at every width */
+table.exp { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.exp th, table.exp td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+table.exp th:first-child, table.exp td:first-child { text-align: left; }
+table.exp th { font-family: var(--font-code); font-weight: 600; }
+table.exp td { font-family: var(--font-code); }
+table.exp td.bad { color: var(--s1); font-weight: 600; }
+table.exp tr.moves td { background: var(--s2-soft); }
+/* section 7: lifelines; thick bar = struct alive, thin bar + band = link alive (fill one level in, box rule 2), dashed = later stage, red dashed = leak */
+.life-fig svg { min-width: 900px; }
+.col { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 4; }
+.life { stroke: var(--ink-2); stroke-width: 6; stroke-linecap: round; }
+.life-future { stroke: var(--muted); stroke-width: 4; stroke-dasharray: 8 6; }
+.life-leak { stroke: var(--s1); stroke-width: 6; stroke-dasharray: 8 6; }
+.born { fill: var(--ink); }
+.tick { fill: var(--bg); stroke: var(--ink); stroke-width: 2; }
+.dead { stroke: var(--ink); stroke-width: 2.4; fill: none; }
+.zone { fill: var(--surface-2); }
+.bar { stroke: currentColor; stroke-width: 3; }
+.bar-future { stroke: var(--muted); stroke-width: 2.5; stroke-dasharray: 6 5; }
+.rung { stroke: currentColor; stroke-width: 1.4; fill: none; }
+.head { fill: currentColor; }
+.num { fill: var(--muted); font-weight: 600; }
+table.life-tab td:first-child { white-space: nowrap; }
+@media (max-width: 600px) { table.life-tab td { grid-column: 1 / -1; } }
+/* section 2-2 begin */
+/* section 2-2: --s3 (the version hue, DESIGN.md section 2) marks a value that differs between ① parent and ② child */
+h3 { font-family: var(--font-head); font-size: 1.25rem; line-height: 1.4; margin: 28px 0 0; }
+.pc-fig svg { min-width: 900px; }
+.hl { fill: var(--s3-soft); stroke: var(--s3); stroke-width: 1; }
+.t-hl { fill: var(--s3); font-weight: 600; }
+.t-hl-s { fill: var(--s3); font-weight: 600; font-size: 12px; }
+.gap { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+table.copy { width: 100%; border-collapse: collapse; margin: 16px 0 0; border: 1px solid var(--line); font-size: .85rem; }
+table.copy th, table.copy td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+table.copy th { font-family: var(--font-code); font-weight: 600; }
+table.copy td code { overflow-wrap: anywhere; }
+/* section 2-2 end */
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="home" href="https://benjohnbill.github.io/">← 학습 기록</a>
+
+<h1>page와 frame</h1>
+<p class="sub">VM 개념 시각화 노트 (4/5)</p>
+<p>필드 순서 = week09 <code>include/vm/vm.h</code> · hash 값 = <code>lab/spt-probe</code> 실행 결과 · 청록 = SPT가 엮는 고리 · 빨강 점선 = Hunk 1 이전에 없던 것</p>
+<p class="sub"><a href="vm-fault-to-page.html">← fault 주소 → page</a> · <a href="vm-mmap.html">mmap →</a></p>
+
+<h2 id="frame">7. 찾은 page에 frame 붙이기: page·frame과 두 연결은 언제 생기고 언제 사라지나</h2>
+<p class="lead">page(<code>va</code>)는 SPT 등록부터 프로세스 종료까지 살아 있음 · frame(<code>kva</code>)은 claim 때 생김 · 둘을 잇는 연결은 두 가지 = 소프트웨어 기록(<code>page-&gt;frame</code> ⇄ <code>frame-&gt;page</code>)과 하드웨어 번역(PTE) · 연결은 eviction 때 끊기고, 두 구조체는 그 뒤에도 남음</p>
+<p>세로 = 호출 순서 · 바깥 굵은 막대 = 구조체가 살아 있는 구간 · 안쪽 가는 막대와 음영 = 연결이 살아 있는 구간 · ● 생김 · ✕ 사라짐 · 점선 = 아직 안 짠 단계 · 빨강 점선 = 틀린 버전</p>
+<figure class="fig life-fig">
+<svg viewBox="0 0 1000 670" role="img" aria-label="struct page는 vm_alloc_page_with_initializer에서 생겨 프로세스 종료까지 산다. struct frame은 vm_get_frame에서 생긴다. vm_do_claim_page가 page와 frame을 서로 가리키게 하고, pml4_set_page가 va에서 kva로 가는 PTE를 만든다. 두 연결은 eviction에서 끊기고, page와 frame은 그 뒤에도 남는다.">
+  <defs>
+    <marker id="lfHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+  </defs>
+  <!-- column heads: two structs outside, two links between them -->
+  <text x="480" y="34" text-anchor="middle" class="t-title">struct page</text>
+  <text x="480" y="52" text-anchor="middle" class="t-muted">va · SPT 안</text>
+  <text x="590" y="34" text-anchor="middle" class="t-title">연결 ① 포인터</text>
+  <text x="590" y="52" text-anchor="middle" class="t-muted">vm 코드가 읽음</text>
+  <text x="690" y="34" text-anchor="middle" class="t-title">연결 ② PTE</text>
+  <text x="690" y="52" text-anchor="middle" class="t-muted">CPU가 읽음</text>
+  <text x="800" y="34" text-anchor="middle" class="t-title">struct frame</text>
+  <text x="800" y="52" text-anchor="middle" class="t-muted">kva · user pool</text>
+  <line x1="480" y1="70" x2="480" y2="650" class="col"/>
+  <line x1="800" y1="70" x2="800" y2="650" class="col"/>
+
+  <!-- connected band: from the first link to eviction -->
+  <rect x="480" y="305" width="320" height="185" class="zone"/>
+  <rect x="480" y="490" width="320" height="55" class="zone dim"/>
+
+  <!-- struct lifelines -->
+  <line x1="480" y1="110" x2="480" y2="490" class="life"/>
+  <line x1="800" y1="240" x2="800" y2="490" class="life"/>
+  <line x1="480" y1="490" x2="480" y2="615" class="life-future"/>
+  <line x1="800" y1="490" x2="800" y2="615" class="life-future"/>
+  <!-- link lifelines -->
+  <line x1="590" y1="305" x2="590" y2="490" class="bar"/>
+  <line x1="690" y1="370" x2="690" y2="490" class="bar"/>
+  <line x1="590" y1="490" x2="590" y2="545" class="bar-future"/>
+  <line x1="690" y1="490" x2="690" y2="545" class="bar-future"/>
+
+  <!-- 1: page born -->
+  <text x="20" y="106" class="num">1</text>
+  <text x="44" y="106" class="t-title">vm_alloc_page_with_initializer()</text>
+  <text x="44" y="124" class="t-muted">→ spt_insert_page(spt, page)</text>
+  <circle cx="480" cy="110" r="8" class="born"/>
+  <text x="496" y="106" class="t">생김</text>
+  <text x="496" y="122" class="t-muted">page-&gt;frame = NULL</text>
+
+  <!-- 2: found by va -->
+  <text x="20" y="171" class="num">2</text>
+  <text x="44" y="171" class="t-title">vm_try_handle_fault()</text>
+  <text x="44" y="189" class="t-muted">또는 vm_claim_page(va) · spt_find_page(spt, va)</text>
+  <circle cx="480" cy="175" r="6" class="tick"/>
+  <text x="496" y="180" class="t-muted">va로 찾음</text>
+
+  <!-- 3: frame born -->
+  <text x="20" y="236" class="num">3</text>
+  <text x="44" y="236" class="t-title">vm_get_frame()</text>
+  <text x="44" y="254" class="t-muted">palloc_get_page(PAL_USER) · malloc(frame)</text>
+  <circle cx="800" cy="240" r="8" class="born"/>
+  <text x="816" y="236" class="t">생김</text>
+  <text x="816" y="252" class="t-muted">frame-&gt;page = NULL</text>
+
+  <!-- 4: link 1 = two pointers -->
+  <text x="20" y="301" class="num">4</text>
+  <text x="44" y="301" class="t-title">vm_do_claim_page(): 연결 ①</text>
+  <text x="44" y="319" class="t-muted">page-&gt;frame = frame</text>
+  <text x="44" y="335" class="t-muted">frame-&gt;page = page</text>
+  <line x1="490" y1="305" x2="790" y2="305" class="rung" marker-start="url(#lfHead)" marker-end="url(#lfHead)"/>
+  <circle cx="590" cy="305" r="5" class="born"/>
+  <text x="496" y="296" class="t-muted">서로 가리킴</text>
+
+  <!-- 5: link 2 = PTE -->
+  <text x="20" y="366" class="num">5</text>
+  <text x="44" y="366" class="t-title">pml4_set_page(pml4, va, kva, PTE_W)</text>
+  <text x="44" y="384" class="t-muted">*pte = vtop(kva) | P | U | W</text>
+  <text x="44" y="400" class="t-muted">W 고정 = 모든 page 쓰기 가능 (임시)</text>
+  <line x1="490" y1="370" x2="790" y2="370" class="rung" marker-end="url(#lfHead)"/>
+  <circle cx="690" cy="370" r="5" class="born"/>
+  <text x="700" y="361" class="t-muted">va → pa(kva)</text>
+  <text x="816" y="366" class="t-gone">false → 그림 2</text>
+
+  <!-- 6: contents -->
+  <text x="20" y="436" class="num">6</text>
+  <text x="44" y="436" class="t-title">swap_in(page, kva)</text>
+  <text x="44" y="454" class="t-muted">kva 페이지에 내용 채움 · 결과를 그대로 return</text>
+  <circle cx="800" cy="440" r="6" class="tick"/>
+  <text x="816" y="445" class="t-muted">내용 채움</text>
+
+  <line x1="20" y1="490" x2="980" y2="490" class="dash"/>
+  <text x="44" y="512" class="t-muted">아래 = 아직 안 짠 단계</text>
+
+  <g class="dim">
+    <!-- 7: eviction cuts both links, both structs survive -->
+    <text x="20" y="541" class="num">7</text>
+    <text x="44" y="541" class="t-title">eviction (Swap 단계)</text>
+    <text x="44" y="559" class="t-muted">pml4_clear_page() · 두 연결 끊음</text>
+    <path d="M582 537 L598 553 M598 537 L582 553" class="dead"/>
+    <path d="M682 537 L698 553 M698 537 L682 553" class="dead"/>
+    <text x="496" y="576" class="t-muted">page: 내용은 swap · file로 · SPT에 남음</text>
+    <text x="816" y="545" class="t-muted">다른 page에 붙음</text>
+
+    <!-- 8: exit -->
+    <text x="20" y="611" class="num">8</text>
+    <text x="44" y="611" class="t-title">process_cleanup()</text>
+    <text x="44" y="629" class="t-muted">spt_kill() → vm_dealloc_page() · pml4_destroy()</text>
+    <path d="M472 607 L488 623 M488 607 L472 623" class="dead"/>
+    <text x="496" y="619" class="t-muted">free(page)</text>
+    <path d="M792 607 L808 623 M808 607 L792 623" class="dead"/>
+    <text x="816" y="611" class="t-muted">kva: pml4_destroy가 반납</text>
+    <text x="816" y="627" class="t-muted">(PTE가 남은 칸만)</text>
+    <text x="816" y="643" class="t-muted">struct frame 해제 = ?</text>
+  </g>
+</svg>
+<figcaption>그림 1. 연결 두 개는 4·5에서 생겨 7에서 함께 끊김 · page와 frame은 연결이 끊긴 뒤에도 각자 남음</figcaption>
+</figure>
+
+<p>그림 2 = <code>pml4_set_page()</code>가 false일 때. 여기까지 생긴 것 = frame(<code>kva</code>)과 연결 ① · 연결 ②(PTE)는 없음 · 두 버전의 차이는 frame 막대가 어디서 끝나느냐 하나뿐</p>
+<figure class="fig life-fig">
+<svg viewBox="0 0 1000 410" role="img" aria-label="pml4_set_page가 실패했을 때 두 버전. 둘 다 연결 ①을 끊는다. 첫째는 palloc_free_page와 free로 frame을 반납해 kva가 실패 분기에서 끝난다. 둘째는 연결만 끊어서 kva가 아무 포인터 없이 남아 누수가 된다.">
+  <defs>
+    <marker id="lfHead2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+  </defs>
+  <text x="390" y="30" text-anchor="middle" class="t-title">① 되돌림 세 줄</text>
+  <text x="390" y="48" text-anchor="middle" class="t-muted">지금 코드</text>
+  <text x="740" y="30" text-anchor="middle" class="t-title">② 연결만 끊음</text>
+  <text x="740" y="48" text-anchor="middle" class="t-muted">앞서 거쳐 간 버전</text>
+  <text x="330" y="78" text-anchor="middle" class="t-muted">page</text>
+  <text x="450" y="78" text-anchor="middle" class="t-muted">frame</text>
+  <text x="680" y="78" text-anchor="middle" class="t-muted">page</text>
+  <text x="800" y="78" text-anchor="middle" class="t-muted">frame</text>
+
+  <rect x="330" y="180" width="120" height="120" class="zone"/>
+  <rect x="680" y="180" width="120" height="120" class="zone"/>
+
+  <line x1="330" y1="90" x2="330" y2="395" class="life"/>
+  <line x1="450" y1="120" x2="450" y2="300" class="life"/>
+  <line x1="680" y1="90" x2="680" y2="395" class="life"/>
+  <line x1="800" y1="120" x2="800" y2="300" class="life"/>
+  <line x1="800" y1="300" x2="800" y2="395" class="life-leak"/>
+  <line x1="390" y1="180" x2="390" y2="300" class="bar"/>
+  <line x1="740" y1="180" x2="740" y2="300" class="bar"/>
+
+  <text x="20" y="125" class="t-title">vm_get_frame()</text>
+  <circle cx="450" cy="120" r="8" class="born"/>
+  <circle cx="800" cy="120" r="8" class="born"/>
+
+  <text x="20" y="176" class="t-title">연결 ①</text>
+  <text x="20" y="194" class="t-muted">page-&gt;frame · frame-&gt;page</text>
+  <line x1="340" y1="180" x2="440" y2="180" class="rung" marker-start="url(#lfHead2)" marker-end="url(#lfHead2)"/>
+  <line x1="690" y1="180" x2="790" y2="180" class="rung" marker-start="url(#lfHead2)" marker-end="url(#lfHead2)"/>
+
+  <text x="20" y="236" class="t-title">pml4_set_page() = false</text>
+  <text x="20" y="254" class="t-muted">연결 ② 못 만듦</text>
+  <text x="466" y="245" class="t-muted">PTE 없음</text>
+  <text x="816" y="245" class="t-muted">PTE 없음</text>
+
+  <text x="20" y="305" class="t-title">실패 분기</text>
+  <path d="M382 292 L398 308 M398 292 L382 308" class="dead"/>
+  <path d="M732 292 L748 308 M748 292 L732 308" class="dead"/>
+  <path d="M442 292 L458 308 M458 292 L442 308" class="dead"/>
+  <text x="466" y="296" class="t">page-&gt;frame = NULL</text>
+  <text x="466" y="312" class="t">palloc_free_page(kva)</text>
+  <text x="466" y="328" class="t">free(frame)</text>
+  <text x="816" y="296" class="t">frame-&gt;page = NULL</text>
+  <text x="816" y="312" class="t">page-&gt;frame = NULL</text>
+  <text x="816" y="328" class="t-gone">해제 없음</text>
+
+  <text x="20" y="370" class="t-title">return false 이후</text>
+  <text x="346" y="370" class="t-muted">page: SPT에 남음 · 다음 fault → 다시 claim</text>
+  <text x="816" y="362" class="t-gone">kva: 포인터 0개</text>
+  <text x="816" y="378" class="t-gone">= 누수</text>
+</svg>
+<figcaption>그림 2. NULL 대입 = 기록 정리 · 누수를 막는 것 = 해제 · frame-&gt;page = NULL은 곧 free될 구조체라 불필요</figcaption>
+</figure>
+<p>false가 나는 곳 = <code>pml4e_walk()</code>의 세 단계(pdp · pd · pt 표) 중 한 곳에서 <code>palloc_get_page(PAL_ZERO)</code> 실패 · <code>PAL_USER</code> 없음 → kernel pool 쪽 고갈 · 그 호출에서 새로 단 중간 표는 walk가 스스로 반납(<code>allocated</code>) → <code>vm_do_claim_page()</code>도 자기가 만든 것(frame · 연결)을 자기가 치움</p>
+<table class="eval life-tab">
+<thead><tr><th>이름</th><th>생김</th><th>사라짐</th><th>사이</th></tr></thead>
+<tbody>
+<tr class="moves"><td><code>struct page</code> (va)</td><td><code>vm_alloc_page_with_initializer()</code> → <code>spt_insert_page()</code></td><td>종료: <code>spt_kill()</code> → <code>vm_dealloc_page()</code></td><td>frame 유무와 무관 · eviction에도 남음</td></tr>
+<tr><td><code>struct frame</code> (kva)</td><td><code>vm_get_frame()</code>: <code>palloc_get_page(PAL_USER)</code></td><td>claim 실패: <code>palloc_free_page()</code> · <code>free()</code> · 종료: <code>pml4_destroy()</code>(PTE가 남은 칸만) · <code>struct frame</code> 해제 = ?</td><td>page에 붙었다 떨어짐</td></tr>
+<tr><td>연결 ② PTE</td><td><code>pml4_set_page()</code></td><td>eviction: <code>pml4_clear_page()</code> · 종료: <code>pml4_destroy()</code></td><td>CPU가 va → pa 번역에 씀</td></tr>
+<tr><td>연결 ① <code>page-&gt;frame</code></td><td><code>vm_do_claim_page()</code></td><td>실패 분기 · eviction</td><td>"지금 메모리에 있나"의 기록</td></tr>
+</tbody>
+</table>
+
+
+<p class="sub"><a href="vm-fault-to-page.html">← fault 주소 → page</a> · <a href="vm-mmap.html">mmap →</a></p>
+</div>
+</body>
+</html>
