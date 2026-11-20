@@ -93,13 +93,14 @@ a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
 .hub.js .hub-head .t::after{content:"▾"; display:inline-block; margin-left:8px; font-family:var(--font-code); font-size:14px; font-weight:400; color:var(--muted); transition:transform .2s var(--eo), color .15s ease}
 .hub.js .hub-head[aria-expanded="true"] .t::after{transform:rotate(180deg)}
 .hub-body{display:grid; grid-template-rows:1fr; transition:grid-template-rows .28s var(--eo), visibility 0s}
-.hub.shut .hub-body{grid-template-rows:0fr; visibility:hidden; transition:grid-template-rows .28s var(--eo), visibility 0s .28s}
+.hub.shut > .hub-body{grid-template-rows:0fr; visibility:hidden; transition:grid-template-rows .28s var(--eo), visibility 0s .28s}
 .hub-in{min-height:0; overflow:hidden; margin-left:72px}
 .phase{padding-left:18px; border-left:1px solid var(--line)}
 .ph{margin:0; padding:16px 0 2px; font:400 12.5px/1.5 var(--font-code); color:var(--ink-2)}
+.hub .hub .hub-in{margin-left:0}
 .ph-empty{padding:8px 0 16px; font-size:14.5px; color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){
-  .hub.opening .ph,.hub.opening a.card,.hub.opening .ph-empty{animation:toc-in .32s var(--eo) both; animation-delay:calc(var(--i, 0) * 30ms)}
+  .hub.opening .ph,.hub.opening a.card,.hub.opening .ph-empty,.hub.opening .hub-body .hub-head{animation:toc-in .32s var(--eo) both; animation-delay:calc(var(--i, 0) * 30ms)}
 }
 .rt{display:flex; flex-direction:column}
 .rr{display:grid; grid-template-columns:62px 190px 170px minmax(0,1fr); gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px; align-items:baseline; color:inherit; text-decoration:none}
@@ -465,63 +466,103 @@ a.card .d code{white-space:nowrap}
       <div class="hub-body" id="hub-mini-react-body">
         <div class="hub-in">
           <div class="phase">
-            <h3 class="ph">Files</h3>
             <div class="cards">
-              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-code-reading.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-code-reading.html">
-                <div class="t dh">VNode - DOM 변환</div>
-                <div class="d">DOM 노드의 필드가 VNode의 type, props, children으로 옮겨지는 과정입니다.</div>
-                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 코드 읽기</span></div>
-              </a>
-            </div>
-          </div>
-          <div class="phase">
-            <h3 class="ph">Phase 1</h3>
-            <div class="cards">
-              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/lab/phase1-test-design/phase1-test-map.html" href="https://benjohnbill.github.io/study/week11/phase1-test-map.html">
-                <div class="t dh">Phase 1 함수별 간단 요약</div>
-                <div class="d">13개 테스트 대상과 57개 검증 갈래를 대상의 책임에서 끌어낸 설계 자료입니다.</div>
-                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 · mini-react · 테스트 설계</span></div>
-              </a>
-              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-test-map.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-test-map.html">
-                <div class="t dh">Phase 1 테스트에 대한 정리</div>
-                <div class="d">검증 갈래마다 추가한 테스트 ID, 통과 수, 결정을 이었습니다.</div>
-                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
-              </a>
-              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-decisions.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-decisions.html">
-                <div class="t dh">Phase 1 결정 요약</div>
-                <div class="d">Patch 형식, StateHistory, 검증 페이지를 만들며 정한 결정과 근거입니다.</div>
-                <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
-              </a>
-            </div>
-          </div>
-          <div class="phase">
-            <h3 class="ph">Phase 2</h3>
-            <div class="cards">
-              <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-state-lesson.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-state-lesson.html">
-                <div class="t dh">READ &amp; Write in useState()</div>
-                <div class="d">렌더링 중 useState와 클릭 때 setter가 칸을 찾는 길을 비교합니다.</div>
-                <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
-              </a>
-              <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-render-timeline.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-render-timeline.html">
-                <div class="t dh">hookIndex &amp; hooks</div>
-                <div class="d">hookIndex가 전역이고 hooks가 인스턴스에 있는 이유를 13단계 시간표로 봅니다.</div>
-                <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
-              </a>
-              <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-hook-fields.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-hook-fields.html">
-                <div class="t dh">FunctionComponent</div>
-                <div class="d">FunctionComponent 필드와 전역 변수를 누가 쓰고 읽는지 표로 모았습니다.</div>
-                <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
-              </a>
-            </div>
-          </div>
-          <div class="phase">
-            <h3 class="ph">Slide</h3>
-            <div class="cards">
-              <a class="card" data-week="11" data-topic="웹" data-kind="deck" data-src="week11-12/lab/meeting-1110/plan.html" href="https://benjohnbill.github.io/study/week11/framework-control.html">
-                <div class="t dh">Week 11-12 Prod 계획(미구현)</div>
-                <div class="d">미니 React, Redis, DBMS를 쓴 제품과 대조군을 비교하자는 팀 회의 제안입니다.</div>
-                <div class="m"><span class="b">덱</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 팀 회의 제안</span></div>
-              </a>
+              <div class="hub" id="hub-mini-react-pre">
+                <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-mini-react-pre-body">
+                  <span class="t dh">Pre-Phase</span>
+                  <span class="d">Phase 1 전에 VNode와 DOM의 대응을 읽은 노트입니다.</span>
+                </button>
+                <div class="hub-body" id="hub-mini-react-pre-body">
+                  <div class="hub-in">
+                    <div class="phase">
+                      <div class="cards">
+                              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-code-reading.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-code-reading.html">
+                              <div class="t dh">VNode - DOM 변환</div>
+                              <div class="d">DOM 노드의 필드가 VNode의 type, props, children으로 옮겨지는 과정입니다.</div>
+                              <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 코드 읽기</span></div>
+                              </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="hub" id="hub-mini-react-p1">
+                <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-mini-react-p1-body">
+                  <span class="t dh">Phase 1</span>
+                  <span class="d">VNode, Diff, Patch, StateHistory의 테스트와 결정을 정리했습니다.</span>
+                </button>
+                <div class="hub-body" id="hub-mini-react-p1-body">
+                  <div class="hub-in">
+                    <div class="phase">
+                      <div class="cards">
+                              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/lab/phase1-test-design/phase1-test-map.html" href="https://benjohnbill.github.io/study/week11/phase1-test-map.html">
+                              <div class="t dh">Phase 1 함수별 간단 요약</div>
+                              <div class="d">13개 테스트 대상과 57개 검증 갈래를 대상의 책임에서 끌어낸 설계 자료입니다.</div>
+                              <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 · mini-react · 테스트 설계</span></div>
+                              </a>
+                              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-test-map.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-test-map.html">
+                              <div class="t dh">Phase 1 테스트에 대한 정리</div>
+                              <div class="d">검증 갈래마다 추가한 테스트 ID, 통과 수, 결정을 이었습니다.</div>
+                              <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
+                              </a>
+                              <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-decisions.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-decisions.html">
+                              <div class="t dh">Phase 1 결정 요약</div>
+                              <div class="d">Patch 형식, StateHistory, 검증 페이지를 만들며 정한 결정과 근거입니다.</div>
+                              <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
+                              </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="hub" id="hub-mini-react-p2">
+                <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-mini-react-p2-body">
+                  <span class="t dh">Phase 2</span>
+                  <span class="d">FunctionComponent와 hooks를 미리 배우는 Lesson입니다.</span>
+                </button>
+                <div class="hub-body" id="hub-mini-react-p2-body">
+                  <div class="hub-in">
+                    <div class="phase">
+                      <div class="cards">
+                              <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-state-lesson.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-state-lesson.html">
+                              <div class="t dh">READ &amp; Write in useState()</div>
+                              <div class="d">렌더링 중 useState와 클릭 때 setter가 칸을 찾는 길을 비교합니다.</div>
+                              <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
+                              </a>
+                              <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-render-timeline.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-render-timeline.html">
+                              <div class="t dh">hookIndex &amp; hooks</div>
+                              <div class="d">hookIndex가 전역이고 hooks가 인스턴스에 있는 이유를 13단계 시간표로 봅니다.</div>
+                              <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
+                              </a>
+                              <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-hook-fields.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-hook-fields.html">
+                              <div class="t dh">FunctionComponent</div>
+                              <div class="d">FunctionComponent 필드와 전역 변수를 누가 쓰고 읽는지 표로 모았습니다.</div>
+                              <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
+                              </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="hub" id="hub-mini-react-slide">
+                <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-mini-react-slide-body">
+                  <span class="t dh">Slide</span>
+                  <span class="d">Week 11-12 팀 회의에서 쓴 슬라이드입니다.</span>
+                </button>
+                <div class="hub-body" id="hub-mini-react-slide-body">
+                  <div class="hub-in">
+                    <div class="phase">
+                      <div class="cards">
+                              <a class="card" data-week="11" data-topic="웹" data-kind="deck" data-src="week11-12/lab/meeting-1110/plan.html" href="https://benjohnbill.github.io/study/week11/framework-control.html">
+                              <div class="t dh">Week 11-12 Prod 계획(미구현)</div>
+                              <div class="d">미니 React, Redis, DBMS를 쓴 제품과 대조군을 비교하자는 팀 회의 제안입니다.</div>
+                              <div class="m"><span class="b">덱</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 팀 회의 제안</span></div>
+                              </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -780,14 +821,14 @@ a.card .d code{white-space:nowrap}
   let openHubs = [];
   try { openHubs = JSON.parse(sessionStorage.getItem(HUB_KEY)) || []; } catch (e) {}
   document.querySelectorAll('.hub').forEach(hub => {
-    const head = hub.querySelector('.hub-head');
+    const head = hub.querySelector(':scope > .hub-head');
     let timer = 0;
     const set = (open, animate) => {
       head.setAttribute('aria-expanded', open);
       hub.classList.toggle('shut', !open);
       hub.classList.remove('opening');
       if (!open || !animate || calm()) return;
-      hub.querySelectorAll('.ph, a.card, .ph-empty').forEach((e, i) => e.style.setProperty('--i', Math.min(i, 3)));
+      hub.querySelectorAll('.ph, a.card, .ph-empty, .hub-body .hub-head').forEach((e, i) => e.style.setProperty('--i', Math.min(i, 3)));
       void hub.offsetWidth;
       hub.classList.add('opening');
       clearTimeout(timer);
@@ -859,7 +900,7 @@ a.card .d code{white-space:nowrap}
   }
 
   // 모음 안의 카드는 모음을 열 때 따로 들어온다
-  const REVEAL = '.gh, a.card:not(.hub a.card), .hub-head, .rr';
+  const REVEAL = '.gh, a.card:not(.hub a.card), .hub-head:not(.hub-body .hub-head), .rr';
   const reveals = calm() ? null : new IntersectionObserver(entries => {
     let n = 0;
     entries.forEach(e => {

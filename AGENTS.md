@@ -53,7 +53,12 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   2026-11-20). The script starts each hub collapsed.
   A hub that the reader opened stays open in that tab (`sessionStorage`). The
   `주제` and `유형` views show the hub cards as normal rows. Without JavaScript,
-  the hubs show open. Reference: `#hub-mini-react` in `index.html`.
+  the hubs show open. Reference: `#hub-week13-lab` in `index.html`.
+  A Folder can hold child Folders instead of phase headings: one `.phase` with
+  one `.cards` block that holds a `.hub` for each phase, each with a title and
+  a one-line description. A child Folder opens and closes on its own. Use it
+  only when a phase holds two or more cards (user said 2026-11-20).
+  Reference: `#hub-mini-react`.
 - **Skill cards.** The `자동화 스킬` group (`id="skills"`) sits below `#list`,
   outside it. The script shows the group only in the `유형` view. Without
   JavaScript it shows below the weeks. Its cards link to skill repositories,
