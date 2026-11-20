@@ -99,6 +99,12 @@ table.copy th, table.copy td { padding: 7px 10px; border-bottom: 1px solid var(-
 table.copy th { font-family: var(--font-code); font-weight: 600; }
 table.copy td code { overflow-wrap: anywhere; }
 /* section 2-2 end */
+/* phone: scroll hint before wide figures, column labels on stacked tables */
+.scroll-hint { display: none; margin: 16px 0 -8px; color: var(--ink-2); font-size: .8rem; }
+@media (max-width: 900px) { .scroll-hint { display: block; } }
+@media (max-width: 600px) {
+  table.eval td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-code); font-size: .72rem; font-weight: 400; color: var(--muted); }
+}
 </style>
 </head>
 <body>
@@ -115,6 +121,7 @@ table.copy td code { overflow-wrap: anywhere; }
 <p>값 = <code>fork-once</code> 실행 중 <code>__do_fork()</code>에서 copy 직후 찍은 probe 출력 · 보라 = 부모와 자식의 값이 다른 칸</p>
 
 <h3>① 부모: fork()를 부른 thread</h3>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <div class="fig pc-fig">
 <svg viewBox="0 0 1010 620" role="img" aria-label="부모: fork를 부른 thread. 0x402000과 스택은 로드되어 frame과 PML4 매핑이 있고, 0x3ff000은 uninit이라 frame과 매핑이 없다.">
   <defs>
@@ -263,6 +270,7 @@ table.copy td code { overflow-wrap: anywhere; }
 </div>
 
 <h3>② 자식: __do_fork() 안, copy 직후</h3>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <div class="fig pc-fig">
 <svg viewBox="0 0 1010 620" role="img" aria-label="자식: supplemental_page_table_copy 직후. 같은 va마다 새 struct page와 새 frame이 있고, 0x3ff000도 이미 로드되어 frame과 매핑이 있다. 서랍 안 순서는 부모의 반대다.">
   <defs>

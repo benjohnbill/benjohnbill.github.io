@@ -99,6 +99,12 @@ table.copy th, table.copy td { padding: 7px 10px; border-bottom: 1px solid var(-
 table.copy th { font-family: var(--font-code); font-weight: 600; }
 table.copy td code { overflow-wrap: anywhere; }
 /* section 2-2 end */
+/* phone: scroll hint before wide figures, column labels on stacked tables */
+.scroll-hint { display: none; margin: 16px 0 -8px; color: var(--ink-2); font-size: .8rem; }
+@media (max-width: 900px) { .scroll-hint { display: block; } }
+@media (max-width: 600px) {
+  table.eval td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-code); font-size: .72rem; font-weight: 400; color: var(--muted); }
+}
 </style>
 </head>
 <body>
@@ -113,6 +119,7 @@ table.copy td code { overflow-wrap: anywhere; }
 
 <h2>1. 누가 무엇을 가리키나</h2>
 <p class="lead">thread → spt(struct hash) → buckets[] → 서랍 list → 힙의 page 안 <code>spt_elem</code></p>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <div class="fig">
 <svg viewBox="0 0 1000 560" role="img" aria-label="thread 안의 spt가 buckets 배열을 가리키고, 각 서랍의 list가 힙에 흩어진 struct page 안의 spt_elem을 엮는다. page.frame은 struct frame을, PML4는 MMU가 읽는 별도 표다.">
   <defs>
@@ -193,6 +200,7 @@ table.copy td code { overflow-wrap: anywhere; }
 
 <h2>2. spt_elem · pages가 없으면</h2>
 <p class="lead">청록 고리 전부 사라짐 → page는 힙에 그대로, thread에서 page로 가는 길 없음</p>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <div class="fig">
 <svg viewBox="0 0 1000 560" role="img" aria-label="spt가 빈 구조체이고 struct page에 spt_elem이 없으면, buckets 배열도 청록색 고리도 없다. page들은 힙에 있지만 thread에서 그 page로 가는 길이 없다. frame과 PML4 쪽은 위 그림과 같다.">
   <defs>

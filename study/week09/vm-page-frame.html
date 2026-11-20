@@ -99,6 +99,12 @@ table.copy th, table.copy td { padding: 7px 10px; border-bottom: 1px solid var(-
 table.copy th { font-family: var(--font-code); font-weight: 600; }
 table.copy td code { overflow-wrap: anywhere; }
 /* section 2-2 end */
+/* phone: scroll hint before wide figures, column labels on stacked tables */
+.scroll-hint { display: none; margin: 16px 0 -8px; color: var(--ink-2); font-size: .8rem; }
+@media (max-width: 900px) { .scroll-hint { display: block; } }
+@media (max-width: 600px) {
+  table.eval td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-code); font-size: .72rem; font-weight: 400; color: var(--muted); }
+}
 </style>
 </head>
 <body>
@@ -113,6 +119,7 @@ table.copy td code { overflow-wrap: anywhere; }
 <h2 id="frame">7. 찾은 page에 frame 붙이기: page·frame과 두 연결은 언제 생기고 언제 사라지나</h2>
 <p class="lead">page(<code>va</code>)는 SPT 등록부터 프로세스 종료까지 살아 있음 · frame(<code>kva</code>)은 claim 때 생김 · 둘을 잇는 연결은 두 가지 = 소프트웨어 기록(<code>page-&gt;frame</code> ⇄ <code>frame-&gt;page</code>)과 하드웨어 번역(PTE) · 연결은 eviction 때 끊기고, 두 구조체는 그 뒤에도 남음</p>
 <p>세로 = 호출 순서 · 바깥 굵은 막대 = 구조체가 살아 있는 구간 · 안쪽 가는 막대와 음영 = 연결이 살아 있는 구간 · ● 생김 · ✕ 사라짐 · 점선 = 아직 안 짠 단계 · 빨강 점선 = 틀린 버전</p>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <figure class="fig life-fig">
 <svg viewBox="0 0 1000 670" role="img" aria-label="struct page는 vm_alloc_page_with_initializer에서 생겨 프로세스 종료까지 산다. struct frame은 vm_get_frame에서 생긴다. vm_do_claim_page가 page와 frame을 서로 가리키게 하고, pml4_set_page가 va에서 kva로 가는 PTE를 만든다. 두 연결은 eviction에서 끊기고, page와 frame은 그 뒤에도 남는다.">
   <defs>
@@ -223,6 +230,7 @@ table.copy td code { overflow-wrap: anywhere; }
 </figure>
 
 <p>그림 2 = <code>pml4_set_page()</code>가 false일 때. 여기까지 생긴 것 = frame(<code>kva</code>)과 연결 ① · 연결 ②(PTE)는 없음 · 두 버전의 차이는 frame 막대가 어디서 끝나느냐 하나뿐</p>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <figure class="fig life-fig">
 <svg viewBox="0 0 1000 410" role="img" aria-label="pml4_set_page가 실패했을 때 두 버전. 둘 다 연결 ①을 끊는다. 첫째는 palloc_free_page와 free로 frame을 반납해 kva가 실패 분기에서 끝난다. 둘째는 연결만 끊어서 kva가 아무 포인터 없이 남아 누수가 된다.">
   <defs>
@@ -284,10 +292,10 @@ table.copy td code { overflow-wrap: anywhere; }
 <table class="eval life-tab">
 <thead><tr><th>이름</th><th>생김</th><th>사라짐</th><th>사이</th></tr></thead>
 <tbody>
-<tr class="moves"><td><code>struct page</code> (va)</td><td><code>vm_alloc_page_with_initializer()</code> → <code>spt_insert_page()</code></td><td>종료: <code>spt_kill()</code> → <code>vm_dealloc_page()</code></td><td>frame 유무와 무관 · eviction에도 남음</td></tr>
-<tr><td><code>struct frame</code> (kva)</td><td><code>vm_get_frame()</code>: <code>palloc_get_page(PAL_USER)</code></td><td>claim 실패: <code>palloc_free_page()</code> · <code>free()</code> · 종료: <code>pml4_destroy()</code>(PTE가 남은 칸만) · <code>struct frame</code> 해제 = ?</td><td>page에 붙었다 떨어짐</td></tr>
-<tr><td>연결 ② PTE</td><td><code>pml4_set_page()</code></td><td>eviction: <code>pml4_clear_page()</code> · 종료: <code>pml4_destroy()</code></td><td>CPU가 va → pa 번역에 씀</td></tr>
-<tr><td>연결 ① <code>page-&gt;frame</code></td><td><code>vm_do_claim_page()</code></td><td>실패 분기 · eviction</td><td>"지금 메모리에 있나"의 기록</td></tr>
+<tr class="moves"><td data-label="이름"><code>struct page</code> (va)</td><td data-label="생김"><code>vm_alloc_page_with_initializer()</code> → <code>spt_insert_page()</code></td><td data-label="사라짐">종료: <code>spt_kill()</code> → <code>vm_dealloc_page()</code></td><td data-label="사이">frame 유무와 무관 · eviction에도 남음</td></tr>
+<tr><td data-label="이름"><code>struct frame</code> (kva)</td><td data-label="생김"><code>vm_get_frame()</code>: <code>palloc_get_page(PAL_USER)</code></td><td data-label="사라짐">claim 실패: <code>palloc_free_page()</code> · <code>free()</code> · 종료: <code>pml4_destroy()</code>(PTE가 남은 칸만) · <code>struct frame</code> 해제 = ?</td><td data-label="사이">page에 붙었다 떨어짐</td></tr>
+<tr><td data-label="이름">연결 ② PTE</td><td data-label="생김"><code>pml4_set_page()</code></td><td data-label="사라짐">eviction: <code>pml4_clear_page()</code> · 종료: <code>pml4_destroy()</code></td><td data-label="사이">CPU가 va → pa 번역에 씀</td></tr>
+<tr><td data-label="이름">연결 ① <code>page-&gt;frame</code></td><td data-label="생김"><code>vm_do_claim_page()</code></td><td data-label="사라짐">실패 분기 · eviction</td><td data-label="사이">"지금 메모리에 있나"의 기록</td></tr>
 </tbody>
 </table>
 

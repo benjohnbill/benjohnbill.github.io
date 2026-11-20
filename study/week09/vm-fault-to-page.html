@@ -99,6 +99,12 @@ table.copy th, table.copy td { padding: 7px 10px; border-bottom: 1px solid var(-
 table.copy th { font-family: var(--font-code); font-weight: 600; }
 table.copy td code { overflow-wrap: anywhere; }
 /* section 2-2 end */
+/* phone: scroll hint before wide figures, column labels on stacked tables */
+.scroll-hint { display: none; margin: 16px 0 -8px; color: var(--ink-2); font-size: .8rem; }
+@media (max-width: 900px) { .scroll-hint { display: block; } }
+@media (max-width: 600px) {
+  table.eval td[data-label]::before { content: attr(data-label); display: block; font-family: var(--font-code); font-size: .72rem; font-weight: 400; color: var(--muted); }
+}
 </style>
 </head>
 <body>
@@ -112,6 +118,7 @@ table.copy td code { overflow-wrap: anywhere; }
 
 <h2 id="find">3. fault 주소에서 page 찾기</h2>
 <p class="lead">내리기 → 해시 → 서랍 고르기 → 비교 → <code>hash_entry</code>. PML4는 보지 않음</p>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <div class="fig">
 <svg viewBox="0 0 1000 240" role="img" aria-label="0x401234를 page 경계 0x401000으로 내리고, 해시 값의 아래 비트로 1번 서랍을 고르고, 그 list를 page_less로 비교해 찾은 elem에서 24바이트를 빼 struct page 포인터를 얻는다.">
   <defs>
@@ -151,6 +158,7 @@ table.copy td code { overflow-wrap: anywhere; }
 
 <h2>4. hash_entry: 고리에서 page로 거슬러 오르기</h2>
 <p class="lead">고리 주소 <code>e</code> − 24 → page 시작. 숫자가 바뀌는 곳은 빼기 한 번</p>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <div class="fig">
 <svg viewBox="0 0 1000 230" role="img" aria-label="struct page 메모리 띠: +0 operations, +8 va, +16 frame, +24 spt_elem의 prev, +32 next, +40 union. 고리 주소 e는 0x8004201018, 즉 +24를 가리킨다. 거기서 offsetof 24바이트를 빼면 page 시작 0x8004201000이 나온다.">
   <defs>
@@ -200,13 +208,13 @@ table.copy td code { overflow-wrap: anywhere; }
 <table class="eval">
 <thead><tr><th>단계</th><th>식</th><th>값</th><th>타입</th></tr></thead>
 <tbody>
-<tr><td>① 고리 주소</td><td><code>(e)</code></td><td><code>0x8004201018</code></td><td><code>struct hash_elem *</code></td></tr>
-<tr><td>② 고리 안 칸, 읽지 않음</td><td><code>(e)-&gt;list_elem</code></td><td>—</td><td><code>struct list_elem</code></td></tr>
-<tr><td>③ 그 칸의 주소 = 첫 멤버라 +0</td><td><code>&amp;(e)-&gt;list_elem</code></td><td><code>0x8004201018</code></td><td><code>struct list_elem *</code></td></tr>
-<tr><td>④ 단위만 1바이트로</td><td><code>(uint8_t *)…</code></td><td><code>0x8004201018</code></td><td><code>uint8_t *</code></td></tr>
-<tr><td>⑤ 컴파일 때 상수 24 + 0</td><td><code>offsetof(struct page, spt_elem.list_elem)</code></td><td><code>24</code></td><td><code>size_t</code></td></tr>
-<tr class="moves"><td>⑥ 빼기: 1바이트 × 24칸 뒤로</td><td>④ − ⑤</td><td><code>0x8004201000</code></td><td><code>uint8_t *</code></td></tr>
-<tr><td>⑦ 같은 숫자를 page로 보기</td><td><code>(struct page *)…</code></td><td><code>0x8004201000</code></td><td><code>struct page *</code></td></tr>
+<tr><td data-label="단계">① 고리 주소</td><td data-label="식"><code>(e)</code></td><td data-label="값"><code>0x8004201018</code></td><td data-label="타입"><code>struct hash_elem *</code></td></tr>
+<tr><td data-label="단계">② 고리 안 칸, 읽지 않음</td><td data-label="식"><code>(e)-&gt;list_elem</code></td><td data-label="값">—</td><td data-label="타입"><code>struct list_elem</code></td></tr>
+<tr><td data-label="단계">③ 그 칸의 주소 = 첫 멤버라 +0</td><td data-label="식"><code>&amp;(e)-&gt;list_elem</code></td><td data-label="값"><code>0x8004201018</code></td><td data-label="타입"><code>struct list_elem *</code></td></tr>
+<tr><td data-label="단계">④ 단위만 1바이트로</td><td data-label="식"><code>(uint8_t *)…</code></td><td data-label="값"><code>0x8004201018</code></td><td data-label="타입"><code>uint8_t *</code></td></tr>
+<tr><td data-label="단계">⑤ 컴파일 때 상수 24 + 0</td><td data-label="식"><code>offsetof(struct page, spt_elem.list_elem)</code></td><td data-label="값"><code>24</code></td><td data-label="타입"><code>size_t</code></td></tr>
+<tr class="moves"><td data-label="단계">⑥ 빼기: 1바이트 × 24칸 뒤로</td><td data-label="식">④ − ⑤</td><td data-label="값"><code>0x8004201000</code></td><td data-label="타입"><code>uint8_t *</code></td></tr>
+<tr><td data-label="단계">⑦ 같은 숫자를 page로 보기</td><td data-label="식"><code>(struct page *)…</code></td><td data-label="값"><code>0x8004201000</code></td><td data-label="타입"><code>struct page *</code></td></tr>
 </tbody>
 </table>
 <p>숫자가 바뀌는 곳 = ⑥ 하나 · 나머지 = 같은 숫자를 보는 타입만 바뀜 · ②③ = <code>&amp;</code> 안의 <code>-&gt;</code>라 메모리 안 읽음. <code>(uint8_t *)</code> 없이 빼면 24 × 16바이트 뒤로</p>
@@ -214,6 +222,7 @@ table.copy td code { overflow-wrap: anywhere; }
 
 <h2>5. buckets 칸과 next 사슬</h2>
 <p class="lead"><code>lab/hash-probe</code> 모양: <code>hash_elem {next}</code> · <code>page {va, spt_elem}</code> · <code>BUCKET_CNT 4</code>. <code>0x405000</code> 찾기 = <code>find_bucket</code> → 1, 그 서랍만 훑기</p>
+<p class="scroll-hint" data-scroll-hint>그림이 화면보다 넓어요. 옆으로 밀어서 보세요.</p>
 <figure class="fig">
 <svg viewBox="0 0 1000 400" role="img" aria-label="struct hash 안의 buckets 배열은 포인터 4칸뿐이고, 각 칸은 배열 밖 힙에 있는 page 사슬의 첫 원소를 가리킨다. 1번 서랍: 0x401000, 0x405000, 0x407000, NULL. 0x405000을 찾을 때 i는 1번 칸에서 시작해 0x401000을 비교하고 next로 0x405000에 가서 찾는다. 0번, 2번, 3번 서랍은 보지 않는다. i->next가 0번 칸에서 1번 칸으로 가는 것이 아니다. 배열 칸은 사슬의 입구일 뿐, next는 같은 서랍의 다음 page로 간다.">
   <defs>
@@ -281,9 +290,9 @@ table.copy td code { overflow-wrap: anywhere; }
 <table class="eval">
 <thead><tr><th>이름</th><th>가리키는 것</th><th>움직이면</th></tr></thead>
 <tbody>
-<tr><td><code>idx</code></td><td>몇 번 서랍 (buckets 칸 번호)</td><td>find_elem 동안 고정</td></tr>
-<tr class="moves"><td><code>i</code></td><td>지금 보는 page의 고리 (<code>spt_elem</code>)</td><td><code>i = i-&gt;next</code></td></tr>
-<tr><td><code>i-&gt;next</code></td><td>같은 서랍 다음 page의 고리</td><td><code>NULL</code> = 서랍 끝 → <code>return NULL</code></td></tr>
+<tr><td data-label="이름"><code>idx</code></td><td data-label="가리키는 것">몇 번 서랍 (buckets 칸 번호)</td><td data-label="움직이면">find_elem 동안 고정</td></tr>
+<tr class="moves"><td data-label="이름"><code>i</code></td><td data-label="가리키는 것">지금 보는 page의 고리 (<code>spt_elem</code>)</td><td data-label="움직이면"><code>i = i-&gt;next</code></td></tr>
+<tr><td data-label="이름"><code>i-&gt;next</code></td><td data-label="가리키는 것">같은 서랍 다음 page의 고리</td><td data-label="움직이면"><code>NULL</code> = 서랍 끝 → <code>return NULL</code></td></tr>
 </tbody>
 </table>
 <p>배열 칸 → page 길만 있음 · page → 배열 칸 길 없음 → <code>i</code>는 한 번 사슬에 들어가면 옆 서랍으로 못 감. 같은 서랍 = 해시 아래 2비트가 같은 page들 (충돌)</p>
@@ -293,12 +302,12 @@ table.copy td code { overflow-wrap: anywhere; }
 <table class="eval">
 <thead><tr><th>hunk</th><th>프로브</th><th>Pintos</th><th>직접 쓰나</th></tr></thead>
 <tbody>
-<tr><td>1</td><td><code>struct hash</code> · typedef 두 개</td><td><code>include/lib/kernel/hash.h</code></td><td>이미 있음</td></tr>
-<tr class="moves"><td>2</td><td><code>struct page</code> + 고리 · <code>hash_entry</code></td><td><code>spt_elem</code> 한 줄 · <code>hash_entry</code>는 <code>hash.h</code></td><td>고리만 씀</td></tr>
-<tr class="moves"><td>3</td><td><code>page_hashing</code> · <code>page_less</code></td><td><code>vm/vm.c</code>에 거의 그대로 · 차이 = <code>aux</code> 인자, <code>void *va</code></td><td>씀</td></tr>
-<tr><td>4</td><td><code>find_index</code> · <code>find_elem</code></td><td><code>hash.c</code> 안 static</td><td>이미 있음</td></tr>
-<tr><td>5</td><td><code>hash_align</code> · <code>find_same_hash</code></td><td><code>hash_insert</code> · <code>hash_find</code></td><td>부르기만</td></tr>
-<tr class="moves"><td>6</td><td><code>main</code>: 넣기 · 중복 · 찾기</td><td><code>spt_insert_page</code> · <code>spt_find_page</code> 모양</td><td>씀</td></tr>
+<tr><td data-label="hunk">1</td><td data-label="프로브"><code>struct hash</code> · typedef 두 개</td><td data-label="Pintos"><code>include/lib/kernel/hash.h</code></td><td data-label="직접 쓰나">이미 있음</td></tr>
+<tr class="moves"><td data-label="hunk">2</td><td data-label="프로브"><code>struct page</code> + 고리 · <code>hash_entry</code></td><td data-label="Pintos"><code>spt_elem</code> 한 줄 · <code>hash_entry</code>는 <code>hash.h</code></td><td data-label="직접 쓰나">고리만 씀</td></tr>
+<tr class="moves"><td data-label="hunk">3</td><td data-label="프로브"><code>page_hashing</code> · <code>page_less</code></td><td data-label="Pintos"><code>vm/vm.c</code>에 거의 그대로 · 차이 = <code>aux</code> 인자, <code>void *va</code></td><td data-label="직접 쓰나">씀</td></tr>
+<tr><td data-label="hunk">4</td><td data-label="프로브"><code>find_index</code> · <code>find_elem</code></td><td data-label="Pintos"><code>hash.c</code> 안 static</td><td data-label="직접 쓰나">이미 있음</td></tr>
+<tr><td data-label="hunk">5</td><td data-label="프로브"><code>hash_align</code> · <code>find_same_hash</code></td><td data-label="Pintos"><code>hash_insert</code> · <code>hash_find</code></td><td data-label="직접 쓰나">부르기만</td></tr>
+<tr class="moves"><td data-label="hunk">6</td><td data-label="프로브"><code>main</code>: 넣기 · 중복 · 찾기</td><td data-label="Pintos"><code>spt_insert_page</code> · <code>spt_find_page</code> 모양</td><td data-label="직접 쓰나">씀</td></tr>
 </tbody>
 </table>
 <p>실험: 연속 page 8개(<code>0x400000</code>–<code>0x407000</code>)를 넣고 8개를 전부 찾을 때 <code>less</code>가 불린 총 횟수</p>
