@@ -281,17 +281,37 @@ a.card .d code{white-space:nowrap}
               <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/preprocessor-hello-i.html" href="https://benjohnbill.github.io/SW-AI-W02-03/preprocessor-hello-i.html">
                 <div class="t dh">hello.i</div>
                 <div class="d">세 줄짜리 C 파일이 <code>gcc -E</code>를 거쳐 844줄이 되는 과정입니다.</div>
-                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 컴파일 파이프라인</span></div>
+                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 전처리</span></div>
               </a>
             </div>
           </div>
           <div class="phase">
-            <h3 class="ph">hello.s · hello.o · hello</h3>
+            <h3 class="ph">hello.s</h3>
             <div class="cards">
-              <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/linker-elf-hello.html" href="https://benjohnbill.github.io/SW-AI-W02-03/linker-elf-hello.html">
-                <div class="t dh">hello.s · hello.o · hello</div>
-                <div class="d">어셈블러가 남긴 쪽지를 링커가 채워 ELF 파일이 되는 과정을 바이트로 봅니다.</div>
-                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 링킹과 ELF</span></div>
+              <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/compile-hello-s.html" href="https://benjohnbill.github.io/SW-AI-W02-03/compile-hello-s.html">
+                <div class="t dh">hello.s</div>
+                <div class="d">컴파일러가 <code>printf</code>를 <code>puts</code>로 바꾸고도 코드는 만들지 않는 과정입니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 컴파일</span></div>
+              </a>
+            </div>
+          </div>
+          <div class="phase">
+            <h3 class="ph">hello.o</h3>
+            <div class="cards">
+              <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/assemble-hello-o.html" href="https://benjohnbill.github.io/SW-AI-W02-03/assemble-hello-o.html">
+                <div class="t dh">hello.o</div>
+                <div class="d">어셈블러가 주소 자리에 0을 적고 링커에게 쪽지를 남기는 과정입니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 어셈블</span></div>
+              </a>
+            </div>
+          </div>
+          <div class="phase">
+            <h3 class="ph">hello</h3>
+            <div class="cards">
+              <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/link-hello.html" href="https://benjohnbill.github.io/SW-AI-W02-03/link-hello.html">
+                <div class="t dh">hello</div>
+                <div class="d">링커가 빈칸을 채우고 ELF 파일이 실행 직전에 문을 잠그는 과정입니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 링크와 ELF</span></div>
               </a>
             </div>
           </div>
