@@ -61,6 +61,12 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   that week's repository (the `origin` of `~/dev/krafton-jungle/weekNN/`),
   plus a `WIL →` link to that week's velog post, added when the post exists
   (`jungle-week-init` asks for it at the start of the next week).
+- **Terms.** A concept or proper term in a written page is English only,
+  spelled as `GLOSSARY.md` spells it, in Korean text too. Attach Korean
+  particles to the English word ("client가", "RST를"). Never translate a
+  term; each entry's `_Avoid_` line lists the Korean words to avoid. A new
+  term goes into `GLOSSARY.md` before the page uses it (user said
+  2026-11-20).
 - **Shared CSS.** Every written page (the index and the notes; not the decks)
   links `https://benjohnbill.github.io/assets/site.css` by absolute URL, so an
   original opened from disk gets it too. It holds the color tokens (light and

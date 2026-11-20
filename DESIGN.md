@@ -92,6 +92,13 @@ reader the voice differs (user decided 2026-11-11).
   internal tool names in prose. File paths stay as they are.
 - Run `node ~/.claude/skills/kill-ai-slop/scripts/scan.mjs <dir>` after edits.
 
+### Spacing and numbered items — Default (user said 2026-11-20)
+
+- Numbered items (①②③) go one per line, never joined with `·` in one
+  line. Example: `t3-restart-sigpipe.html`, `.story dd .ln`.
+- Leave air between blocks, not only inside lines: paragraph gap 14px,
+  box padding about 22px, definition rows 14px apart, h2 top margin 64px.
+
 ## 6. Patterns — Pattern
 
 | Pattern | Use when | Shape (class in the example page) |
