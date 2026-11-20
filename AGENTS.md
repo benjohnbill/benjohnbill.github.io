@@ -48,7 +48,9 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   the same attributes, the same shape, and the same `data-src`. Put a new
   page of that project in its phase's `.cards` block, not directly in the
   week's `.cards`. A card that belongs to no single project (for example a team
-  meeting deck) stays outside the hubs. The script starts each hub collapsed.
+  meeting deck) stays outside the hubs, unless the user places it (the
+  Week 11-12 Prod deck sits in the mini-react `Slide` phase, user said
+  2026-11-20). The script starts each hub collapsed.
   A hub that the reader opened stays open in that tab (`sessionStorage`). The
   `주제` and `유형` views show the hub cards as normal rows. Without JavaScript,
   the hubs show open. Reference: `#hub-mini-react` in `index.html`.
