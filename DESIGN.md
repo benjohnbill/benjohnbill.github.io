@@ -97,7 +97,8 @@ reader the voice differs (user decided 2026-11-11).
 - Numbered items (①②③) go one per line, never joined with `·` in one
   line. Example: `t3-restart-sigpipe.html`, `.story dd .ln`.
 - A summary box at the top of a result page: one row per problem; the
-  summary cell holds full sentences (평서체), one sentence per line, not
+  summary cell holds two full sentences (평서체), one per line, each led by a
+  bold `Before` or `After` label (the problem, then the fix), not
   telegraphic `→` chains. Example: `t3-restart-sigpipe.html`, `.summary`.
 - Leave air between blocks, not only inside lines: paragraph gap 14px,
   box padding about 22px, definition rows 14px apart, h2 top margin 64px.
