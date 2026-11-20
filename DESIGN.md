@@ -94,6 +94,10 @@ reader the voice differs (user decided 2026-11-11).
 
 ### Spacing and numbered items — Default (user said 2026-11-20)
 
+- Never join two meaning units with `·`. Put each unit on its own line:
+  `.ln` spans in a table cell or `dd`, `<br>` in `.sub` and `.lead`. A
+  glossary table has one term per row. This overrides the `·` samples in
+  section 5 for pages made from 2026-11-20 on.
 - Numbered items (①②③) go one per line, never joined with `·` in one
   line. Example: `t3-restart-sigpipe.html`, `.story dd .ln`.
 - A summary box at the top of a result page: one row per problem; the
