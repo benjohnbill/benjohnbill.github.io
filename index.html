@@ -39,18 +39,18 @@ a.repo:hover{color:var(--ink-2); text-decoration:underline}
 a.wk-repo{color:inherit; text-decoration:none}
 a.wk-repo:hover{text-decoration:underline; text-underline-offset:4px}
 /* 제목 줄 오른쪽 끝에 두면 마크업을 바꾸지 않고 WIL 링크 왼쪽에 놓인다 */
-a.wk-repo::after{content:"저장소 ↗"; float:right; margin-top:2px; font-family:var(--font-code); font-size:13px; font-weight:400; line-height:37px; letter-spacing:0; color:var(--s2)}
+a.wk-repo::after{content:"Repo ↗"; float:right; margin-top:2px; font-family:var(--font-code); font-size:13px; font-weight:400; line-height:37px; letter-spacing:0; color:var(--s2)}
 .wil{margin-left:4px; font-family:var(--font-code); font-size:13px; color:var(--s2); text-decoration:none; white-space:nowrap}
 .wil:hover{text-decoration:underline}
 .cards{display:flex; flex-direction:column}
-a.card{display:grid; grid-template-columns:62px minmax(0,1fr); gap:3px 10px; padding:15px 0 16px; border-bottom:1px solid var(--line); text-decoration:none; color:inherit}
+a.card{display:grid; grid-template-columns:76px minmax(0,1fr); gap:3px 10px; padding:15px 0 16px; border-bottom:1px solid var(--line); text-decoration:none; color:inherit}
 a.card:focus-visible{outline:2px solid var(--s3); outline-offset:2px}
 a.card::before{content:""; padding-top:8px; font-family:var(--font-code); font-size:12px; line-height:1.5; color:var(--muted)}
-a.card[data-kind="note"]::before{content:"노트"}
-a.card[data-kind="deck"]::before{content:"슬라이드"}
-a.card[data-scope="team"]::before{content:"팀 슬라이드"; white-space:nowrap}
-a.card[data-kind="repo"]::before{content:"저장소"}
-a.card[data-kind="lesson"]::before{content:"사전 학습"}
+a.card[data-kind="note"]::before{content:"Note"}
+a.card[data-kind="deck"]::before{content:"Slide"}
+a.card[data-scope="team"]::before{content:"Team Slide"; white-space:nowrap}
+a.card[data-kind="repo"]::before{content:"Repo"}
+a.card[data-kind="lesson"]::before{content:"Lesson"}
 a.card > *{grid-column:-2 / -1; min-width:0; transform-origin:left center; transition:transform .14s ease-out, color .15s ease}
 a.card:active > *{transform:scale(.995)}
 a.card .t{font-size:18px; line-height:1.45; letter-spacing:-0.01em}
@@ -80,8 +80,8 @@ a.card .m{font-family:var(--font-code); font-size:12px; color:var(--muted)}
 .decks a.card{transition:transform .2s var(--eo), border-color .15s ease}
 .decks a.card.in{transition:opacity .28s var(--eo), transform .28s var(--eo), border-color .15s ease}
 /* 프로젝트 모음: 머리는 카드와 같은 줄 모양이고, 몸은 grid 행을 0fr과 1fr 사이로 옮겨 접는다 */
-.hub-head{all:unset; box-sizing:border-box; display:grid; grid-template-columns:62px minmax(0,1fr); gap:3px 10px; width:100%; padding:15px 0 16px; border-bottom:1px solid var(--line)}
-.hub-head::before{content:"모음"; padding-top:8px; font-family:var(--font-code); font-size:12px; line-height:1.5; color:var(--muted)}
+.hub-head{all:unset; box-sizing:border-box; display:grid; grid-template-columns:76px minmax(0,1fr); gap:3px 10px; width:100%; padding:15px 0 16px; border-bottom:1px solid var(--line)}
+.hub-head::before{content:"Folder"; padding-top:8px; font-family:var(--font-code); font-size:12px; line-height:1.5; color:var(--muted)}
 .hub-head > *{display:block; grid-column:-2 / -1; min-width:0; transform-origin:left center; transition:transform .14s ease-out, color .15s ease}
 .hub-head .t{font-size:18px; line-height:1.45; letter-spacing:-0.01em}
 .hub-head .t::before{content:""; display:inline-block; width:8px; height:8px; margin-right:9px; vertical-align:2px; background:var(--tc)}
@@ -239,18 +239,18 @@ a.card .d code{white-space:nowrap}
   </div>
   <div class="cards">
     <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/quicksort-three-stages.html" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-three-stages.html">
-      <div class="t dh">퀵 정렬 세 단계</div>
-      <div class="d">같은 문제를 세 번 다시 짜면서 무엇이 잘못됐고 무엇을 바꿨는지, 실제 코드와 그림과 측정값으로 따라갑니다. 로무토 분할과의 대조를 부록으로 실었습니다.</div>
+      <div class="t dh">Quick Sort 최적화</div>
+      <div class="d">Quick Sort를 세 번 다시 짜며 고친 점을 코드와 측정값으로 따라갑니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 01_quick_sort</span></div>
     </a>
     <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/quicksort-partition-rewrite.html" href="https://benjohnbill.github.io/SW-AI-W02-03/quicksort-partition-rewrite.html">
-      <div class="t dh">분할 함수 재작성 기록</div>
-      <div class="d">호어 분할을 바로잡던 과정의 중간 기록입니다. 같은 값만 있는 구간에서 두 지수가 어떻게 움직이는지를 회전 단위로 추적했습니다.</div>
+      <div class="t dh">Quick Sort 최적화 요약</div>
+      <div class="d">호어 분할을 고치며 같은 값 구간에서 두 지수의 움직임을 추적했습니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 01_quick_sort</span></div>
     </a>
     <a class="card" data-week="2" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/priority-queue-stages.html" href="https://benjohnbill.github.io/SW-AI-W02-03/priority-queue-stages.html">
-      <div class="t dh">응급실 대기줄</div>
-      <div class="d">같은 문제를 다섯 번 짠 기록입니다. 완전탐색이 왜 입력 모양에 따라 제곱도 되고 세제곱도 되는지, 접었던 버전이 왜 느리기 전에 이미 틀렸는지, 그리고 정석이라던 heapq가 왜 이 문제에서는 .sort()보다 느린지를 측정값으로 따라갑니다.</div>
+      <div class="t dh">Priority Queue 최적화</div>
+      <div class="d">같은 문제를 다섯 번 짜며 heapq가 .sort()보다 느린 이유까지 측정했습니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">2주차</span><span>week2 / 2. advanced / 03_priority_queue</span></div>
     </a>
   </div>
@@ -263,23 +263,44 @@ a.card .d code{white-space:nowrap}
   </div>
   <div class="cards">
     <a class="card" data-week="3" data-topic="알고리즘" data-kind="note" data-src="week02-03/docs/bfs-dfs-wave-and-thread.html" href="https://benjohnbill.github.io/SW-AI-W02-03/bfs-dfs-wave-and-thread.html">
-      <div class="t dh">물결과 실타래</div>
-      <div class="d">BFS와 DFS를 한 걸음씩 직접 돌려 보는 문서입니다. 큐와 스택의 차이, visited의 정체, 재귀와 호출 스택의 관계를 다루고, 하노이 탑을 상태 그래프로 뒤집어 봅니다.</div>
+      <div class="t dh">BFS와 DFS 이해하기</div>
+      <div class="d">BFS와 DFS를 한 걸음씩 돌리며 큐, 스택, visited, 재귀를 봅니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>week3 / 1. basic / 04_bfs · 05_dfs</span></div>
     </a>
-    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/preprocessor-hello-i.html" href="https://benjohnbill.github.io/SW-AI-W02-03/preprocessor-hello-i.html">
-      <div class="t dh">hello.i 해부도</div>
-      <div class="d">세 줄짜리 C 파일이 <code>gcc -E</code>를 거쳐 844줄이 되는 과정입니다. 늘어난 줄이 각각 무엇인지 세어서 나눠 놓았습니다.</div>
-      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 컴파일 파이프라인</span></div>
-    </a>
-    <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/linker-elf-hello.html" href="https://benjohnbill.github.io/SW-AI-W02-03/linker-elf-hello.html">
-      <div class="t dh">hello.i에서 hello까지</div>
-      <div class="d">위 문서의 다음 편입니다. 어셈블러가 주소 자리에 0을 적고 남긴 쪽지, 링커가 그것을 채우는 순간, 그리고 완성된 ELF 파일이 실행 직전에 스스로 문을 잠그는 과정을 바이트 단위로 확인했습니다.</div>
-      <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 링킹과 ELF</span></div>
-    </a>
+    <div class="hub" id="hub-hello">
+      <button type="button" class="hub-head" data-topic="시스템" aria-expanded="true" aria-controls="hub-hello-body">
+        <span class="t dh">hello.c - 전처리기부터 실행파일까지</span>
+        <span class="d">hello.c가 hello.i, hello.s, hello.o, hello로 바뀌는 단계를 따라갑니다.</span>
+        <span class="m">week02-03 / docs · CS:APP</span>
+      </button>
+      <div class="hub-body" id="hub-hello-body">
+        <div class="hub-in">
+          <div class="phase">
+            <h3 class="ph">hello.i</h3>
+            <div class="cards">
+              <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/preprocessor-hello-i.html" href="https://benjohnbill.github.io/SW-AI-W02-03/preprocessor-hello-i.html">
+                <div class="t dh">hello.i</div>
+                <div class="d">세 줄짜리 C 파일이 <code>gcc -E</code>를 거쳐 844줄이 되는 과정입니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 컴파일 파이프라인</span></div>
+              </a>
+            </div>
+          </div>
+          <div class="phase">
+            <h3 class="ph">hello.s · hello.o · hello</h3>
+            <div class="cards">
+              <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/linker-elf-hello.html" href="https://benjohnbill.github.io/SW-AI-W02-03/linker-elf-hello.html">
+                <div class="t dh">hello.s · hello.o · hello</div>
+                <div class="d">어셈블러가 남긴 쪽지를 링커가 채워 ELF 파일이 되는 과정을 바이트로 봅니다.</div>
+                <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP · 링킹과 ELF</span></div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <a class="card" data-week="3" data-topic="시스템" data-kind="note" data-src="week02-03/docs/threads-blueprints.html" href="https://benjohnbill.github.io/SW-AI-W02-03/threads-blueprints.html">
-      <div class="t dh">쓰레드 도면집</div>
-      <div class="d">프로세스와 쓰레드, 가상 메모리 배치, 컨텍스트 스위칭, race condition을 도면 여섯 장으로 정리했습니다.</div>
+      <div class="t dh">프로세스와 스레드에 대한 유아적 수준에서의 이해</div>
+      <div class="d">프로세스, 스레드, 컨텍스트 스위칭, race condition을 도면 여섯 장으로 봅니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">3주차</span><span>CS:APP 1장 · 운영체제</span></div>
     </a>
   </div>
@@ -292,13 +313,13 @@ a.card .d code{white-space:nowrap}
   </div>
   <div class="cards">
     <a class="card" data-week="4" data-topic="시스템" data-kind="note" data-src="week04/study/csapp-ch3/" href="https://benjohnbill.github.io/SW-AI-C/study/csapp-ch3/">
-      <div class="t dh">3장 기계어 문제집</div>
-      <div class="d">CS:APP 3장 3.1~3.7을 조원들과 함께 풀도록 만든 12문항 문제집입니다. 답을 확인하면 정답 근거와 더 찾아볼 검색어, 그리고 그 사실이 C 코딩과 gdb, malloc-lab, pintos에서 어디에 걸리는지가 함께 펼쳐집니다.</div>
+      <div class="t dh">CSAPP 3장 문제 출제</div>
+      <div class="d">CS:APP 3장 3.1~3.7을 조원과 함께 푸는 12문항 문제집입니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">4주차</span><span>week4 / CS:APP 3장 · 조별 학습</span></div>
     </a>
     <a class="card" data-week="4" data-topic="시스템" data-kind="deck" data-src="week04/study/week04-array-in-c.html" href="https://benjohnbill.github.io/SW-AI-C/study/week04-array-in-c.html">
       <div class="t dh">함수에 들어가는 순간 배열이 아니다</div>
-      <div class="d">파이썬 버블 정렬을 C로 옮기다 만난 일입니다. 함수 안에서 <code>sizeof(arr)</code>가 8인 이유를 퀴즈로 열고, 직접 만든 길이 함수가 왜 조용히 0을 돌려줬는지를 gdb 기록으로 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="d">함수 안에서 <code>sizeof(arr)</code>가 8인 이유를 gdb 기록으로 따라가는 2분 발표입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">4주차</span><span>week4 / porting/08_bubble_sort · 2분 발표</span></div>
     </a>
   </div>
@@ -311,13 +332,13 @@ a.card .d code{white-space:nowrap}
   </div>
   <div class="cards">
     <a class="card" data-week="5" data-topic="C언어" data-kind="note" data-src="c-workshop/projects/study-cli/study-design.html" href="https://benjohnbill.github.io/study/week05/study-design.html">
-      <div class="t dh">study 설계 노트</div>
-      <div class="d">공부 기록 CLI를 C로 키우는 설계의 현재 상태입니다. 왜 만드는지, 어디까지 됐는지, 명령과 경계선을 적었고, 세웠다가 고친 가설은 그때 쓴 문장 그대로 따라가는 설계 로그로 이어집니다.</div>
+      <div class="t dh">Study CLI 프로젝트</div>
+      <div class="d">공부 기록 CLI를 C로 키우는 설계의 현재 상태와 설계 로그입니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · Stage 8 진행 중</span></div>
     </a>
     <a class="card" data-week="5" data-topic="C언어" data-kind="deck" data-src="c-workshop/study/oop-in-c.html" href="https://benjohnbill.github.io/study/week05/oop-in-c.html">
       <div class="t dh">C에서 객체지향 프로그래밍하기</div>
-      <div class="d">study CLI의 구조체를 <code>record.c</code> 안에 숨겼더니 <code>main</code>이 <code>r-&gt;count</code>를 읽지 못하게 됐습니다. 불완전 타입이 몸체를 숨기는 원리를 컴파일과 링크 두 단계로 나눠 보고, 출력을 함수 포인터로 넘겨 양쪽이 서로를 모르게 만든 과정을 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="d">불완전 타입과 함수 포인터로 study CLI의 구조체를 숨긴 2분 발표입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">5주차</span><span>c-workshop / projects/study-cli · 2분 발표</span></div>
     </a>
   </div>
@@ -330,7 +351,7 @@ a.card .d code{white-space:nowrap}
   <div class="cards">
     <a class="card" data-week="6" data-topic="C언어" data-kind="deck" data-src="week06/study/bsize-cast-v2.html" href="https://benjohnbill.github.io/study/week06/bsize-cast.html">
       <div class="t dh">Typecasting - 컴파일러가 통과시키는 오류</div>
-      <div class="d">malloc-lab에서 경고 없이 컴파일된 할당기가 20MB를 다 쓰고 멈췄습니다. gdb로 따라가 보니 <code>first_fit()</code>이 함수 포인터 <code>bsize</code>를 <code>(size_t)</code>로 바꾼 값과 크기를 비교하고 있었습니다. 캐스트가 컴파일러의 경고를 어떻게 막았는지, 그리고 <code>unsigned int</code>가 4GB를 넘는 크기를 어떻게 잘라 내는지를 따라갑니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="d">캐스트가 경고를 막아 할당기가 20MB를 다 쓰고 멈춘 과정을 따라갑니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">6주차</span><span>week6 / malloc-lab · 2분 발표</span></div>
     </a>
   </div>
@@ -342,18 +363,18 @@ a.card .d code{white-space:nowrap}
   </div>
   <div class="cards">
     <a class="card" data-week="7" data-topic="시스템" data-kind="note" data-src="jingeunOS/notes/debug-panic-eli5.html" href="https://benjohnbill.github.io/study/week07/debug-panic-exit.html">
-      <div class="t dh">exit(1)을 받아 줄 OS가 없을 때</div>
-      <div class="d">내 코드의 <code>debug_panic</code>은 <code>exit(1)</code>로 끝나는데, Pintos 커널의 같은 함수는 <code>power_off()</code>나 <code>for (;;)</code>로 끝났습니다. 공통 코드와 다른 부분을 나란히 놓고, 밑에 받아 줄 OS가 있느냐가 끝을 가른다는 것을 Pintos와 Linux의 실제 커널 PANIC 로그로 확인합니다.</div>
+      <div class="t dh">커널에서는 exit(1)을 어떻게 할까?</div>
+      <div class="d">Jingeun Scheduler(User Stack)를 만들다 든 의문을 Pintos와 Linux의 PANIC 로그로 풉니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">7주차</span><span>jingeunOS / harness/boot.c · lib/kernel/debug.c</span></div>
     </a>
     <a class="card" data-week="7" data-topic="시스템" data-kind="deck" data-scope="team" data-src="week07/study/team9/team9.html" href="https://benjohnbill.github.io/study/week07/team9.html">
       <div class="t dh">PintOS 1주차 [Thread] · 9팀 발표</div>
-      <div class="d">9팀 세 사람의 발표를 순서대로 잇습니다. 원형 리스트(benjohnbill), 인터럽트 핸들러에서 lock을 잡을 수 없는 이유(Jun), MLFQS에서 바뀐 것만 다시 계산하기(Yena). 한 덱이 끝나면 다음 덱으로 넘어가고, 화살표 키로 넘깁니다.</div>
+      <div class="d">원형 리스트, 인터럽트와 lock, MLFQS를 다룬 9팀 세 사람의 발표입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">7주차</span><span>week7 / pintos-team9 · 6분 팀 발표</span></div>
     </a>
     <a class="card" data-week="7" data-topic="시스템" data-kind="deck" data-src="week07/study/circular-list/circular-list.html" href="https://benjohnbill.github.io/study/week07/circular-list.html">
       <div class="t dh">list에서 끝을 없앴더니, 분기가 사라졌다</div>
-      <div class="d">PintOS 1주차 9팀의 진행과 협업 방식에서 출발합니다. <code>struct thread</code>의 필드를 재배치해 패딩을 줄이려 했지만 gdb로 재 보니 0바이트였고, 직접 짠 jingeunOS에서 list를 다시 보다가 Linux의 원형 이중 연결 리스트에 닿았습니다. 원형이라 끝이 없으니 모든 삽입이 두 이웃 사이가 되는 과정을 따라갑니다. 2분 20초 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="d">Linux 원형 이중 연결 리스트에서 분기가 사라지는 과정을 따라갑니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">7주차</span><span>week7 / pintos-team9 · jingeunOS · 2분 20초 발표</span></div>
     </a>
   </div>
@@ -366,23 +387,23 @@ a.card .d code{white-space:nowrap}
   </div>
   <div class="cards">
     <a class="card" data-week="8" data-topic="시스템" data-kind="note" data-src="week08/docs/userprog-flow-map.html" href="https://benjohnbill.github.io/study/week08/userprog-flow-map.html">
-      <div class="t dh">명령줄 한 줄의 일생</div>
-      <div class="d"><code>run 'args-single onearg'</code> 한 줄이 프로세스가 되어 끝나기까지를 마디 A–K로 나누고, Project 2 문서 6개와 userprog 테스트 64개를 그 마디에 매핑합니다. 팀 개념 체크용 12문항은 단서와 답을 두 겹으로 접어 두었고, 실제 커널을 돌려 얻은 출력을 문항에 썼습니다.</div>
+      <div class="t dh">Argument Passing &amp; Process Syscall</div>
+      <div class="d">명령줄 한 줄이 프로세스가 되어 끝나기까지를 userprog 테스트 64개와 잇습니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 개념 체크 12문항</span></div>
     </a>
     <a class="card" data-week="8" data-topic="시스템" data-kind="note" data-src="week08/notes/team-plan.html" href="https://benjohnbill.github.io/study/week08/team-plan.html">
-      <div class="t dh">수요일 저녁까지 userprog 95개</div>
-      <div class="d">남은 테스트를 사람과 요일에 배치한 팀 분업표입니다. fork·wait·exec는 셋이 각자 구현하고 파일 쪽은 나눠 맡으며, 테스트마다 이슈 링크와 체크박스를 달아 두었습니다.</div>
+      <div class="t dh">PintOS 2주차 현황표</div>
+      <div class="d">남은 userprog 테스트를 사람과 요일에 배치한 팀 분업표입니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 분업표</span></div>
     </a>
     <a class="card" data-week="8" data-topic="시스템" data-kind="deck" data-scope="team" data-src="week08/study/team8/team8.html" href="https://benjohnbill.github.io/study/week08/team8.html">
       <div class="t dh">PintOS 2주차 [User Programs] · 8팀 발표</div>
-      <div class="d">8팀 세 사람의 발표를 순서대로 잇습니다. 1주일간의 8팀(benjohnbill), 부모가 <code>child_status</code>와 세마포어로 자식의 종료를 기다리는 <code>wait()</code>(정승영), 출력은 다른데 테스트는 PASS였던 이유(누리). 한 덱이 끝나면 다음 덱으로 넘어가고, 화살표 키로 넘깁니다.</div>
+      <div class="d">팀 협업, <code>wait()</code>, 출력이 달라도 PASS였던 이유를 다룬 8팀 세 사람의 발표입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 팀 발표</span></div>
     </a>
     <a class="card" data-week="8" data-topic="시스템" data-kind="deck" data-src="week08/study/p2-team-workflow/p2-team-workflow.html" href="https://benjohnbill.github.io/study/week08/p2-team-workflow.html">
-      <div class="t dh">1주일간의 8팀</div>
-      <div class="d">PintOS userprog를 함께 푼 8팀의 일주일을 날짜순으로 따라갑니다. 누가 짠 코드든 합칠 수 있도록 같은 컨벤션, 같은 테스트 명령(<code>ptest</code>), 같은 보드를 만든 과정과, 팀은 합쳐졌지만 내 이해는 따라가지 못했다는 회고로 끝납니다. 2분 20초 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="t dh">PintOS 2주차 발표 // 조진근</div>
+      <div class="d">같은 컨벤션, <code>ptest</code>, 같은 보드로 합친 8팀의 일주일과 회고입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">8주차</span><span>week8 / pintos-userprog · 2분 20초 발표</span></div>
     </a>
   </div>
@@ -395,17 +416,17 @@ a.card .d code{white-space:nowrap}
   <div class="cards">
     <a class="card" data-week="9" data-topic="시스템" data-kind="note" data-src="week09/notes/spt-hash-page-map.html" href="https://benjohnbill.github.io/study/week09/spt-hash-page-map.html">
       <div class="t dh">fault 난 주소에서 struct page까지</div>
-      <div class="d">보조 페이지 테이블(SPT)과 Pintos hash, <code>struct page</code>가 메모리에서 어떻게 엮이는지 그린 연결도입니다. <code>spt_elem</code>과 <code>pages</code> 두 줄이 있을 때와 없을 때를 같은 배치로 위아래에 두었고, fault 주소 <code>0x401234</code>에서 page를 찾는 길을 실제 probe 실행 값으로 따라갑니다.</div>
+      <div class="d">SPT, Pintos hash, <code>struct page</code>가 엮이는 모양을 probe 값으로 따라갑니다.</div>
       <div class="m"><span class="b">노트</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · SPT 연결도</span></div>
     </a>
     <a class="card" data-week="9" data-topic="시스템" data-kind="deck" data-scope="team" data-src="week09/study/team6/team6.html" href="https://benjohnbill.github.io/study/week09/team6.html">
       <div class="t dh">PintOS 3~4주차 [VM] · 6팀 발표</div>
-      <div class="d">6팀 세 사람의 발표를 18장으로 잇습니다. COW를 제외한 140개 테스트 통과와 협업 도구, <code>munmap</code> 설계와 병합 뒤에 공유 필드를 다시 맞춘 경험, Lazy loading 이후 <code>read</code> 실패와 락 이중 획득을 해결한 과정, Clean Code와 책임 경계 순서입니다. 화살표 키로 넘깁니다.</div>
+      <div class="d">140개 테스트 통과, <code>munmap</code> 설계, Lazy loading 이후 버그를 다룬 6팀 발표입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · 팀 발표</span></div>
     </a>
     <a class="card" data-week="9" data-topic="시스템" data-kind="deck" data-src="week09/study/clean-code/clean-code.html" href="https://benjohnbill.github.io/study/week09/clean-code.html">
       <div class="t dh">Clean Code를 어떻게 짜야 할까?</div>
-      <div class="d">남이 짠 코드를 받았을 때의 막막함에서 출발합니다. 44줄짜리 <code>do_mmap()</code>이 함수 이름으로 접히는 과정을 보고, <code>mmap()</code>의 함수 흐름을 따라가며 책임 소재가 구조체로 어떻게 이어지고 어디서 파일과 페이지로 갈라지는지 확인합니다. 2분 발표용 슬라이드라 화살표 키로 넘깁니다.</div>
+      <div class="d">44줄 <code>do_mmap()</code>이 함수 이름으로 접히는 과정을 따라가는 2분 발표입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">9~10주차</span><span>week9 / pintos-vm · 2분 발표</span></div>
     </a>
   </div>
@@ -418,57 +439,57 @@ a.card .d code{white-space:nowrap}
     <div class="hub" id="hub-mini-react">
       <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-mini-react-body">
         <span class="t dh">mini-react</span>
-        <span class="d">Virtual DOM을 만들고 비교하고 고치는 흐름부터 hooks까지, 단계마다 남긴 노트를 모았습니다.</span>
+        <span class="d">Virtual DOM의 생성, 비교, 수정부터 hooks까지 단계별 기록입니다.</span>
         <span class="m">week11-12 / mini-react</span>
       </button>
       <div class="hub-body" id="hub-mini-react-body">
         <div class="hub-in">
           <div class="phase">
-            <h3 class="ph">공통</h3>
+            <h3 class="ph">Files</h3>
             <div class="cards">
               <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-code-reading.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-code-reading.html">
-                <div class="t dh">mini-react 코드 읽기</div>
-                <div class="d">src의 함수를 줄 단위로 읽으며 각 줄이 뜻하는 것과 그 줄을 지키는 테스트를 이었습니다. 첫 절은 DOM 노드의 필드가 VNode의 type, props, children으로 옮겨지는 대응 그림과 createDomFromVNode입니다.</div>
+                <div class="t dh">VNode - DOM 변환</div>
+                <div class="d">DOM 노드의 필드가 VNode의 type, props, children으로 옮겨지는 과정입니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 코드 읽기</span></div>
               </a>
             </div>
           </div>
           <div class="phase">
-            <h3 class="ph">Phase 1 · VNode, Diff, Patch, StateHistory</h3>
+            <h3 class="ph">Phase 1</h3>
             <div class="cards">
               <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/lab/phase1-test-design/phase1-test-map.html" href="https://benjohnbill.github.io/study/week11/phase1-test-map.html">
-                <div class="t dh">미니 React Phase 1 테스트 지도</div>
-                <div class="d">단위·통합·기능의 13개 테스트 대상과 57개 검증 갈래. 대상의 책임에서 검증할 성질이 파생되는 과정을 선택형 도식으로 정리한 설계 자료.</div>
+                <div class="t dh">Phase 1 함수별 간단 요약</div>
+                <div class="d">13개 테스트 대상과 57개 검증 갈래를 대상의 책임에서 끌어낸 설계 자료입니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 · mini-react · 테스트 설계</span></div>
               </a>
               <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-test-map.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-test-map.html">
-                <div class="t dh">mini-react Phase 1 테스트 지도 · 구현 연결</div>
-                <div class="d">13개 테스트 대상과 57개 검증 갈래마다 Lark의 기존 사례, 실제로 추가한 테스트 ID와 통과 수, 그 갈래의 결정을 이어 보여 줍니다. 대상과 갈래마다 링크가 있어 단위별로 공유할 수 있습니다.</div>
+                <div class="t dh">Phase 1 테스트에 대한 정리</div>
+                <div class="d">검증 갈래마다 추가한 테스트 ID, 통과 수, 결정을 이었습니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
               </a>
               <a class="card" data-week="11" data-topic="웹" data-kind="note" data-src="week11-12/mini-react-phase1-tests/mini-react-phase1-decisions.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase1-decisions.html">
-                <div class="t dh">mini-react Phase 1 결정 요약</div>
-                <div class="d">Patch 형식과 path 기준, StateHistory, 검증 페이지를 구현하며 정한 결정을 근거와 함께 모았습니다. 독립 리뷰에서 찾은 결함과 수정, 실제 브라우저 확인 결과, 팀 테스트 시트와 다른 점도 함께 적었습니다.</div>
+                <div class="t dh">Phase 1 결정 요약</div>
+                <div class="d">Patch 형식, StateHistory, 검증 페이지를 만들며 정한 결정과 근거입니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 1</span></div>
               </a>
             </div>
           </div>
           <div class="phase">
-            <h3 class="ph">Phase 2 · FunctionComponent, hooks</h3>
+            <h3 class="ph">Phase 2</h3>
             <div class="cards">
               <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-state-lesson.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-state-lesson.html">
-                <div class="t dh">useState의 READ와 WRITE, 인스턴스 필드는 언제 바뀌나</div>
-                <div class="d">렌더링 중 useState가 칸을 찾는 길과 클릭 때 setter가 칸을 찾는 길을 비교합니다. 필드와 전역 변수가 한 단계씩 바뀌는 모습을 따라가는 단계 화면과 퀴즈가 있습니다.</div>
+                <div class="t dh">READ &amp; Write in useState()</div>
+                <div class="d">렌더링 중 useState와 클릭 때 setter가 칸을 찾는 길을 비교합니다.</div>
                 <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
               </a>
               <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-render-timeline.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-render-timeline.html">
-                <div class="t dh">렌더링 시간표, hookIndex는 왜 전역이고 hooks는 인스턴스에 있나</div>
-                <div class="d">Root Component 본문이 렌더링마다 처음부터 다시 실행된다는 뿌리 결정에서 hooks, 호출 순서, actions 표가 나오는 과정을 표로 정리했습니다. Root Instance 두 개를 mount하고 클릭하는 13단계 시간표에서 모듈 변수와 인스턴스 필드가 바뀌는 모습을 예측하며 따라가고, 퀴즈로 되짚습니다.</div>
+                <div class="t dh">hookIndex &amp; hooks</div>
+                <div class="d">hookIndex가 전역이고 hooks가 인스턴스에 있는 이유를 13단계 시간표로 봅니다.</div>
                 <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
               </a>
               <a class="card" data-week="11" data-topic="웹" data-kind="lesson" data-src="week11-12/lab/teach/publish/mini-react-phase2-hook-fields.html" href="https://benjohnbill.github.io/study/week11-12/mini-react-phase2-hook-fields.html">
-                <div class="t dh">FunctionComponent 필드와 전역 변수 한눈에 보기</div>
-                <div class="d">hooks, container, currentView, actions와 전역 currentComponent, hookIndex를 누가 쓰고 누가 읽는지, 각 값이 얼마나 오래 사는지 표로 모았습니다. mount, update, 클릭이 이어지는 한 사이클 트리와 Hook이 깨지는 경우를 함께 적었습니다.</div>
+                <div class="t dh">FunctionComponent</div>
+                <div class="d">FunctionComponent 필드와 전역 변수를 누가 쓰고 읽는지 표로 모았습니다.</div>
                 <div class="m"><span class="b">사전 학습</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · Phase 2</span></div>
               </a>
             </div>
@@ -477,8 +498,8 @@ a.card .d code{white-space:nowrap}
       </div>
     </div>
     <a class="card" data-week="11" data-topic="웹" data-kind="deck" data-src="week11-12/lab/meeting-1110/plan.html" href="https://benjohnbill.github.io/study/week11/framework-control.html">
-      <div class="t dh">같은 제품을 두 번 만들기</div>
-      <div class="d">미니 React, Redis, DBMS를 라이브러리로 쓰는 제품 하나와, 셋 없이 만든 대조군을 같은 기능 테스트로 비교하자는 팀 회의 제안입니다. 대조군에서 실험군으로 바뀌는 파일을 PR diff처럼 보여 주고, 원문 요구사항과 제품 기능의 빈칸, 테스트 지도, 결정 카드와 반론을 한 화면에 둡니다.</div>
+      <div class="t dh">Week 11-12 Prod 계획(미구현)</div>
+      <div class="d">미니 React, Redis, DBMS를 쓴 제품과 대조군을 비교하자는 팀 회의 제안입니다.</div>
       <div class="m"><span class="b">덱</span><span class="b wk">11~12주차</span><span>week11-12 / mini-react · 팀 회의 제안</span></div>
     </a>
   </div>
@@ -491,7 +512,7 @@ a.card .d code{white-space:nowrap}
     <div class="hub" id="hub-week13-lab">
       <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-week13-lab-body">
         <span class="t dh">웹 서버의 기초</span>
-        <span class="d">명령과 작은 C 코드로 웹 서버의 기초를 직접 겪으며 남긴 기록을 모았습니다.</span>
+        <span class="d">명령과 작은 C 코드로 웹 서버의 기초를 직접 겪은 기록입니다.</span>
         <span class="m">week13 / lab</span>
       </button>
       <div class="hub-body" id="hub-week13-lab-body">
@@ -501,17 +522,17 @@ a.card .d code{white-space:nowrap}
             <div class="cards">
               <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t1-cli-probes.html" href="https://benjohnbill.github.io/study/week13/t1-cli-probes.html">
                 <div class="t dh">CLI 명령어를 통한 학습</div>
-                <div class="d">curl, telnet, nc, strace로 요청 하나를 DNS부터 시스템콜까지 따라간 다섯 프로브입니다. 맨 위 요약에서 프로브마다 본 것과 그 뜻을 보고, 아래에서 프로브마다 명령과 본 것을 따라갑니다.</div>
+                <div class="d">curl, telnet, nc, strace로 요청 하나를 DNS부터 시스템콜까지 따라갑니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · T1 CLI</span></div>
               </a>
               <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/strace-syscalls.html" href="https://benjohnbill.github.io/study/week13/strace-syscalls.html">
                 <div class="t dh">Server to Kernel 요약</div>
-                <div class="d">nc -l을 strace로 보며 socket, bind, listen 다음 accept에서 멈추는 장면을 기록했습니다. listen 소켓과 연결 소켓의 fd 표, 같은 포트의 두 소켓, curl 쪽의 DNS 조회와 connect까지 실제 출력에 해설을 붙였습니다.</div>
+                <div class="d">nc -l을 strace로 보며 accept에서 멈추는 장면과 fd 표를 기록했습니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · 05 strace</span></div>
               </a>
               <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/address-map.html" href="https://benjohnbill.github.io/study/week13/address-map.html">
                 <div class="t dh">내 PC로 살펴보는 IP와 Host</div>
-                <div class="d">내 PC에서 조회한 값으로 인터페이스와 IP, 이름과 IP, Host 줄이 어떻게 이어지는지 그렸습니다. 공인 IP가 없는 이유인 NAT와, NAT와 프록시의 차이도 정리했습니다.</div>
+                <div class="d">내 PC의 인터페이스, IP, Host가 이어지는 모양과 NAT를 정리했습니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · 주소와 NAT</span></div>
               </a>
             </div>
@@ -522,7 +543,7 @@ a.card .d code{white-space:nowrap}
     <div class="hub" id="hub-week13-prep">
       <button type="button" class="hub-head" data-topic="웹" aria-expanded="true" aria-controls="hub-week13-prep-body">
         <span class="t dh">웹서버 사전 학습</span>
-        <span class="d">웹서버를 만들기 전에 주제별로 미리 배우는 사전 학습과, 그 뒤 직접 해 본 결과 노트를 순서대로 모았습니다.</span>
+        <span class="d">웹서버를 만들기 전 주제별 Lesson과 결과 Note를 순서대로 모았습니다.</span>
         <span class="m">week13 / lab / teach</span>
       </button>
       <div class="hub-body" id="hub-week13-prep-body">
@@ -532,32 +553,32 @@ a.card .d code{white-space:nowrap}
             <div class="cards">
               <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l1-connection-setup.html" href="https://benjohnbill.github.io/study/week13/l1-connection-setup.html">
                 <div class="t dh">연결 준비와 fd: accept 전에 연결은 이미 끝나 있다</div>
-                <div class="d">handshake는 서버 커널이 혼자 끝내고, accept는 Accept Queue에서 연결 하나를 꺼내 새 fd를 줄 뿐이라는 것을 네 칸 그림으로 봅니다. accept를 부르지 않는 서버로 ss의 Recv-Q를 확인하고, 퀴즈로 06-echo를 예측합니다.</div>
+                <div class="d">accept 전에 handshake는 커널이 이미 끝낸다는 것을 ss로 확인합니다.</div>
                 <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
               </a>
               <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l2-receive-buffer.html" href="https://benjohnbill.github.io/study/week13/l2-receive-buffer.html">
                 <div class="t dh">Receive Buffer: read 전까지 바이트는 커널에 있다</div>
-                <div class="d">client가 보낸 바이트가 주소 네 개로 연결 소켓을 찾아 Receive Buffer에서 read를 기다리는 과정을 봅니다. read를 부르지 않는 서버로 ESTAB 줄의 Recv-Q를 세고, 퀴즈로 06-echo를 예측합니다.</div>
+                <div class="d">read 전까지 바이트가 Receive Buffer에서 기다리는 과정을 봅니다.</div>
                 <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
               </a>
               <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t2-echo-server.html" href="https://benjohnbill.github.io/study/week13/t2-echo-server.html">
                 <div class="t dh">한 번에 한 client만 받는 echo 서버</div>
-                <div class="d">C로 처음 손으로 친 echo 서버에 client 둘과 다섯을 붙였습니다. 연결은 Accept Queue에서, 바이트는 Receive Buffer에서 기다린다는 것을 ss 출력으로 확인한 기록입니다.</div>
+                <div class="d">echo 서버에 client를 여럿 붙여 Accept Queue와 Receive Buffer를 확인했습니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
               </a>
               <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l3-close-and-failure.html" href="https://benjohnbill.github.io/study/week13/l3-close-and-failure.html">
                 <div class="t dh">close와 실패: 끊는 쪽, 남는 쪽, 죽는 쪽</div>
-                <div class="d">FIN과 read의 0, 먼저 끊은 쪽에 남는 TIME-WAIT, 아무도 듣지 않는 포트의 RST, 끊긴 연결에 write할 때의 SIGPIPE를 차례로 봅니다. 퀴즈로 T3를 예측합니다.</div>
+                <div class="d">FIN, TIME-WAIT, RST, SIGPIPE를 끊는 쪽과 남는 쪽에서 봅니다.</div>
                 <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
               </a>
               <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t3-restart-sigpipe.html" href="https://benjohnbill.github.io/study/week13/t3-restart-sigpipe.html">
                 <div class="t dh">서버 재시작과 응답 도중 떠난 client</div>
-                <div class="d">끈 서버가 바로 다시 켜지지 않는 문제와, client 하나가 떠나자 서버가 통째로 죽는 문제를 겪고 고친 기록입니다. 고치기 전과 후를 실제 출력으로 비교합니다.</div>
+                <div class="d">바로 다시 켜지지 않는 서버와 client가 떠나면 죽는 서버를 고친 기록입니다.</div>
                 <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
               </a>
               <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/syscall-lanes.html" href="https://benjohnbill.github.io/study/week13/syscall-lanes.html">
                 <div class="t dh">syscall과 네 칸 한눈에 보기</div>
-                <div class="d">L1부터 L3까지의 syscall을 어느 칸이 부르고 커널이 무엇을 하는지, 연결이 끝나거나 실패할 때 앱이 무엇을 받는지 표로 모았습니다. ss의 Recv-Q와 Send-Q, 용어 표도 있습니다.</div>
+                <div class="d">L1~L3의 syscall과 커널 동작, 실패 때 앱이 받는 값을 표로 모았습니다.</div>
                 <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
               </a>
             </div>
@@ -576,22 +597,22 @@ a.card .d code{white-space:nowrap}
   <div class="cards">
     <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-week-init">
       <div class="t dh">한 주의 시작</div>
-      <div class="d">새 주차 저장소의 첫날을 준비합니다. 빌드 구성과 에디터 설정을 잡고, 혼자 하는 주에는 이슈 보드를, 주차별 <code>CLAUDE.md</code> 초안까지 만듭니다.</div>
+      <div class="d">새 주차 저장소의 빌드, 에디터, 이슈 보드, <code>CLAUDE.md</code>를 준비합니다.</div>
       <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-week-init</span></div>
     </a>
     <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-team-merge">
       <div class="t dh">팀 PR 검증</div>
-      <div class="d">Pintos 팀 주차에서 내 PR, 팀원의 PR, 깨진 develop을 최신 기준에서 검증하고 보고합니다. 승인과 병합은 사람이 합니다.</div>
+      <div class="d">Pintos 팀 PR과 develop을 최신 기준에서 검증하고 보고합니다.</div>
       <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-team-merge</span></div>
     </a>
     <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/jungle-deck" href="https://github.com/benjohnbill/jungle-deck">
       <div class="t dh">2분 발표 자료</div>
-      <div class="d">매주 2분 발표에 쓰는 HTML 슬라이드를 만들고, 이어서 고치고, GitHub Pages에 올립니다. 저장소에서 예시 발표 자료도 볼 수 있습니다.</div>
+      <div class="d">매주 2분 발표용 HTML 슬라이드를 만들고 GitHub Pages에 올립니다.</div>
       <div class="m"><span class="b">스킬</span><span>github.com/benjohnbill/jungle-deck</span></div>
     </a>
     <a class="card" data-kind="repo" data-src="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close" href="https://github.com/benjohnbill/krafton-jungle/tree/master/skills/jungle-close">
       <div class="t dh">하루의 마무리</div>
-      <div class="d">주차 저장소의 하루를 닫습니다. 검증, 커밋, 푸시, 보드 갱신을 거쳐 다음 날 이어갈 메모를 남깁니다.</div>
+      <div class="d">검증, 커밋, 푸시, 보드 갱신 뒤 다음 날 메모를 남깁니다.</div>
       <div class="m"><span class="b">스킬</span><span>krafton-jungle / skills/jungle-close</span></div>
     </a>
   </div>
@@ -656,7 +677,7 @@ a.card .d code{white-space:nowrap}
   };
   const repoTable = () => {
     const box = el('div', 'rt'), hd = el('div', 'rr hd');
-    hd.append(...['주차', '저장소', '소유자', '내용'].map(t => el('span', '', t)));
+    hd.append(...['주차', 'Repo', '소유자', '내용'].map(t => el('span', '', t)));
     box.append(hd);
     model.repos.forEach(r => {
       const a = el('a', 'rr');
@@ -695,12 +716,12 @@ a.card .d code{white-space:nowrap}
         const teamDecks = decks.filter(c => c.dataset.scope === 'team');
         const soloDecks = decks.filter(c => c.dataset.scope !== 'team');
         return [
-          { id: 'type-repos', label: '저장소', count: model.repos.length, node: group('저장소', repoTable()) },
+          { id: 'type-repos', label: 'Repo', count: model.repos.length, node: group('Repo', repoTable()) },
           { id: 'skills', label: '자동화 스킬', count: model.skills.length, node: skillsGroup },
-          { id: 'type-notes', label: '노트', count: notes.length, node: group('노트', rows(notes, 'no-kind with-week')) },
-          { id: 'type-lessons', label: '사전 학습', count: lessons.length, node: group('사전 학습', rows(lessons, 'no-kind with-week')) },
-          { id: 'type-team-decks', label: '팀 슬라이드', count: teamDecks.length, node: group('팀 슬라이드', deckCards(teamDecks)) },
-          { id: 'type-solo-decks', label: '개인 슬라이드', count: soloDecks.length, node: group('개인 슬라이드', deckCards(soloDecks)) },
+          { id: 'type-notes', label: 'Note', count: notes.length, node: group('Note', rows(notes, 'no-kind with-week')) },
+          { id: 'type-lessons', label: 'Lesson', count: lessons.length, node: group('Lesson', rows(lessons, 'no-kind with-week')) },
+          { id: 'type-team-decks', label: 'Team Slide', count: teamDecks.length, node: group('Team Slide', deckCards(teamDecks)) },
+          { id: 'type-solo-decks', label: 'Slide', count: soloDecks.length, node: group('Slide', deckCards(soloDecks)) },
         ];
       },
     },

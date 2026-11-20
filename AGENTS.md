@@ -25,12 +25,13 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   elsewhere under `~/dev/krafton-jungle/`. Edit the original, then copy it
   here again; never edit the copy. `rg data-src index.html` lists each
   card's original.
+- **Card text.** A card or Folder description is one line on desktop (user said 2026-11-20). A title names the topic plainly; no metaphor titles.
 - **Cards.** One `<a class="card">` per page in `index.html`, inside its
   week's group, with `data-week`, `data-topic` (exactly one: 알고리즘,
   시스템, C언어; a new topic also needs a title-color rule), `data-kind`
   (`note`, `deck`, `repo`, `lesson`), `data-src`, and an absolute `href`. CSS
   makes each card a row, and the visible type label comes from `data-kind`, not
-  `.b`. `lesson` (label 사전 학습, renamed from 레슨 on 2026-11-20, user said) marks a page made by the `/teach` skill: a lesson
+  `.b`. `lesson` (label Lesson; the type labels are English since 2026-11-20, user said: Note, Slide, Team Slide, Repo, Lesson, Folder) marks a page made by the `/teach` skill: a lesson
   or its reference page. Its original is under `weekNN/lab/teach/publish/`,
   built by `publish/build.py` there.
   A team deck also has `data-scope="team"`. A deck without it counts as
@@ -40,9 +41,9 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   `jungle-week-init` read that markup; the script only adds the sidebar, the
   repository table, and clones for the `주제` and `유형` views.
 - **Project hubs.** A week group can hold one hub (`<div class="hub">`)
-  for each project, labeled `모음`. Make a hub when a project gets its second
+  for each project, labeled `Folder`. Make a hub when a project gets its second
   note. A hub has a `<button class="hub-head">` and a body with one
-  `<div class="phase">` for each phase (`공통`, `Phase 1`, …). Each phase has an
+  `<div class="phase">` for each phase (`Files`, `Phase 1`, …). Each phase has an
   `<h3 class="ph">` and a `.cards` block. The cards in a hub are normal cards:
   the same attributes, the same shape, and the same `data-src`. Put a new
   page of that project in its phase's `.cards` block, not directly in the
