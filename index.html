@@ -657,36 +657,47 @@ a.card .d code{white-space:nowrap}
                 <div class="hub-body" id="hub-week13-prep-socket-body">
                   <div class="hub-in">
                     <div class="phase">
+                      <h3 class="ph">Files</h3>
                       <div class="cards">
-                    <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l1-connection-setup.html" href="https://benjohnbill.github.io/study/week13/l1-connection-setup.html">
-                      <div class="t dh">연결 준비와 fd: accept 전에 연결은 이미 끝나 있다</div>
-                      <div class="d">accept 전에 handshake는 커널이 이미 끝낸다는 것을 ss로 확인합니다.</div>
-                      <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
-                    </a>
-                    <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l2-receive-buffer.html" href="https://benjohnbill.github.io/study/week13/l2-receive-buffer.html">
-                      <div class="t dh">Receive Buffer: read 전까지 바이트는 커널에 있다</div>
-                      <div class="d">read 전까지 바이트가 Receive Buffer에서 기다리는 과정을 봅니다.</div>
-                      <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
-                    </a>
-                    <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t2-echo-server.html" href="https://benjohnbill.github.io/study/week13/t2-echo-server.html">
-                      <div class="t dh">한 번에 한 client만 받는 echo 서버 (06)</div>
-                      <div class="d">echo 서버에 client를 여럿 붙여 Accept Queue와 Receive Buffer를 확인했습니다.</div>
-                      <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
-                    </a>
-                    <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l3-close-and-failure.html" href="https://benjohnbill.github.io/study/week13/l3-close-and-failure.html">
-                      <div class="t dh">close와 실패: 끊는 쪽, 남는 쪽, 죽는 쪽</div>
-                      <div class="d">FIN, TIME-WAIT, RST, SIGPIPE를 끊는 쪽과 남는 쪽에서 봅니다.</div>
-                      <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
-                    </a>
-                    <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t3-restart-sigpipe.html" href="https://benjohnbill.github.io/study/week13/t3-restart-sigpipe.html">
-                      <div class="t dh">서버 재시작과 응답 도중 떠난 client (07 ~ 08)</div>
-                      <div class="d">바로 다시 켜지지 않는 서버와 client가 떠나면 죽는 서버를 고친 기록입니다.</div>
-                      <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
-                    </a>
                     <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/syscall-lanes.html" href="https://benjohnbill.github.io/study/week13/syscall-lanes.html">
                       <div class="t dh">syscall과 네 칸 한눈에 보기</div>
                       <div class="d">L1~L3의 syscall과 커널 동작, 실패 때 앱이 받는 값을 표로 모았습니다.</div>
                       <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket</span></div>
+                    </a>
+                      </div>
+                    </div>
+                    <div class="phase">
+                      <h3 class="ph">T2 · echo 서버 (06)</h3>
+                      <div class="cards">
+                    <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l1-connection-setup.html" href="https://benjohnbill.github.io/study/week13/l1-connection-setup.html">
+                      <div class="t dh">연결 준비와 fd: accept 전에 연결은 이미 끝나 있다</div>
+                      <div class="d">accept 전에 handshake는 커널이 이미 끝낸다는 것을 ss로 확인합니다.</div>
+                      <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket T2</span></div>
+                    </a>
+                    <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l2-receive-buffer.html" href="https://benjohnbill.github.io/study/week13/l2-receive-buffer.html">
+                      <div class="t dh">Receive Buffer: read 전까지 바이트는 커널에 있다</div>
+                      <div class="d">read 전까지 바이트가 Receive Buffer에서 기다리는 과정을 봅니다.</div>
+                      <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket T2</span></div>
+                    </a>
+                    <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t2-echo-server.html" href="https://benjohnbill.github.io/study/week13/t2-echo-server.html">
+                      <div class="t dh">한 번에 한 client만 받는 echo 서버 (06)</div>
+                      <div class="d">echo 서버에 client를 여럿 붙여 Accept Queue와 Receive Buffer를 확인했습니다.</div>
+                      <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · Socket T2</span></div>
+                    </a>
+                      </div>
+                    </div>
+                    <div class="phase">
+                      <h3 class="ph">T3 · 재시작과 SIGPIPE (07 ~ 08)</h3>
+                      <div class="cards">
+                    <a class="card" data-week="13" data-topic="웹" data-kind="lesson" data-src="week13/lab/teach/publish/l3-close-and-failure.html" href="https://benjohnbill.github.io/study/week13/l3-close-and-failure.html">
+                      <div class="t dh">close와 실패: 끊는 쪽, 남는 쪽, 죽는 쪽</div>
+                      <div class="d">FIN, TIME-WAIT, RST, SIGPIPE를 끊는 쪽과 남는 쪽에서 봅니다.</div>
+                      <div class="m"><span class="b">사전 학습</span><span class="b wk">13주차</span><span>week13 / lab · Socket T3</span></div>
+                    </a>
+                    <a class="card" data-week="13" data-topic="웹" data-kind="note" data-src="week13/lab/pages/t3-restart-sigpipe.html" href="https://benjohnbill.github.io/study/week13/t3-restart-sigpipe.html">
+                      <div class="t dh">서버 재시작과 응답 도중 떠난 client (07 ~ 08)</div>
+                      <div class="d">바로 다시 켜지지 않는 서버와 client가 떠나면 죽는 서버를 고친 기록입니다.</div>
+                      <div class="m"><span class="b">노트</span><span class="b wk">13주차</span><span>week13 / lab · Socket T3</span></div>
                     </a>
                       </div>
                     </div>
