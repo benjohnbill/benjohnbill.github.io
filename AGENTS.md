@@ -25,6 +25,13 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   elsewhere under `~/dev/krafton-jungle/`. Edit the original, then copy it
   here again; never edit the copy. `rg data-src index.html` lists each
   card's original.
+- **Projects.** A project outside the Jungle weeks lives at
+  `projects/<slug>/index.html`, linked from one `a.project` strip in the
+  index header (outside `#list`, so the week script ignores it). The page is
+  the original and is edited here. Its video, PDF, and images are byte copies
+  from the project repo; `slides/` and `poster.jpg` are rendered from them
+  (`pdftoppm -r 300`, `ffmpeg -ss 4`). First: `projects/herz/` from
+  `benjohnbill/maeum-mirror`.
 - **Card text.** A card or Folder description is one line on desktop (user said 2026-11-20). A title names the topic plainly; no metaphor titles.
 - **Cards.** One `<a class="card">` per page in `index.html`, inside its
   week's group, with `data-week`, `data-topic` (exactly one: 알고리즘,
