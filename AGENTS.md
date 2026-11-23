@@ -19,7 +19,9 @@ use the available local instructions; do not invent the missing policy.
 Hand-written static HTML served from `main` by GitHub Pages. No build step.
 
 - **Paths.** A page published here lives at `study/weekNN/<slug>.html`
-  (`slug` in English kebab-case). Weeks 2–4 live in other repositories
+  (`slug` in English kebab-case). A series of notes that link to each other
+  by relative links can share a folder: `study/weekNN/<series>/<slug>.html`
+  (first: `study/week13/crawler/`, 2026-11-24). Weeks 2–4 live in other repositories
   (`SW-AI-W02-03`, `SW-AI-C`) and are only linked from the index.
 - **Copies.** Every file under `study/weekNN/` is a byte copy of an original
   elsewhere under `~/dev/krafton-jungle/`. Edit the original, then copy it
