@@ -207,11 +207,11 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <p class="lead">막을 대상만이 아니라 잘못 막으면 안 되는 대상도 요구</p>
 <div class="scroll">
 <table class="stack">
-<thead><tr><th>사용자</th><th>운영자가 원하는 것</th><th>잘못 판단하면</th><th>경기장에서 보는 곳</th></tr></thead>
+<thead><tr><th>사용자</th><th>운영자가 원하는 것</th><th>잘못 판단하면</th><th>Scene에서 보는 곳</th></tr></thead>
 <tbody>
-<tr><td>진짜 사용자</td><td data-h="운영자가 원하는 것">막지 않기. 느려지지 않기</td><td data-h="잘못 판단하면">오탐: 사람이 막히거나 기다린다</td><td data-h="경기장에서 보는 곳"><code>human.py</code>의 200 수</td></tr>
-<tr><td>나쁜 crawler</td><td data-h="운영자가 원하는 것">싸게, 앞 단계에서 거르기</td><td data-h="잘못 판단하면">미탐: Origin의 CPU와 대역폭이 샌다</td><td data-h="경기장에서 보는 곳"><span class="ln"><code>000</code>, <code>429</code>, <code>403</code></span><span class="ln">Origin이 보낸 MiB</span></td></tr>
-<tr><td>착한 bot</td><td data-h="운영자가 원하는 것">신원이 확인되면 통과시키거나 값을 받기</td><td data-h="잘못 판단하면">검색 노출이나 거래를 잃는다</td><td data-h="경기장에서 보는 곳"><span class="ln"><code>signed</code>의 200</span><span class="ln"><code>named</code>의 402</span></td></tr>
+<tr><td>진짜 사용자</td><td data-h="운영자가 원하는 것">막지 않기. 느려지지 않기</td><td data-h="잘못 판단하면">오탐: 사람이 막히거나 기다린다</td><td data-h="Scene에서 보는 곳"><code>human.py</code>의 200 수</td></tr>
+<tr><td>나쁜 crawler</td><td data-h="운영자가 원하는 것">싸게, 앞 단계에서 거르기</td><td data-h="잘못 판단하면">미탐: Origin의 CPU와 대역폭이 샌다</td><td data-h="Scene에서 보는 곳"><span class="ln"><code>000</code>, <code>429</code>, <code>403</code></span><span class="ln">Origin이 보낸 MiB</span></td></tr>
+<tr><td>착한 bot</td><td data-h="운영자가 원하는 것">신원이 확인되면 통과시키거나 값을 받기</td><td data-h="잘못 판단하면">검색 노출이나 거래를 잃는다</td><td data-h="Scene에서 보는 곳"><span class="ln"><code>signed</code>의 200</span><span class="ln"><code>named</code>의 402</span></td></tr>
 </tbody>
 </table>
 </div>
@@ -220,7 +220,7 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <p class="lead">단계 하나 = 카드 하나<br>카드마다 보이는 신호 → 거르는 기준 → 구분하는 사용자 → 서버 비용 → 고려할 점</p>
 <div id="flow"></div>
 <!--GEN:dg-rp-flow--><figure class="dgf"><svg class="dg" id="dg-rp-flow" viewBox="0 0 400 512" style="max-width:520px" role="img" aria-labelledby="dg-rp-flow-title dg-rp-flow-desc"><title id="dg-rp-flow-title">연결 하나의 길</title><desc id="dg-rp-flow-desc">연결 하나가 지나는 순서와 옆으로 빠지는 출구. drop은 TLS handshake 전에 끝난다</desc><defs><marker id="dg-rp-flow-ah" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah" d="M0 0L8 3L0 6z"/></marker><marker id="dg-rp-flow-ah-g" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah g" d="M0 0L8 3L0 6z"/></marker><marker id="dg-rp-flow-ah-r" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah r" d="M0 0L8 3L0 6z"/></marker></defs><path class="ln" d="M104 32 L104 48" marker-end="url(#dg-rp-flow-ah)"/><path class="ln" d="M104 92 L104 108" marker-end="url(#dg-rp-flow-ah)"/><path class="ln g" d="M104 144 L104 172" marker-end="url(#dg-rp-flow-ah-g)"/><path class="ln" d="M104 216 L104 232" marker-end="url(#dg-rp-flow-ah)"/><path class="ln" d="M104 264 L104 280" marker-end="url(#dg-rp-flow-ah)"/><path class="ln" d="M104 324 L104 340" marker-end="url(#dg-rp-flow-ah)"/><path class="ln g" d="M104 376 L104 416" marker-end="url(#dg-rp-flow-ah-g)"/><path class="ln" d="M104 452 L104 476" marker-end="url(#dg-rp-flow-ah)"/><rect class="mk" x="108.0" y="152.0" width="35.8" height="14"/><text x="112" y="163.0" text-anchor="start" class="t2" font-size="12">pass</text><rect class="mk" x="108.0" y="389.0" width="35.8" height="14"/><text x="112" y="400.0" text-anchor="start" class="t2" font-size="12">pass</text><rect class="mk" x="108.0" y="458.0" width="34.6" height="14"/><text x="112" y="469.0" text-anchor="start" class="t2" font-size="12">miss</text><path class="ln r" d="M208 126 L248 126" marker-end="url(#dg-rp-flow-ah-r)"/><path class="ln r" d="M208 358 L248 358" marker-end="url(#dg-rp-flow-ah-r)"/><path class="ln g" d="M208 434 L248 434" marker-end="url(#dg-rp-flow-ah-g)"/><rect class="bx" x="40" y="0" width="128" height="32" rx="6" fill="none" stroke="currentColor"/><text x="104" y="20.6" text-anchor="middle" class="b" font-size="13">client 연결</text><rect class="bx" x="0" y="48" width="208" height="44" rx="6" fill="none" stroke="currentColor"/><text x="104" y="66.4" text-anchor="middle" font-size="12.5">ClientHello 엿보기</text><text x="104" y="82.4" text-anchor="middle" class="t2 mono" font-size="12.5">MSG_PEEK → JA4</text><rect class="hl" x="0" y="108" width="208" height="36" rx="6" fill="none" stroke="currentColor"/><text x="104" y="130.4" text-anchor="middle" class="b" font-size="12.5">Connection Verdict</text><rect class="ev" x="0" y="172" width="208" height="44" rx="6" fill="none" stroke="currentColor"/><text x="104" y="190.4" text-anchor="middle" font-size="12.5">TLS handshake</text><text x="104" y="206.4" text-anchor="middle" class="t2" font-size="12.5">RSA-2048 서명 0.9 ms</text><rect class="bx" x="0" y="232" width="208" height="32" rx="6" fill="none" stroke="currentColor"/><text x="104" y="252.4" text-anchor="middle" font-size="12.5">request parse</text><rect class="bx" x="0" y="280" width="208" height="44" rx="6" fill="none" stroke="currentColor"/><text x="104" y="298.4" text-anchor="middle" font-size="12.5">rate limit,</text><text x="104" y="314.4" text-anchor="middle" font-size="12.5">Behavior counter</text><rect class="hl" x="0" y="340" width="208" height="36" rx="6" fill="none" stroke="currentColor"/><text x="104" y="362.4" text-anchor="middle" class="b" font-size="12.5">Request Verdict</text><rect class="bx" x="0" y="416" width="208" height="36" rx="6" fill="none" stroke="currentColor"/><text x="104" y="438.4" text-anchor="middle" font-size="12.5">cache</text><rect class="ink" x="40" y="476" width="128" height="32" rx="6" fill="none" stroke="currentColor"/><text x="104" y="496.6" text-anchor="middle" class="b" font-size="13">Origin</text><rect class="ng" x="248" y="102" width="152" height="48" rx="6" fill="none" stroke="currentColor"/><text x="324" y="122.2" text-anchor="middle" font-size="12">drop: 응답 없이 닫음</text><text x="324" y="138.2" text-anchor="middle" class="t2" font-size="12">TLS 바이트 0</text><text x="252" y="190.2" text-anchor="start" class="t2" font-size="12">drop은 이 서명을</text><text x="252" y="206.2" text-anchor="start" class="t2" font-size="12">치르지 않는다</text><rect class="ng" x="248" y="314" width="152" height="88" rx="6" fill="none" stroke="currentColor"/><text x="324" y="330.2" text-anchor="middle" font-size="12">403 deny</text><text x="324" y="346.2" text-anchor="middle" font-size="12">429 slow</text><text x="324" y="362.2" text-anchor="middle" font-size="12">401 challenge</text><text x="324" y="378.2" text-anchor="middle" font-size="12">402 pay</text><text x="324" y="394.2" text-anchor="middle" font-size="12">tarpit: 붙잡고 닫음</text><rect class="ok" x="248" y="412" width="152" height="44" rx="6" fill="none" stroke="currentColor"/><text x="324" y="430.2" text-anchor="middle" font-size="12">cache hit, 304</text><text x="324" y="446.2" text-anchor="middle" class="t2" font-size="12">Origin에 안 감</text></svg></figure><!--/GEN:dg-rp-flow-->
-<p>Lesson과 따라치기도 이 카드 순서로 간다. 카드의 코드 칸이 따라칠 함수이고, 경기장 칸이 Lesson의 예측 문제다.</p>
+<p>Lesson과 따라치기도 이 카드 순서로 간다. 카드의 코드 칸이 따라칠 함수이고, Scene 칸이 Lesson의 예측 문제다.</p>
 
 <section class="stage" id="s-tcp">
 <h3><span class="no">①</span> TCP</h3>
@@ -243,7 +243,7 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <dt>서버 비용</dt><dd><code>MSG_PEEK</code> 한 번과 표 조회. drop은 ClientHello를 읽지 않고 닫아서 RST만 가고, TLS 바이트는 0</dd>
 <dt>고려할 점</dt><dd><span class="ln">HTTP가 아직 없으므로 403이나 429는 못 고르고 pass, drop, tarpit뿐</span><span class="ln">JA4는 개인이 아니라 라이브러리의 지문: 막으면 같은 curl을 쓰는 사람도 막힘</span><span class="ln">IP는 바꾸면 끝 (02 역사 라운드 4, 5)</span></dd>
 <dt>코드</dt><dd><code>connection_decide</code> (<code>connection_verdict.c</code>), <code>ja4_format</code> (<code>ja4.c</code>)</dd>
-<dt>경기장</dt><dd><span class="ln"><code>spread</code> <code>000=5120</code>: 주소 32개 중 16개가 <code>127.0.0.16/28</code></span><span class="ln"><code>trapped</code> <code>000=6860</code>: Honeypot 한 번 뒤 Block table</span></dd>
+<dt>Scene</dt><dd><span class="ln"><code>spread</code> <code>000=5120</code>: 주소 32개 중 16개가 <code>127.0.0.16/28</code></span><span class="ln"><code>trapped</code> <code>000=6860</code>: Honeypot 한 번 뒤 Block table</span></dd>
 <dt>Lesson</dt><dd><a href="https://benjohnbill.github.io/study/week13/mini-webserver/lessons/l1-map-and-cost.html">L1 TCP, ClientHello: 규칙 표</a><br>L2 ClientHello: 지문 (준비 중)</dd>
 </dl>
 </section>
@@ -271,11 +271,11 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <dt>고려할 점</dt><dd><span class="ln">규칙 대부분이 이 단계에 몰린다: 신호가 여기서 가장 많다</span><span class="ln">tarpit은 연결을 붙잡는 동안 서버 자원도 붙잡는다 (<a href="#cost">6절</a>)</span></dd>
 </dl>
 <table class="sub-stage">
-<thead><tr><th>묶음</th><th>규칙과 Verdict</th><th>코드</th><th>경기장</th><th>Lesson</th></tr></thead>
+<thead><tr><th>묶음</th><th>규칙과 Verdict</th><th>코드</th><th>Scene</th><th>Lesson</th></tr></thead>
 <tbody>
-<tr><td>HTTP ① 양</td><td data-h="규칙과 Verdict">IP마다 token bucket을 넘으면 slow (429)</td><td data-h="코드"><code>rate_limit_take</code></td><td data-h="경기장"><code>repeat</code> 200=59 = 10 + 5 × 10</td><td data-h="Lesson">L3</td></tr>
-<tr><td>HTTP ② 시험과 비용 비대칭</td><td data-h="규칙과 Verdict"><span class="ln"><code>--pow-prefix</code> 경로(경기장은 <code>/api/</code>)에서 Proof of work 풀이가 없으면 challenge (401)</span><span class="ln">User-Agent는 Chrome인데 JA4 table이 그 JA4에 browser가 아닌 label을 붙였으면 tarpit</span></td><td data-h="코드"><code>pow_is_solved</code>, <code>tarpit_start</code></td><td data-h="경기장"><span class="ln"><code>solver</code> 200=55</span><span class="ln"><code>disguised</code> 응답 0</span></td><td data-h="Lesson">L4</td></tr>
-<tr><td>HTTP ③ 신원, 거래, 규칙 순서</td><td data-h="규칙과 Verdict"><span class="ln">Honeypot과 scanner (404 5번) → Block table</span><span class="ln">서명이 확인된 bot → pass</span><span class="ln">서명 없는 crawler 이름: pay 경로면 402, 아니면 403</span></td><td data-h="코드"><code>verdict_decide</code></td><td data-h="경기장"><span class="ln"><code>signed</code> 200, <code>named</code> 402</span><span class="ln"><code>polite</code> 200=10</span></td><td data-h="Lesson">L5</td></tr>
+<tr><td>HTTP ① 양</td><td data-h="규칙과 Verdict">IP마다 token bucket을 넘으면 slow (429)</td><td data-h="코드"><code>rate_limit_take</code></td><td data-h="Scene"><code>repeat</code> 200=59 = 10 + 5 × 10</td><td data-h="Lesson">L3</td></tr>
+<tr><td>HTTP ② 시험과 비용 비대칭</td><td data-h="규칙과 Verdict"><span class="ln"><code>--pow-prefix</code> 경로(Scene은 <code>/api/</code>)에서 Proof of work 풀이가 없으면 challenge (401)</span><span class="ln">User-Agent는 Chrome인데 JA4 table이 그 JA4에 browser가 아닌 label을 붙였으면 tarpit</span></td><td data-h="코드"><code>pow_is_solved</code>, <code>tarpit_start</code></td><td data-h="Scene"><span class="ln"><code>solver</code> 200=55</span><span class="ln"><code>disguised</code> 응답 0</span></td><td data-h="Lesson">L4</td></tr>
+<tr><td>HTTP ③ 신원, 거래, 규칙 순서</td><td data-h="규칙과 Verdict"><span class="ln">Honeypot과 scanner (404 5번) → Block table</span><span class="ln">서명이 확인된 bot → pass</span><span class="ln">서명 없는 crawler 이름: pay 경로면 402, 아니면 403</span></td><td data-h="코드"><code>verdict_decide</code></td><td data-h="Scene"><span class="ln"><code>signed</code> 200, <code>named</code> 402</span><span class="ln"><code>polite</code> 200=10</span></td><td data-h="Lesson">L5</td></tr>
 </tbody>
 </table>
 </section>
@@ -292,7 +292,7 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <dt>서버 비용</dt><dd>표 조회 하나. hit면 Origin에 가지 않는다</dd>
 <dt>고려할 점</dt><dd>crawler는 드문 페이지를 긁어서 cache miss가 많다. cache만으로는 crawler 비용이 줄지 않는다 (<a href="https://benjohnbill.github.io/study/week13/mini-webserver/notes/01-cost.html#paths">01 비용</a>)</dd>
 <dt>코드</dt><dd><code>cache_find</code>, <code>cache_find_etag</code></dd>
-<dt>경기장</dt><dd><span class="ln"><code>revalidate</code> 304=55</span><span class="ln"><code>signed</code>: 요청 2176개를 cache가 답함</span></dd>
+<dt>Scene</dt><dd><span class="ln"><code>revalidate</code> 304=55</span><span class="ln"><code>signed</code>: 요청 2176개를 cache가 답함</span></dd>
 <dt>Lesson</dt><dd>L6 (준비 중)</dd>
 </dl>
 </section>
@@ -304,9 +304,9 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <dt>거르는 기준</dt><dd>없음. 여기까지 온 요청은 모두 서빙한다</dd>
 <dt>구분하는 사용자</dt><dd>없음</dd>
 <dt>서버 비용</dt><dd>가장 비싸다: Origin의 CPU, 디스크, 대역폭</dd>
-<dt>고려할 점</dt><dd>앞 단계의 모든 방어는 이 비용을 줄이려고 있다. 그 효과는 경기장의 "Origin이 보낸 MiB"로 잰다</dd>
+<dt>고려할 점</dt><dd>앞 단계의 모든 방어는 이 비용을 줄이려고 있다. 그 효과는 Scene의 "Origin이 보낸 MiB"로 잰다</dd>
 <dt>코드</dt><dd><code>forward.c</code></dd>
-<dt>경기장</dt><dd><code>repeat</code> 4896.3 → 8.0 MiB (<code>none</code> → <code>layers</code>)</dd>
+<dt>Scene</dt><dd><code>repeat</code> 4896.3 → 8.0 MiB (<code>none</code> → <code>layers</code>)</dd>
 <dt>Lesson</dt><dd>L6 (준비 중)</dd>
 </dl>
 </section>
@@ -317,7 +317,7 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <thead><tr><th>하지 않는 것</th><th>이유</th></tr></thead>
 <tbody>
 <tr><td>완벽한 차단</td><td>막는 비용이 아끼는 비용보다 커지는 지점부터는 손해다 (1절의 두 비교)</td></tr>
-<tr><td>CAPTCHA</td><td>사람이 풀어야 하므로 경기장이 잴 수 없다. 진짜 사용자의 비용도 크다</td></tr>
+<tr><td>CAPTCHA</td><td>사람이 풀어야 하므로 Scene이 잴 수 없다. 진짜 사용자의 비용도 크다</td></tr>
 <tr><td>reverse DNS</td><td>착한 bot의 신원 증명은 Web Bot Auth가 맡는다</td></tr>
 <tr><td>JS를 돌리는 browser 판별 (headless 탐지)</td><td><code>rproxy</code>는 HTML을 고치지 않고, 그 군비 경쟁은 02 역사 라운드 6 ~ 9에서 crawler가 앞섰다</td></tr>
 <tr><td>대량 트래픽 공격 (DDoS)</td><td>kernel과 망 장비의 일이다. <code>rproxy</code>는 연결이 생긴 뒤부터 본다</td></tr>
@@ -326,7 +326,7 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 </table>
 <p><span class="tag plan">agent 제안</span> CAPTCHA와 reverse DNS는 SPEC §11 v2가 뺐고, 나머지 넷은 agent가 제안했다. 정할 사람은 운영자다.</p>
 
-<h2 id="arena">5. 경기장: Crawler script 10개</h2>
+<h2 id="arena">5. Scene: Crawler script 10개</h2>
 <p><code>bench/arena/scene.sh &lt;crawler&gt; none layers</code>는 Crawler script 하나와 <code>human.py</code>를 나란히, preset마다 10초씩 돌린다. Origin은 <code>./server --model pool --delay 10</code>이다. Scene은 재기만 하고, 합격과 불합격을 가리지 않는다. <a class="src p" href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-arena-layers.md">primary</a></p>
 <details class="fold"><summary><span>자세히: 두 preset의 flag</span></summary>
 <div class="in">
@@ -368,10 +368,10 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <!--GEN:dg-rp-starve--><figure class="dgf"><svg class="dg" id="dg-rp-starve" viewBox="0 0 400 240" style="max-width:520px" role="img" aria-labelledby="dg-rp-starve-title dg-rp-starve-desc"><title id="dg-rp-starve-title">tarpit이 Worker를 모두 붙잡을 때</title><desc id="dg-rp-starve-desc">disguised의 연결이 Worker 4개를 tarpit으로 10초씩 붙잡고, human.py는 대기열에서 기다린다</desc><defs><marker id="dg-rp-starve-ah" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah" d="M0 0L8 3L0 6z"/></marker><marker id="dg-rp-starve-ah-r" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah r" d="M0 0L8 3L0 6z"/></marker></defs><path class="ln r" d="M90 44 L90 72" marker-end="url(#dg-rp-starve-ah-r)"/><path class="ln" d="M310 44 L310 80" marker-end="url(#dg-rp-starve-ah)"/><path class="ln r" d="M44 120 L44 152" marker-end="url(#dg-rp-starve-ah-r)"/><path class="ln r" d="M148 120 L148 152" marker-end="url(#dg-rp-starve-ah-r)"/><path class="ln r" d="M252 120 L252 152" marker-end="url(#dg-rp-starve-ah-r)"/><path class="ln r" d="M356 120 L356 152" marker-end="url(#dg-rp-starve-ah-r)"/><rect class="bx" x="0" y="0" width="180" height="44" rx="6" fill="none" stroke="currentColor"/><text x="90" y="18.4" text-anchor="middle" class="b" font-size="12.5">disguised</text><text x="90" y="34.4" text-anchor="middle" class="t2" font-size="12.5">loop 8개, Chrome UA</text><rect class="bx" x="220" y="0" width="180" height="44" rx="6" fill="none" stroke="currentColor"/><text x="310" y="18.4" text-anchor="middle" class="b" font-size="12.5">human.py</text><text x="310" y="34.4" text-anchor="middle" class="t2" font-size="12.5">1 ~ 3초 쉬고 다시</text><rect class="zone" x="0" y="72" width="400" height="48" rx="6" fill="none" stroke="currentColor"/><text x="12" y="100.5" text-anchor="start" class="b" font-size="12">대기열</text><rect class="ng" x="72" y="84" width="16" height="24" rx="3" fill="none" stroke="currentColor"/><rect class="ng" x="96" y="84" width="16" height="24" rx="3" fill="none" stroke="currentColor"/><rect class="ng" x="120" y="84" width="16" height="24" rx="3" fill="none" stroke="currentColor"/><rect class="ng" x="144" y="84" width="16" height="24" rx="3" fill="none" stroke="currentColor"/><rect class="ng" x="168" y="84" width="16" height="24" rx="3" fill="none" stroke="currentColor"/><rect class="ng" x="192" y="84" width="16" height="24" rx="3" fill="none" stroke="currentColor"/><rect class="bx" x="228" y="80" width="160" height="32" rx="6" fill="none" stroke="currentColor"/><text x="308" y="100.2" text-anchor="middle" font-size="12">human.py 연결</text><rect class="ng" x="0" y="152" width="88" height="44" rx="6" fill="none" stroke="currentColor"/><text x="44" y="170.4" text-anchor="middle" font-size="12.5">Worker</text><text x="44" y="186.4" text-anchor="middle" class="t2" font-size="12.5">tarpit 10초</text><rect class="ng" x="104" y="152" width="88" height="44" rx="6" fill="none" stroke="currentColor"/><text x="148" y="170.4" text-anchor="middle" font-size="12.5">Worker</text><text x="148" y="186.4" text-anchor="middle" class="t2" font-size="12.5">tarpit 10초</text><rect class="ng" x="208" y="152" width="88" height="44" rx="6" fill="none" stroke="currentColor"/><text x="252" y="170.4" text-anchor="middle" font-size="12.5">Worker</text><text x="252" y="186.4" text-anchor="middle" class="t2" font-size="12.5">tarpit 10초</text><rect class="ng" x="312" y="152" width="88" height="44" rx="6" fill="none" stroke="currentColor"/><text x="356" y="170.4" text-anchor="middle" font-size="12.5">Worker</text><text x="356" y="186.4" text-anchor="middle" class="t2" font-size="12.5">tarpit 10초</text><text x="200" y="224.0" text-anchor="middle" font-size="12">Worker 4개가 모두 묶임 → human.py 응답 0개</text></svg></figure><!--/GEN:dg-rp-starve-->
 <p>disguised는 Chrome User-Agent에 curl의 JA4를 보내므로, 요청마다 tarpit을 받는다. commit <code>f9dda4d</code>의 tarpit은 Worker 하나를 <code>--tarpit</code> 초(기본 10초) 동안 <code>sleep</code>으로 붙잡은 뒤 응답 없이 닫았다. Worker는 기본 4개였고 disguised는 loop 8개로 보냈다. Worker가 모두 묶이자 <code>human.py</code>는 대기열에서 10초를 기다렸고, 두 client 모두 응답을 하나도 받지 못했다. <a class="src p" href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-arena-disguised-v2.md">primary</a></p>
 <p>1절의 첫 비교를 어긴 사례다: crawler를 붙잡는 방어가 서버의 자원도 붙잡아서, 진짜 사용자까지 멈췄다.</p>
-<p><span class="tag plan">고침, 재측정 전</span> commit <code>617b815</code>부터 <code>rproxy</code>는 CPU core마다 Event loop 하나로 돈다. tarpit은 이제 <code>sleep</code>이 아니라 timer다: socket은 열어 두고, 아무 thread도 기다리지 않는다(<code>tarpit_start</code>). 이 변경 뒤 경기장은 아직 다시 재지 않았다.</p>
+<p><span class="tag plan">고침, 재측정 전</span> commit <code>617b815</code>부터 <code>rproxy</code>는 CPU core마다 Event loop 하나로 돈다. tarpit은 이제 <code>sleep</code>이 아니라 timer다: socket은 열어 두고, 아무 thread도 기다리지 않는다(<code>tarpit_start</code>). 이 변경 뒤 Scene은 아직 다시 재지 않았다.</p>
 <p id="tls-cost"><code>rproxy</code>는 응답 하나를 보내고 연결을 닫으므로, 요청마다 TLS handshake를 한다. parity 측정에서 <code>rproxy</code>는 요청 하나에 CPU 2.1 ms를 썼고, 평문 HTTP와 keep-alive를 쓰던 Proxy Route는 0.08 ms를 썼다. 약 25배다. <a class="src p" href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-rproxy-cache-parity.md">primary</a></p>
 <p><span class="tag plan">계획, 아직 없음</span> <code>rproxy</code>의 keep-alive나 TLS session resumption이 있으면 handshake가 아니라 cache를 잴 수 있다고 측정 파일은 적었다. 아직 재지 않았다.</p>
-<p>이 경기장의 한계:</p>
+<p>이 Scene의 한계:</p>
 <ul>
 <li>curl로 만든 Crawler script는 모두 JA4 하나를 같이 쓴다. 그래서 Honeypot hit는 JA4가 아니라 IP만 Block table에 넣고, <code>layers</code>의 rate limit 열쇠도 IP다.</li>
 <li><code>human.py</code>는 Python <code>urllib</code>이고 TLS는 OpenSSL이다. 진짜 Chrome(BoringSSL)이 아니라 browser의 대역이고, JA4 table이 그 JA4를 <code>browser</code>라고 부를 뿐이다.</li>
@@ -388,7 +388,7 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <li><a href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/spec-cjg.md#L312">SPEC §11 Reverse Proxy</a>: module, 연결 하나의 순서, 기본값과 그 출처</li>
 <li><a href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/adr/reverse-proxy-is-a-separate-process.md">ADR: Reverse Proxy는 별도 프로세스</a></li>
 <li><a href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/adr/openssl-for-the-reverse-proxy.md">ADR: TLS와 SHA-256에 OpenSSL</a></li>
-<li><a href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-arena-layers.md">경기장 결과 요약</a>: Crawler script마다의 표는 같은 폴더의 <code>20261124-arena-&lt;crawler&gt;-v2.md</code></li>
+<li><a href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-arena-layers.md">Scene 결과 요약</a>: Crawler script마다의 표는 같은 폴더의 <code>20261124-arena-&lt;crawler&gt;-v2.md</code></li>
 </ul>
 
 <nav class="pn" aria-label="관련 페이지">Lesson: <a href="https://benjohnbill.github.io/study/week13/mini-webserver/lessons/l1-map-and-cost.html">L1 TCP, ClientHello: 규칙 표</a><br>배경: <a href="https://benjohnbill.github.io/study/week13/mini-webserver/notes/00-overview.html">00 한눈에 보기</a></nav>
