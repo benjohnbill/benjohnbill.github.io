@@ -268,11 +268,41 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 </details>
 
 <h2 id="stages">3. 단계별 검사</h2>
-<p class="lead">단계 하나 = 카드 하나<br>접힌 카드의 한 줄 = 여기서 거르면 아끼는 비용</p>
+<p class="lead">단계 하나 = 카드 하나<br>접힌 카드의 Saved = 여기서 거르면 아끼는 비용</p>
 <div id="flow"></div>
-<!--GEN:dg-rp-flow--><figure class="dgf"><svg class="dg" id="dg-rp-flow" viewBox="0 0 400 512" style="max-width:520px" role="img" aria-labelledby="dg-rp-flow-title dg-rp-flow-desc"><title id="dg-rp-flow-title">연결 하나의 길</title><desc id="dg-rp-flow-desc">연결 하나가 지나는 순서와 옆으로 빠지는 출구. drop은 TLS handshake 전에 끝난다</desc><defs><marker id="dg-rp-flow-ah" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah" d="M0 0L8 3L0 6z"/></marker><marker id="dg-rp-flow-ah-g" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah g" d="M0 0L8 3L0 6z"/></marker><marker id="dg-rp-flow-ah-r" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah r" d="M0 0L8 3L0 6z"/></marker></defs><path class="ln" d="M104 32 L104 48" marker-end="url(#dg-rp-flow-ah)"/><path class="ln" d="M104 92 L104 108" marker-end="url(#dg-rp-flow-ah)"/><path class="ln g" d="M104 144 L104 172" marker-end="url(#dg-rp-flow-ah-g)"/><path class="ln" d="M104 216 L104 232" marker-end="url(#dg-rp-flow-ah)"/><path class="ln" d="M104 264 L104 280" marker-end="url(#dg-rp-flow-ah)"/><path class="ln" d="M104 324 L104 340" marker-end="url(#dg-rp-flow-ah)"/><path class="ln g" d="M104 376 L104 416" marker-end="url(#dg-rp-flow-ah-g)"/><path class="ln" d="M104 452 L104 476" marker-end="url(#dg-rp-flow-ah)"/><rect class="mk" x="108.0" y="152.0" width="35.8" height="14"/><text x="112" y="163.0" text-anchor="start" class="t2" font-size="12">pass</text><rect class="mk" x="108.0" y="389.0" width="35.8" height="14"/><text x="112" y="400.0" text-anchor="start" class="t2" font-size="12">pass</text><rect class="mk" x="108.0" y="458.0" width="34.6" height="14"/><text x="112" y="469.0" text-anchor="start" class="t2" font-size="12">miss</text><path class="ln r" d="M208 126 L248 126" marker-end="url(#dg-rp-flow-ah-r)"/><path class="ln r" d="M208 358 L248 358" marker-end="url(#dg-rp-flow-ah-r)"/><path class="ln g" d="M208 434 L248 434" marker-end="url(#dg-rp-flow-ah-g)"/><rect class="bx" x="40" y="0" width="128" height="32" rx="6" fill="none" stroke="currentColor"/><text x="104" y="20.6" text-anchor="middle" class="b" font-size="13">client 연결</text><rect class="bx" x="0" y="48" width="208" height="44" rx="6" fill="none" stroke="currentColor"/><text x="104" y="66.4" text-anchor="middle" font-size="12.5">ClientHello 엿보기</text><text x="104" y="82.4" text-anchor="middle" class="t2 mono" font-size="12.5">MSG_PEEK → JA4</text><rect class="hl" x="0" y="108" width="208" height="36" rx="6" fill="none" stroke="currentColor"/><text x="104" y="130.4" text-anchor="middle" class="b" font-size="12.5">Connection Verdict</text><rect class="ev" x="0" y="172" width="208" height="44" rx="6" fill="none" stroke="currentColor"/><text x="104" y="190.4" text-anchor="middle" font-size="12.5">TLS handshake</text><text x="104" y="206.4" text-anchor="middle" class="t2" font-size="12.5">RSA-2048 서명 0.9 ms</text><rect class="bx" x="0" y="232" width="208" height="32" rx="6" fill="none" stroke="currentColor"/><text x="104" y="252.4" text-anchor="middle" font-size="12.5">request parse</text><rect class="bx" x="0" y="280" width="208" height="44" rx="6" fill="none" stroke="currentColor"/><text x="104" y="298.4" text-anchor="middle" font-size="12.5">rate limit,</text><text x="104" y="314.4" text-anchor="middle" font-size="12.5">Behavior counter</text><rect class="hl" x="0" y="340" width="208" height="36" rx="6" fill="none" stroke="currentColor"/><text x="104" y="362.4" text-anchor="middle" class="b" font-size="12.5">Request Verdict</text><rect class="bx" x="0" y="416" width="208" height="36" rx="6" fill="none" stroke="currentColor"/><text x="104" y="438.4" text-anchor="middle" font-size="12.5">cache</text><rect class="ink" x="40" y="476" width="128" height="32" rx="6" fill="none" stroke="currentColor"/><text x="104" y="496.6" text-anchor="middle" class="b" font-size="13">Origin</text><rect class="ng" x="248" y="102" width="152" height="48" rx="6" fill="none" stroke="currentColor"/><text x="324" y="122.2" text-anchor="middle" font-size="12">drop: 응답 없이 닫음</text><text x="324" y="138.2" text-anchor="middle" class="t2" font-size="12">TLS 바이트 0</text><text x="252" y="190.2" text-anchor="start" class="t2" font-size="12">drop은 이 서명을</text><text x="252" y="206.2" text-anchor="start" class="t2" font-size="12">치르지 않는다</text><rect class="ng" x="248" y="314" width="152" height="88" rx="6" fill="none" stroke="currentColor"/><text x="324" y="330.2" text-anchor="middle" font-size="12">403 deny</text><text x="324" y="346.2" text-anchor="middle" font-size="12">429 slow</text><text x="324" y="362.2" text-anchor="middle" font-size="12">401 challenge</text><text x="324" y="378.2" text-anchor="middle" font-size="12">402 pay</text><text x="324" y="394.2" text-anchor="middle" font-size="12">tarpit: 붙잡고 닫음</text><rect class="ok" x="248" y="412" width="152" height="44" rx="6" fill="none" stroke="currentColor"/><text x="324" y="430.2" text-anchor="middle" font-size="12">cache hit, 304</text><text x="324" y="446.2" text-anchor="middle" class="t2" font-size="12">Origin에 안 감</text></svg></figure><!--/GEN:dg-rp-flow-->
+<!--GEN:dg-rp-stages--><figure class="dgf"><svg class="dg" id="dg-rp-stages" viewBox="0 0 400 420" style="max-width:560px" role="img" aria-labelledby="dg-rp-stages-title dg-rp-stages-desc"><title id="dg-rp-stages-title">연결 하나의 길: 여섯 단계</title><desc id="dg-rp-stages-desc">가운데 세로축은 TCP, ClientHello, TLS, HTTP, Cache, Origin 여섯 단계. 각 단계에 끼는 검사와 그 출구는 오른쪽에 있다. TLS에는 검사가 없다</desc><defs><marker id="dg-rp-stages-ah" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah" d="M0 0L8 3L0 6z"/></marker><marker id="dg-rp-stages-ah-g" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah g" d="M0 0L8 3L0 6z"/></marker><marker id="dg-rp-stages-ah-r" viewBox="0 0 8 6" markerWidth="8" markerHeight="6" refX="7.5" refY="3" orient="auto" markerUnits="userSpaceOnUse"><path class="ah r" d="M0 0L8 3L0 6z"/></marker></defs>
+<text x="80.0" y="20" text-anchor="middle" class="b" font-size="13">client</text>
+<path class="ln" d="M80.0 28 L80.0 40.0" marker-end="url(#dg-rp-stages-ah)"/>
+<a href="#s-tcp"><rect class="ink" x="16" y="40.0" width="128" height="40" rx="6"/><text x="80.0" y="65.0" text-anchor="middle" class="b" font-size="13">① TCP</text></a>
+<text x="188" y="65.0" class="t2" font-size="12">Stuck connection: 5초 뒤 닫음</text>
+<path class="ln" d="M80.0 80.0 L80.0 97.0" marker-end="url(#dg-rp-stages-ah)"/>
+<a href="#s-hello"><rect class="ink" x="16" y="97.0" width="128" height="40" rx="6"/><text x="80.0" y="122.0" text-anchor="middle" class="b" font-size="13">② ClientHello</text></a>
+<text x="188" y="108" class="t2" font-size="12">Connection Verdict</text>
+<rect class="ng" x="188" y="112" width="200" height="26" rx="6"/>
+<text x="288" y="130" text-anchor="middle" font-size="12">drop: RST, TLS 바이트 0</text>
+<path class="ln r" d="M144 117.0 L188 117.0" marker-end="url(#dg-rp-stages-ah-r)"/>
+<path class="ln" d="M80.0 137.0 L80.0 154.0" marker-end="url(#dg-rp-stages-ah)"/>
+<a href="#s-tls"><rect class="ink" x="16" y="154.0" width="128" height="40" rx="6"/><text x="80.0" y="179.0" text-anchor="middle" class="b" font-size="13">③ TLS</text></a>
+<text x="188" y="179.0" class="t2" font-size="12">검사 없음: RSA 서명 0.9 ms</text>
+<path class="ln" d="M80.0 194.0 L80.0 235.0" marker-end="url(#dg-rp-stages-ah)"/>
+<a href="#s-http"><rect class="ink" x="16" y="235.0" width="128" height="40" rx="6"/><text x="80.0" y="260.0" text-anchor="middle" class="b" font-size="13">④ HTTP</text></a>
+<text x="188" y="222" class="t2" font-size="12">rate limit, Behavior counter</text>
+<text x="188" y="238" class="t2" font-size="12">→ Request Verdict</text>
+<rect class="ng" x="188" y="242" width="200" height="58" rx="6"/>
+<text x="288" y="260" text-anchor="middle" font-size="12">403 deny · 429 slow</text>
+<text x="288" y="276" text-anchor="middle" font-size="12">401 challenge · 402 pay</text>
+<text x="288" y="292" text-anchor="middle" font-size="12">tarpit</text>
+<path class="ln r" d="M144 255.0 L188 255.0" marker-end="url(#dg-rp-stages-ah-r)"/>
+<path class="ln" d="M80.0 275.0 L80.0 316.0" marker-end="url(#dg-rp-stages-ah)"/>
+<a href="#s-cache"><rect class="ink" x="16" y="316.0" width="128" height="40" rx="6"/><text x="80.0" y="341.0" text-anchor="middle" class="b" font-size="13">⑤ Cache</text></a>
+<rect class="ok" x="188" y="316" width="200" height="26" rx="6"/>
+<text x="288" y="334" text-anchor="middle" font-size="12">hit, 304: Origin에 안 감</text>
+<path class="ln g" d="M144 336.0 L188 336.0" marker-end="url(#dg-rp-stages-ah-g)"/>
+<path class="ln" d="M80.0 356.0 L80.0 372.0" marker-end="url(#dg-rp-stages-ah)"/>
+<a href="#s-origin"><rect class="ink" x="16" y="372.0" width="128" height="40" rx="6"/><text x="80.0" y="397.0" text-anchor="middle" class="b" font-size="13">⑥ Origin</text></a>
+</svg></figure><!--/GEN:dg-rp-stages-->
 
-<details class="fold stage" id="s-tcp"><summary><span class="no">①</span><span class="nm">TCP</span><span class="save">아낌: Stuck connection이 쥔 fd와 칸</span></summary>
+<details class="fold stage" id="s-tcp"><summary><span class="no">①</span><span class="nm">TCP</span><span class="save">Saved: Stuck connection이 쥔 fd와 칸</span></summary>
 <div class="in"><dl>
 <dt>보이는 신호</dt><dd><span class="ln">client IP (<code>accept</code>의 주소)</span><span class="ln">연결이 바이트를 보내는지</span></dd>
 <dt>거르는 기준</dt><dd><span class="ln">ClientHello를 5초 안에 다 보내지 않는 연결은 닫음 (<code>CLIENT_TIMEOUT</code>)</span><span class="ln">Event loop마다 연결 수 상한 (<code>--connections</code>, 기본 1024)</span></dd>
@@ -281,7 +311,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 </dl></div>
 </details>
 
-<details class="fold stage" id="s-hello"><summary><span class="no">②</span><span class="nm">ClientHello</span><span class="save">아낌: TLS 서명, request parse, Origin 서빙 전부</span></summary>
+<details class="fold stage" id="s-hello"><summary><span class="no">②</span><span class="nm">ClientHello</span><span class="save">Saved: TLS 서명, request parse, Origin 서빙 전부</span></summary>
 <div class="in"><dl>
 <dt>보이는 신호</dt><dd><span class="ln">client IP</span><span class="ln">JA4 (ClientHello로 만든 TLS 라이브러리의 지문)</span><span class="ln">Block table</span></dd>
 <dt>거르는 기준</dt><dd><span class="ln">Block list의 CIDR range에 든 IP → drop</span><span class="ln">Block table에 든 IP나 JA4 → drop</span><span class="ln weak">약점: JA4를 막으면 같은 라이브러리를 쓰는 사람도 막힘</span><span class="ln weak">약점: IP는 바꾸면 끝 (02 역사 라운드 4, 5)</span><span class="ln weak">한계: HTTP가 아직 없어서 403, 429는 못 고름</span></dd>
@@ -301,7 +331,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 </div>
 </details>
 
-<details class="fold stage" id="s-http"><summary><span class="no">④</span><span class="nm">HTTP: Request Verdict</span><span class="save">아낌: Origin 서빙 (CPU, 디스크, 대역폭)</span></summary>
+<details class="fold stage" id="s-http"><summary><span class="no">④</span><span class="nm">HTTP: Request Verdict</span><span class="save">Saved: Origin 서빙 (CPU, 디스크, 대역폭)</span></summary>
 <div class="in"><dl>
 <dt>보이는 신호</dt><dd><span class="ln">②의 셋</span><span class="ln">User-Agent, target</span><span class="ln">rate limit, Behavior counter (요청, 서로 다른 target, 404, <code>robots.txt</code> 읽기, Honeypot hit)</span><span class="ln">Proof of work 풀이, Web Bot Auth 서명</span></dd>
 <dt>거르는 기준</dt><dd><span class="ln">규칙 8개의 표 (<code>verdict.c</code>의 <code>rules[]</code>), 첫 매치가 이김. 아래 그림</span><span class="ln weak">약점: tarpit은 붙잡는 동안 연결 하나를 계속 쥔다</span></dd>
@@ -321,7 +351,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 </div>
 </details>
 
-<details class="fold stage" id="s-cache"><summary><span class="no">⑤</span><span class="nm">Cache</span><span class="save">아낌: Origin 서빙 (hit와 304)</span></summary>
+<details class="fold stage" id="s-cache"><summary><span class="no">⑤</span><span class="nm">Cache</span><span class="save">Saved: Origin 서빙 (hit와 304)</span></summary>
 <div class="in"><dl>
 <dt>보이는 신호</dt><dd>target과 <code>If-None-Match</code></dd>
 <dt>서버 비용</dt><dd>cache 표 조회 하나. hit면 메모리에서 바로 보낸다</dd>
