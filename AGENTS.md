@@ -21,7 +21,7 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
 - **Paths.** A page published here lives at `study/weekNN/<slug>.html`
   (`slug` in English kebab-case). A series of notes that link to each other
   by relative links can share a folder: `study/weekNN/<series>/<slug>.html`
-  (first: `study/week13/crawler/`, 2026-11-24). Weeks 2–4 live in other repositories
+  (first: the crawler notes, 2026-11-24). A project series can nest one more level, `study/weekNN/<project>/<series>/<slug>.html`: `study/week13/mini-webserver/notes/` and `lessons/` (user said 2026-11-24). `study/week13/crawler/` holds redirect stubs for the old note URLs; do not delete them or add pages there. Weeks 2–4 live in other repositories
   (`SW-AI-W02-03`, `SW-AI-C`) and are only linked from the index.
 - **Copies.** Every file under `study/weekNN/` is a byte copy of an original
   elsewhere under `~/dev/krafton-jungle/`. Edit the original, then copy it
