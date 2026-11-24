@@ -277,13 +277,13 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 <a href="#s-tcp"><rect class="ink" x="16" y="40.0" width="128" height="40" rx="6"/><text x="80.0" y="65.0" text-anchor="middle" class="b" font-size="13">① TCP</text></a>
 <text x="188" y="65.0" class="t2" font-size="12">Stuck connection: 5초 뒤 닫음</text>
 <path class="ln" d="M80.0 80.0 L80.0 97.0" marker-end="url(#dg-rp-stages-ah)"/>
-<a href="#s-hello"><rect class="ink" x="16" y="97.0" width="128" height="40" rx="6"/><text x="80.0" y="122.0" text-anchor="middle" class="b" font-size="13">② ClientHello</text></a>
+<a href="#s-hello"><rect class="ink" x="16" y="97.0" width="128" height="40" rx="6"/><text x="80.0" y="122.0" text-anchor="middle" class="b" font-size="11">② TLS: ClientHello</text></a>
 <text x="188" y="108" class="t2" font-size="12">Connection Verdict</text>
 <rect class="ng" x="188" y="112" width="200" height="26" rx="6"/>
 <text x="288" y="130" text-anchor="middle" font-size="12">drop: RST, TLS 바이트 0</text>
 <path class="ln r" d="M144 117.0 L188 117.0" marker-end="url(#dg-rp-stages-ah-r)"/>
 <path class="ln" d="M80.0 137.0 L80.0 154.0" marker-end="url(#dg-rp-stages-ah)"/>
-<a href="#s-tls"><rect class="ink" x="16" y="154.0" width="128" height="40" rx="6"/><text x="80.0" y="179.0" text-anchor="middle" class="b" font-size="13">③ TLS</text></a>
+<a href="#s-tls"><rect class="ink" x="16" y="154.0" width="128" height="40" rx="6"/><text x="80.0" y="179.0" text-anchor="middle" class="b" font-size="11">③ TLS: ServerHello부터</text></a>
 <text x="188" y="179.0" class="t2" font-size="12">검사 없음: RSA 서명 0.9 ms</text>
 <path class="ln" d="M80.0 194.0 L80.0 235.0" marker-end="url(#dg-rp-stages-ah)"/>
 <a href="#s-http"><rect class="ink" x="16" y="235.0" width="128" height="40" rx="6"/><text x="80.0" y="260.0" text-anchor="middle" class="b" font-size="13">④ HTTP</text></a>
@@ -312,7 +312,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 </dl></div>
 </details>
 
-<details class="fold stage" id="s-hello"><summary><span class="no">②</span><span class="nm">ClientHello</span><span class="save">Saved: TLS 서명, request parse, Origin 서빙 전부</span></summary>
+<details class="fold stage" id="s-hello"><summary><span class="no">②</span><span class="nm">TLS handshake: ClientHello</span><span class="save">Saved: TLS 서명, request parse, Origin 서빙 전부</span></summary>
 <div class="in"><dl>
 <dt>보이는 신호</dt><dd><span class="ln">client IP</span><span class="ln">JA4 (ClientHello로 만든 TLS 라이브러리의 지문)</span><span class="ln">Block table</span></dd>
 <dt>거르는 기준</dt><dd><span class="ln">Block list의 CIDR range에 든 IP → drop</span><span class="ln">Block table에 든 IP나 JA4 → drop</span><span class="ln weak">약점: JA4를 막으면 같은 라이브러리를 쓰는 사람도 막힘</span><span class="ln weak">약점: IP는 바꾸면 끝 (02 역사 라운드 4, 5)</span><span class="ln weak">한계: HTTP가 아직 없어서 403, 429는 못 고름</span></dd>
@@ -323,7 +323,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 </dl></div>
 </details>
 
-<details class="fold stage" id="s-tls"><summary><span class="no">③</span><span class="nm">TLS handshake</span><span class="save">거르지 않음: 비용만 생기는 단계</span></summary>
+<details class="fold stage" id="s-tls"><summary><span class="no">③</span><span class="nm">TLS handshake: ServerHello부터</span><span class="save">거르지 않음: 비용만 생기는 단계</span></summary>
 <div class="in"><dl>
 <dt>서버 비용</dt><dd><span class="ln">RSA-2048 서명 한 번: CPU 0.9 ms (요청 하나 2.1 ms 중) <a class="src p" href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-rproxy-cache-parity.md">primary</a></span><span class="ln">keep-alive가 없어서 요청마다 다시 낸다</span></dd>
 <dt>코드</dt><dd><code>handshake_start</code>, <code>handshake_step</code> (<code>event_loop.c</code>), <code>tls.c</code>. 따라치지 않음</dd>
