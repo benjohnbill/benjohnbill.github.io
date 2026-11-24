@@ -199,9 +199,81 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 <nav class="notes" aria-label="짝 노트">짝: <a href="https://benjohnbill.github.io/study/week13/mini-webserver/rproxy-requirements.html">rproxy 요구분석</a></nav>
 
 <h1>rproxy 측정: 방어마다 아끼는 비용과 옮기는 비용</h1>
-<p class="sub">rate limit은 Origin의 비용을 rproxy로 옮김<br>drop과 tarpit은 rproxy의 비용까지 줄임</p>
+<p class="sub">rate limit만 쓰면 Origin의 비용이 rproxy로 옮겨감<br>429를 반복해 받는 IP를 Block table에 올리면 그 비용도 사라짐<br>drop과 tarpit은 rproxy의 비용까지 줄임</p>
 
-<h2 id="run-20261124">1. 2026-11-24: Event loop, 방어 전부</h2>
+<h2 id="run-20261124-block">1. 2026-11-24: 429를 반복해 받는 IP를 Block table에</h2>
+<table>
+<thead><tr><th>항목</th><th>내용</th></tr></thead>
+<tbody>
+<tr><td>코드</td><td><code>CJG</code> <code>1170ba3</code>. window 안에 429를 5번 받은 IP가 또 한도를 넘으면 429와 함께 Block table에 올림 (<code>--rate-key ip</code>일 때만)</td></tr>
+<tr><td>비교</td><td>none, 이전 layers (<a href="#run-20261124">2절</a>), 지금 layers</td></tr>
+<tr><td>Scene</td><td>429를 받던 넷: <code>repeat</code>, <code>longtail</code>, <code>revalidate</code>, <code>solver</code>. 나머지 여섯은 429를 받지 않아 2절 결과가 그대로 유효함</td></tr>
+<tr><td>반복</td><td>3회, 중앙값 <a class="src p" href="https://github.com/benjohnbill/mini-webserver/blob/1e271c7/docs/measurements/20261124-arena-layers-slowblock.md">primary</a></td></tr>
+</tbody>
+</table>
+
+<h3 id="block-cpu">rproxy CPU: rate limit이 옮긴 비용이 사라짐</h3>
+<!--GEN:m-blk-cpu--><figure class="dgf"><svg class="dg" id="m-blk-cpu" viewBox="0 0 400 368" style="max-width:560px" role="img" aria-labelledby="m-blk-cpu-title m-blk-cpu-desc"><title id="m-blk-cpu-title">429 반복 client를 Block table에: rproxy의 CPU 초</title><desc id="m-blk-cpu-desc">Scene마다 none, 이전 layers, 지금 layers. 비율은 이전 layers 대비 지금 layers</desc>
+<rect class="ng" x="92" y="4" width="20" height="12" rx="2"/><text x="118" y="14.5" font-size="12">none</text><rect class="bx" x="192" y="4" width="20" height="12" rx="2"/><text x="218" y="14.5" font-size="12">이전 layers</text><rect class="ok" x="292" y="4" width="20" height="12" rx="2"/><text x="318" y="14.5" font-size="12">지금 layers</text>
+<line class="rule" x1="92.0" y1="32" x2="92.0" y2="340"/><text x="92.0" y="356" text-anchor="middle" class="t2" font-size="12">0</text>
+<line class="rule" x1="151.5" y1="32" x2="151.5" y2="340"/><text x="151.5" y="356" text-anchor="middle" class="t2" font-size="12">5.0</text>
+<line class="rule" x1="211.0" y1="32" x2="211.0" y2="340"/><text x="211.0" y="356" text-anchor="middle" class="t2" font-size="12">10</text>
+<line class="rule" x1="270.5" y1="32" x2="270.5" y2="340"/><text x="270.5" y="356" text-anchor="middle" class="t2" font-size="12">15</text>
+<line class="rule" x1="330.0" y1="32" x2="330.0" y2="340"/><text x="330.0" y="356" text-anchor="middle" class="t2" font-size="12">20</text>
+<text x="0" y="356" class="t2" font-size="12">CPU s</text>
+<text x="0" y="60.5" class="b mono" font-size="12">longtail</text>
+<text x="0" y="76" class="t2" font-size="11">× 0.24</text>
+<rect class="ng" x="92" y="40" width="67.8" height="16" rx="2"/><text x="165.8" y="52" class="mono" font-size="12">5.7</text>
+<rect class="bx" x="92" y="60" width="189.7" height="16" rx="2"/><text x="287.7" y="72" class="mono" font-size="12">15.9</text>
+<rect class="ok" x="92" y="80" width="44.9" height="16" rx="2"/><text x="142.9" y="92" class="mono" font-size="12">3.8</text>
+<text x="0" y="136.5" class="b mono" font-size="12">solver</text>
+<text x="0" y="152" class="t2" font-size="11">× 0.14</text>
+<rect class="ng" x="92" y="116" width="66.0" height="16" rx="2"/><text x="164.0" y="128" class="mono" font-size="12">5.5</text>
+<rect class="bx" x="92" y="136" width="189.3" height="16" rx="2"/><text x="287.3" y="148" class="mono" font-size="12">15.9</text>
+<rect class="ok" x="92" y="156" width="26.9" height="16" rx="2"/><text x="124.9" y="168" class="mono" font-size="12">2.3</text>
+<text x="0" y="212.5" class="b mono" font-size="12">repeat</text>
+<text x="0" y="228" class="t2" font-size="11">× 0.29</text>
+<rect class="ng" x="92" y="192" width="106.7" height="16" rx="2"/><text x="204.7" y="204" class="mono" font-size="12">9.0</text>
+<rect class="bx" x="92" y="212" width="137.0" height="16" rx="2"/><text x="235.0" y="224" class="mono" font-size="12">11.5</text>
+<rect class="ok" x="92" y="232" width="40.3" height="16" rx="2"/><text x="138.3" y="244" class="mono" font-size="12">3.4</text>
+<text x="0" y="288.5" class="b mono" font-size="12">revalidate</text>
+<text x="0" y="304" class="t2" font-size="11">× 0.30</text>
+<rect class="ng" x="92" y="268" width="125.7" height="16" rx="2"/><text x="223.7" y="280" class="mono" font-size="12">10.6</text>
+<rect class="bx" x="92" y="288" width="135.1" height="16" rx="2"/><text x="233.1" y="300" class="mono" font-size="12">11.3</text>
+<rect class="ok" x="92" y="308" width="40.5" height="16" rx="2"/><text x="138.5" y="320" class="mono" font-size="12">3.4</text>
+</svg></figure><!--/GEN:m-blk-cpu-->
+<!--GEN:m-blk-req--><figure class="dgf"><svg class="dg" id="m-blk-req" viewBox="0 0 400 288" style="max-width:560px" role="img" aria-labelledby="m-blk-req-title m-blk-req-desc"><title id="m-blk-req-title">429 반복 client를 Block table에: crawler가 보낸 요청 수</title><desc id="m-blk-req-desc">이전 layers와 지금 layers. 지금은 거의 전부 drop</desc>
+<rect class="bx" x="92" y="4" width="20" height="12" rx="2"/><text x="118" y="14.5" font-size="12">이전 layers</text><rect class="ok" x="192" y="4" width="20" height="12" rx="2"/><text x="218" y="14.5" font-size="12">지금 layers</text>
+<line class="rule" x1="92.0" y1="32" x2="92.0" y2="260"/><text x="92.0" y="276" text-anchor="middle" class="t2" font-size="12">0</text>
+<line class="rule" x1="151.5" y1="32" x2="151.5" y2="260"/><text x="151.5" y="276" text-anchor="middle" class="t2" font-size="12">5000</text>
+<line class="rule" x1="211.0" y1="32" x2="211.0" y2="260"/><text x="211.0" y="276" text-anchor="middle" class="t2" font-size="12">10000</text>
+<line class="rule" x1="270.5" y1="32" x2="270.5" y2="260"/><text x="270.5" y="276" text-anchor="middle" class="t2" font-size="12">15000</text>
+<line class="rule" x1="330.0" y1="32" x2="330.0" y2="260"/><text x="330.0" y="276" text-anchor="middle" class="t2" font-size="12">20000</text>
+<text x="0" y="276" class="t2" font-size="12">요청 수</text>
+<text x="0" y="60.5" class="b mono" font-size="12">revalidate</text>
+<text x="0" y="76" class="t2" font-size="11">× 1.81</text>
+<rect class="bx" x="92" y="40" width="125.1" height="16" rx="2"/><text x="223.1" y="52" class="mono" font-size="12">10514</text>
+<rect class="ok" x="92" y="60" width="225.9" height="16" rx="2"/><text x="323.9" y="72" class="mono" font-size="12">18984</text>
+<text x="0" y="116.5" class="b mono" font-size="12">solver</text>
+<text x="0" y="132" class="t2" font-size="11">× 2.13</text>
+<rect class="bx" x="92" y="96" width="98.7" height="16" rx="2"/><text x="196.7" y="108" class="mono" font-size="12">8295</text>
+<rect class="ok" x="92" y="116" width="210.6" height="16" rx="2"/><text x="308.6" y="128" class="mono" font-size="12">17695</text>
+<text x="0" y="172.5" class="b mono" font-size="12">repeat</text>
+<text x="0" y="188" class="t2" font-size="11">× 1.80</text>
+<rect class="bx" x="92" y="152" width="105.4" height="16" rx="2"/><text x="203.4" y="164" class="mono" font-size="12">8860</text>
+<rect class="ok" x="92" y="172" width="189.4" height="16" rx="2"/><text x="287.4" y="184" class="mono" font-size="12">15920</text>
+<text x="0" y="228.5" class="b mono" font-size="12">longtail</text>
+<text x="0" y="244" class="t2" font-size="11">× 1.35</text>
+<rect class="bx" x="92" y="208" width="108.3" height="16" rx="2"/><text x="206.3" y="220" class="mono" font-size="12">9100</text>
+<rect class="ok" x="92" y="228" width="146.1" height="16" rx="2"/><text x="244.1" y="240" class="mono" font-size="12">12280</text>
+</svg></figure><!--/GEN:m-blk-req-->
+<dl class="notable">
+<dt>아낀 것</dt><dd><span class="ln"><strong>왜</strong> <code>rproxy</code> CPU가 이전 layers의 1/3 ~ 1/7, none보다도 낮음</span><span class="ln"><strong>어떻게</strong> burst 10번 통과, 429 약 8번 뒤 Block table에 올라 나머지 연결은 ②에서 drop: TLS 서명 없음</span></dd>
+<dt>늘어난 것</dt><dd><span class="ln"><strong>왜</strong> crawler 요청 수가 1.3 ~ 2.1배</span><span class="ln"><strong>어떻게</strong> drop은 429보다도 빨리 끝나서 crawler가 더 보냄. 그래도 요청 하나가 handshake 전에 끝나서 CPU는 줄어듦</span></dd>
+<dt>그대로인 것</dt><dd><span class="ln"><strong>왜</strong> Origin CPU 약 0, Origin MiB는 이전 layers와 같은 수준 (<code>repeat</code> 8.0)</span><span class="ln"><strong>어떻게</strong> <code>human.py</code>는 429를 한 번도 받지 않아 Block table에 오르지 않음. p95 16 ~ 31 ms</span></dd>
+</dl>
+
+<h2 id="run-20261124">2. 2026-11-24: Event loop, 방어 전부</h2>
 <table>
 <thead><tr><th>항목</th><th>내용</th></tr></thead>
 <tbody>
@@ -288,7 +360,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 </svg></figure><!--/GEN:m-rl-req-->
 <dl class="notable">
 <dt>아낀 것</dt><dd><span class="ln"><strong>왜</strong> Origin MiB가 1/59 ~ 1/588, Origin CPU는 약 0</span><span class="ln"><strong>어떻게</strong> IP마다 10초에 59번만 통과(④). <code>repeat</code>, <code>revalidate</code>는 그중 55번을 cache와 304가 답함(⑤)</span></dd>
-<dt>옮긴 것</dt><dd><span class="ln"><strong>왜</strong> <code>rproxy</code> CPU가 1.3 ~ 3배</span><span class="ln"><strong>어떻게</strong> 429가 빨리 오니 crawler가 2.5 ~ 4.5배 더 보냄. <code>rproxy</code>에 keep-alive가 없어서 요청마다 TLS 서명(0.9 ms)을 다시 함</span></dd>
+<dt>옮긴 것</dt><dd><span class="ln"><strong>왜</strong> <code>rproxy</code> CPU가 1.3 ~ 3배</span><span class="ln"><strong>어떻게</strong> 429가 빨리 오니 crawler가 2.5 ~ 4.5배 더 보냄. <code>rproxy</code>에 keep-alive가 없어서 요청마다 TLS 서명(0.9 ms)을 다시 함</span><span class="ln"><strong>그 뒤</strong> <a href="#run-20261124-block">1절</a>: 429를 반복해 받는 IP를 Block table에 올려 이 비용을 없앰</span></dd>
 </dl>
 
 <h3 id="drop">drop: rproxy까지 아낌</h3>
@@ -369,15 +441,15 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 <dt>착한 bot</dt><dd><span class="ln"><strong>왜</strong> <code>signed</code>의 Origin MiB 0 → 16.6: 의도한 증가</span><span class="ln"><strong>어떻게</strong> 서명이 확인되어 통과(④). 1952번은 cache가 답함(⑤)</span></dd>
 </dl>
 
-<h2 id="open">2. 열린 질문</h2>
+<h2 id="open">3. 열린 질문</h2>
 <table>
 <thead><tr><th>질문</th><th>다룰 곳</th></tr></thead>
 <tbody>
-<tr><td><span class="ln">rate limit이 rproxy에 옮긴 비용을 어떻게 줄이나</span><span class="ln">연결을 다시 써서 TLS 서명 횟수를 줄이기 (keep-alive, session resumption)</span><span class="ln">429를 계속 받는 IP를 Block table에 올려 ②에서 drop하기</span></td><td>L3 HTTP ①: 양, L4 HTTP ②: 시험과 비용 비대칭</td></tr>
+<tr><td><span class="ln">연결을 다시 써서 TLS 서명 횟수를 줄이면 무엇이 바뀌나 (keep-alive, session resumption)</span><span class="ln">Block table로 rate limit 비용은 1절에서 해결함. keep-alive는 crawler의 비용도 함께 줄이고, 모든 Scene의 기준선을 바꿈</span></td><td>L3 HTTP ①: 양, L4 HTTP ②: 시험과 비용 비대칭</td></tr>
 </tbody>
 </table>
 
-<h2 id="past">3. 예전 측정</h2>
+<h2 id="past">4. 예전 측정</h2>
 <details class="fold"><summary><span>2026-11-24: Worker pool (<code>f9dda4d</code>), 1회</span></summary>
 <div class="in">
 <p><code>human.py</code>는 <code>disguised</code> 옆에서 10초 동안 응답 0개. tarpit이 <code>sleep</code>으로 Worker 4개를 모두 붙잡았다. 그 밖의 Origin MiB는 위 결과와 비슷했다 (<code>repeat</code> 4896 → 8, <code>disguised</code> 275 → 0). <a class="src p" href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-arena-layers.md">primary</a></p>
