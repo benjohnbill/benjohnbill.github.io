@@ -227,7 +227,6 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <dl>
 <dt>보이는 신호</dt><dd><span class="ln">client IP (<code>accept</code>의 주소)</span><span class="ln">연결이 바이트를 보내는지</span></dd>
 <dt>거르는 기준</dt><dd><span class="ln">ClientHello를 5초 안에 다 보내지 않는 연결은 닫음 (<code>CLIENT_TIMEOUT</code>)</span><span class="ln">Event loop마다 연결 수 상한 (<code>--connections</code>, 기본 1024)</span></dd>
-<dt>구분하는 사용자</dt><dd>아직 가르지 않음. Stuck connection만 정리</dd>
 <dt>서버 비용</dt><dd>3-way handshake는 kernel이 끝냄. 서버 앱은 fd 하나와 Event loop의 칸 하나</dd>
 <dt>고려할 점</dt><dd>IP는 여기서 이미 보이지만, 검사는 다음 단계에서 JA4와 함께 한 번에 한다</dd>
 <dt>코드</dt><dd><code>event_loop.c</code>의 accept, <code>connection_set_deadline</code></dd>
@@ -251,9 +250,6 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <section class="stage" id="s-tls">
 <h3><span class="no">③</span> TLS handshake</h3>
 <dl>
-<dt>보이는 신호</dt><dd>새로 보이는 것 없음</dd>
-<dt>거르는 기준</dt><dd>없음. 이 단계는 비용만 생긴다</dd>
-<dt>구분하는 사용자</dt><dd>없음</dd>
 <dt>서버 비용</dt><dd>RSA-2048 서명. 요청 하나 CPU 2.1 ms 중 0.9 ms <a class="src p" href="https://github.com/benjohnbill/mini-webserver/blob/f9dda4d/docs/measurements/20261124-rproxy-cache-parity.md">primary</a></dd>
 <dt>고려할 점</dt><dd><span class="ln">②에서 drop하면 이 비용을 통째로 아낀다</span><span class="ln"><code>rproxy</code>에는 keep-alive가 없어서 요청마다 이 비용을 다시 낸다</span></dd>
 <dt>코드</dt><dd><code>handshake_start</code>, <code>handshake_step</code> (<code>event_loop.c</code>), <code>tls.c</code>. 따라치지 않음</dd>
@@ -287,9 +283,7 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <h3><span class="no">⑤</span> Cache</h3>
 <dl>
 <dt>보이는 신호</dt><dd>target과 <code>If-None-Match</code></dd>
-<dt>거르는 기준</dt><dd>거르지 않음. 통과한 요청을 싸게 답한다: cache hit, 또는 ETag가 같으면 304</dd>
-<dt>구분하는 사용자</dt><dd>가르지 않음</dd>
-<dt>서버 비용</dt><dd>표 조회 하나. hit면 Origin에 가지 않는다</dd>
+<dt>서버 비용</dt><dd>표 조회 하나. cache hit, 또는 ETag가 같아 304로 답하면 Origin에 가지 않는다</dd>
 <dt>고려할 점</dt><dd>crawler는 드문 페이지를 긁어서 cache miss가 많다. cache만으로는 crawler 비용이 줄지 않는다 (<a href="https://benjohnbill.github.io/study/week13/mini-webserver/notes/01-cost.html#paths">01 비용</a>)</dd>
 <dt>코드</dt><dd><code>cache_find</code>, <code>cache_find_etag</code></dd>
 <dt>Scene</dt><dd><span class="ln"><code>revalidate</code> 304=55</span><span class="ln"><code>signed</code>: 요청 2176개를 cache가 답함</span></dd>
@@ -301,8 +295,6 @@ svg.dg { display: block; width: 100%; height: auto; font-size: 13px; }
 <h3><span class="no">⑥</span> Origin</h3>
 <dl>
 <dt>보이는 신호</dt><dd><code>X-Forwarded-For</code> (client IP), <code>X-JA4</code></dd>
-<dt>거르는 기준</dt><dd>없음. 여기까지 온 요청은 모두 서빙한다</dd>
-<dt>구분하는 사용자</dt><dd>없음</dd>
 <dt>서버 비용</dt><dd>가장 비싸다: Origin의 CPU, 디스크, 대역폭</dd>
 <dt>고려할 점</dt><dd>앞 단계의 모든 방어는 이 비용을 줄이려고 있다. 그 효과는 Scene의 "Origin이 보낸 MiB"로 잰다</dd>
 <dt>코드</dt><dd><code>forward.c</code></dd>
