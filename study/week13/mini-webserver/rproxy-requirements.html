@@ -309,6 +309,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 <dt>거르는 기준</dt><dd><span class="ln">ClientHello를 5초 안에 다 보내지 않는 연결은 닫음 (<code>CLIENT_TIMEOUT</code>)</span><span class="ln">Event loop마다 연결 수 상한 (<code>--connections</code>, 기본 1024)</span></dd>
 <dt>서버 비용</dt><dd>fd 하나와 Event loop의 연결 칸 하나. 3-way handshake는 kernel이 한다</dd>
 <dt>코드</dt><dd><code>event_loop.c</code>의 accept, <code>connection_set_deadline</code></dd>
+<dt>Lesson</dt><dd><a href="https://benjohnbill.github.io/study/week13/mini-webserver/lessons/l1-map-and-cost.html">L1 TCP, ClientHello: 규칙 표</a></dd>
 </dl></div>
 </details>
 
@@ -319,7 +320,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 <dt>구분하는 사용자</dt><dd>이미 아는 나쁜 crawler</dd>
 <dt>서버 비용</dt><dd><code>MSG_PEEK</code> 한 번, ClientHello parse, JA4 계산, 표 조회 둘. drop이면 RST만 가고 TLS 바이트는 0</dd>
 <dt>코드</dt><dd><code>connection_decide</code> (<code>connection_verdict.c</code>), <code>ja4_format</code> (<code>ja4.c</code>)</dd>
-<dt>Lesson</dt><dd><a href="https://benjohnbill.github.io/study/week13/mini-webserver/lessons/l1-map-and-cost.html">L1 TCP, ClientHello: 규칙 표</a><br>L2 ClientHello: 지문 (준비 중)</dd>
+<dt>Lesson</dt><dd><a href="https://benjohnbill.github.io/study/week13/mini-webserver/lessons/l1-map-and-cost.html">L1 TCP, ClientHello: 규칙 표</a><br><a href="https://benjohnbill.github.io/study/week13/mini-webserver/lessons/l2-clienthello-fingerprint.html">L2 ClientHello: 지문</a></dd>
 </dl></div>
 </details>
 
@@ -342,7 +343,7 @@ dl.notable strong { display: inline-block; min-width: 3.5em; font-family: var(--
 <table class="sub-stage">
 <thead><tr><th>묶음</th><th>규칙과 Verdict</th><th>코드</th><th>Lesson</th></tr></thead>
 <tbody>
-<tr><td>HTTP ① 양</td><td data-h="규칙과 Verdict">IP마다 token bucket을 넘으면 slow (429)</td><td data-h="코드"><code>rate_limit_take</code></td><td data-h="Lesson">L3</td></tr>
+<tr><td>HTTP ① 양</td><td data-h="규칙과 Verdict">IP마다 token bucket을 넘으면 slow (429)</td><td data-h="코드"><code>rate_limit_take</code></td><td data-h="Lesson"><a href="https://benjohnbill.github.io/study/week13/mini-webserver/lessons/l3-http-volume.html">L3</a></td></tr>
 <tr><td>HTTP ② 시험과 비용 비대칭</td><td data-h="규칙과 Verdict"><span class="ln"><code>--pow-prefix</code> 경로에서 Proof of work 풀이가 없으면 challenge (401)</span><span class="ln">User-Agent는 Chrome인데 JA4 table의 label이 browser가 아니면 tarpit</span></td><td data-h="코드"><code>pow_is_solved</code>, <code>tarpit_start</code></td><td data-h="Lesson">L4</td></tr>
 <tr><td>HTTP ③ 신원, 거래, 규칙 순서</td><td data-h="규칙과 Verdict"><span class="ln">Honeypot과 scanner (404 5번) → Block table</span><span class="ln">서명이 확인된 bot → pass</span><span class="ln">서명 없는 crawler 이름: pay 경로면 402, 아니면 403</span></td><td data-h="코드"><code>verdict_decide</code></td><td data-h="Lesson">L5</td></tr>
 </tbody>
