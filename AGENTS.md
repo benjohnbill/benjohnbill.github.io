@@ -24,7 +24,7 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   (first: the crawler notes, 2026-11-24). A project series can nest one more level, `study/weekNN/<project>/<series>/<slug>.html`: `study/week13/mini-webserver/notes/` and `lessons/` (user said 2026-11-24). `study/week13/crawler/` holds redirect stubs for the old note URLs; do not delete them or add pages there. Weeks 2–4 live in other repositories
   (`SW-AI-W02-03`, `SW-AI-C`) and are only linked from the index.
 - **Copies.** Every file under `study/weekNN/` is a byte copy of an original
-  elsewhere under `~/dev/krafton-jungle/`. Edit the original, then copy it
+  elsewhere under `~/dev/learning/krafton-jungle/`. Edit the original, then copy it
   here again; never edit the copy. `rg data-src index.html` lists each
   card's original.
 - **Projects.** A project outside the Jungle weeks lives at
@@ -77,7 +77,7 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
   `data-week` and no `data-topic`.
 - **Week headings.** `N주차 · <week name>`, wrapped in
   `<a class="wk-repo" href="https://github.com/<owner>/<repo>">` pointing at
-  that week's repository (the `origin` of `~/dev/krafton-jungle/weekNN/`),
+  that week's repository (the `origin` of `~/dev/learning/krafton-jungle/weekNN/`),
   plus a `WIL →` link to that week's velog post, added when the post exists
   (`jungle-week-init` asks for it at the start of the next week).
 - **Terms.** A concept or proper term in a written page is English only,
