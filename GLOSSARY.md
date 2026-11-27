@@ -144,3 +144,63 @@ _Avoid_: 동시성 모델, mode, strategy
 **Worker**:
 An execution unit (a thread or a process) that serves one connection at a time. In `iter` the main loop is the only Worker. `epoll` has no Worker.
 _Avoid_: 워커, thread (for a Worker of any model), handler
+
+### Neural networks (week14-15)
+
+In these pages, "layer" means a neural network layer, not a crawler-defense layer.
+
+**neuron**:
+One unit of a layer. It holds one number for each input image: its activation.
+_Avoid_: 뉴런, 노드, 신경 세포
+
+**layer**:
+In a neural network, one step that turns the activations of the previous layer into new activations. In `mnist`, an `Affine` and the `ReLU` after it.
+_Avoid_: 층, 계층
+
+**hidden layer**:
+A layer between the input and the output. `TwoLayerNet` has one, with 128 neurons.
+_Avoid_: 은닉층, 숨은 층
+
+**weight**:
+The number on one connection between two neurons. One layer keeps its weights in one matrix, `W`.
+_Avoid_: 가중치, 웨이트
+
+**activation**:
+The number that a neuron holds after its layer runs.
+_Avoid_: 활성화, 활성화 값, 활성값
+
+**activation function**:
+The function that a layer applies to each value after the weighted sum: sigmoid or `ReLU`.
+_Avoid_: 활성화 함수
+
+**sigmoid**:
+The activation function `1 / (1 + exp(-x))`. It puts each value between 0 and 1. The 3Blue1Brown video uses it; `mnist` does not.
+_Avoid_: 시그모이드, 로지스틱 함수
+
+**ReLU**:
+The activation function `max(0, x)`, the class `ReLU` in `mnist`.
+_Avoid_: 렐루, 램프 함수
+
+**Affine**:
+The `mnist` layer class that computes `x @ W + b`.
+_Avoid_: 아핀, 완전연결층, fully connected layer
+
+**logits**:
+The output of the last `Affine`: one score per class, not a probability. It can be negative or above 1.
+_Avoid_: 로짓, 점수 벡터
+
+**softmax**:
+The function that turns one row of logits into probabilities that sum to 1. It keeps the order of the values.
+_Avoid_: 소프트맥스
+
+**batch**:
+The images that one forward pass handles together. In `mnist`, they are the rows of `x`: `(batch_size, 784)`.
+_Avoid_: 배치, 묶음
+
+**shape**:
+The size of each axis of a NumPy array, for example `(784, 128)`.
+_Avoid_: 모양, 형상, 차원
+
+**loss**:
+One number that tells how far the predictions are from the correct labels. Training makes it smaller.
+_Avoid_: 손실, 오차, 비용

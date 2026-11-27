@@ -37,7 +37,7 @@ Hand-written static HTML served from `main` by GitHub Pages. No build step.
 - **Card text.** A card or Folder description is one line on desktop (user said 2026-11-20). A title names the topic plainly; no metaphor titles.
 - **Cards.** One `<a class="card">` per page in `index.html`, inside its
   week's group, with `data-week`, `data-topic` (exactly one: 알고리즘,
-  시스템, C언어; a new topic also needs a title-color rule), `data-kind`
+  시스템, C언어, 웹, AI; a new topic also needs a title-color rule), `data-kind`
   (`note`, `deck`, `repo`, `lesson`), `data-src`, and an absolute `href`. CSS
   makes each card a row, and the visible type label comes from `data-kind`, not
   `.b`. `lesson` (label Lesson; the type labels are English since 2026-11-20, user said: Note, Slide, Team Slide, Repo, Lesson, Folder) marks a page made by the `/teach` skill: a lesson
